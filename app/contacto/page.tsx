@@ -16,11 +16,11 @@ export default function ContactoPage() {
           <p className="text-sm text-zinc-400 mb-2">Email de contacto</p>
 
           <p className="text-lg font-medium">
-            tuemail@ejemplo.com
+            calculadoraemprendedora@gmail.com
           </p>
 
           <p className="text-sm text-zinc-500 mt-3">
-            (Podés cambiar este email en el código cuando quieras)
+            (Podes Ayudarnos con cualquier inconveniente)
           </p>
         </div>
 

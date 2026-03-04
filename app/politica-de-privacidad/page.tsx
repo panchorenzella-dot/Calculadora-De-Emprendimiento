@@ -69,7 +69,7 @@ export default function PoliticaPage() {
         <p className="text-zinc-400">
           Si tenés preguntas sobre esta política de privacidad podés escribir a:
           <span className="ml-2 font-medium text-white">
-            tuemail@ejemplo.com
+            calculadoraemprendedora@gmail.com
           </span>
         </p>
 
