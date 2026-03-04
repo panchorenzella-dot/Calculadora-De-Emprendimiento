@@ -22,12 +22,21 @@ export const metadata: Metadata = {
       "Calculadoras simples para emprendedores: margen, rentabilidad e interés compuesto. Gratis y fáciles de usar.",
     siteName: "Calculadora Emprendedora",
     locale: "es_AR",
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Calculadora Emprendedora",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Calculadora Emprendedora",
     description:
       "Calculadoras simples para emprendedores: margen, rentabilidad e interés compuesto. Gratis y fáciles de usar.",
+    images: ["/twitter-image.png"], // o "/opengraph-image.png" si usás una sola
   },
 };
 
@@ -38,9 +47,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
-      <body className="bg-zinc-950 text-white">
+      <body className="min-h-screen bg-zinc-950 text-white">
         <Navbar />
-        {children}
+        <div className="w-full">{children}</div>
         <Footer />
       </body>
     </html>
