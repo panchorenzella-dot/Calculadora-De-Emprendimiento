@@ -16,7 +16,7 @@ export default function Navbar() {
           </div>
         </div>
 
-        <div className="text-xs text-white/60"></div>
+        <div className="text-xs text-white/60">Gratis • Simple • Rápida</div>
       </div>
     </header>
   );
