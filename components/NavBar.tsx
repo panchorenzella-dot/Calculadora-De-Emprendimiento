@@ -11,12 +11,12 @@ export default function Navbar() {
               Calculadora Emprendedora
             </Link>
             <div className="text-xs text-white/60">
-              Calculadoras para tu negocio
+              
             </div>
           </div>
         </div>
 
-        <div className="text-xs text-white/60">Gratis • Simple • Rápida</div>
+        <div className="text-xs text-white/60"></div>
       </div>
     </header>
   );
