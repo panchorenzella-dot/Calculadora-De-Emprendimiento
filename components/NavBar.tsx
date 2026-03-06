@@ -34,7 +34,7 @@ export default function Navbar() {
             </Link>
 
             <Link href="/markup" className={linkClass("/markup")}>
-              Markup
+              Precio Venta
             </Link>
           </nav>
         </div>
