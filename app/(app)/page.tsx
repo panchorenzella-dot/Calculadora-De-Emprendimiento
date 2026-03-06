@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import Card from "@/components/Card";
 import MoneyInput, { Currency } from "@/components/MoneyInput";
 import InfoSections from "@/components/InfoSections";
+import SeoContent from "@/components/SeoContent";
 
 import { fmtMoney, fmtNum } from "@/lib/format";
 import {
@@ -73,15 +74,18 @@ export default function Page() {
     setLoading(true);
     setResp(null);
 
-    const r = await fetch("/api/calc", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    try {
+      const r = await fetch("/api/calc", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-    const data = (await r.json()) as CalcResponse;
-    setResp(data);
-    setLoading(false);
+      const data = (await r.json()) as CalcResponse;
+      setResp(data);
+    } finally {
+      setLoading(false);
+    }
   }
 
   const results = resp?.ok ? resp.results : null;
@@ -96,16 +100,15 @@ export default function Page() {
 
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
-      <div className="mx-auto max-w-5xl px-4">
-        <h1 className="text-3xl font-bold tracking-tight">
+      <div className="mx-auto max-w-5xl px-4 py-10">
+        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
           Calculadora de Margen para tu negocio
         </h1>
-        <p className="mt-2 text-white/70">
-          Cargás datos y te devuelve margen, ganancia, punto de equilibrio y
-          período de recupero.
+        <p className="mt-2 max-w-2xl text-white/70">
+          Calculá margen de ganancia, ventas netas, punto de equilibrio, ROI
+          anual y período de recupero para tu emprendimiento en segundos.
         </p>
 
-        {/* SELECTOR MONEDA */}
         <div className="mt-6 flex items-center gap-3">
           <span className="text-sm text-white/70">Moneda</span>
           <select
@@ -119,7 +122,6 @@ export default function Page() {
         </div>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
-          {/* FORM */}
           <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
             <h2 className="text-xl font-semibold">Inputs</h2>
 
@@ -184,6 +186,7 @@ export default function Page() {
                   <span className="text-sm text-white/70">Costo variable</span>
                   <div className="flex gap-2">
                     <button
+                      type="button"
                       onClick={() => setModoCosto("pct")}
                       className={`rounded-xl px-3 py-2 ring-1 ${
                         modoCosto === "pct"
@@ -194,6 +197,7 @@ export default function Page() {
                       %
                     </button>
                     <button
+                      type="button"
                       onClick={() => setModoCosto("abs")}
                       className={`rounded-xl px-3 py-2 ring-1 ${
                         modoCosto === "abs"
@@ -208,7 +212,7 @@ export default function Page() {
 
                 {modoCosto === "pct" ? (
                   <input
-                    className="rounded-xl bg-zinc-900 px-4 py-3 outline-none ring-1 ring-white/10"
+                    className="rounded-xl bg-zinc-900 px-4 py-3 outline-none ring-1 ring-white/10 focus:ring-white/30"
                     inputMode="numeric"
                     value={costoPct}
                     onChange={(e) => setCostoPct(onlyDigits(e.target.value))}
@@ -242,14 +246,13 @@ export default function Page() {
               <button
                 onClick={calcular}
                 disabled={loading}
-                className="mt-2 rounded-2xl bg-white px-5 py-3 font-semibold text-zinc-950"
+                className="mt-2 rounded-2xl bg-white px-5 py-3 font-semibold text-zinc-950 disabled:opacity-70"
               >
                 {loading ? "Calculando..." : "Calcular"}
               </button>
             </div>
           </div>
 
-          {/* RESULTS */}
           <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
             <h2 className="text-xl font-semibold">Resultados</h2>
 
@@ -313,6 +316,7 @@ export default function Page() {
         </div>
 
         <InfoSections />
+        <SeoContent />
       </div>
     </main>
   );
