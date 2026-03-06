@@ -1,19 +1,13 @@
-
-
 export default function AppLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex w-full flex-col md:flex-row">
-      
-
-      <main className="flex-1 px-4 py-6 md:px-6">
-        <div className="mx-auto w-full max-w-5xl">
-          {children}
-        </div>
-      </main>
-    </div>
+    <main className="min-h-screen bg-zinc-950 text-white">
+      <div className="mx-auto w-full max-w-5xl px-4 py-10">
+        {children}
+      </div>
+    </main>
   );
 }
