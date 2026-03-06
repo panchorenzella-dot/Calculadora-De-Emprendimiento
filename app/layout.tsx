@@ -1,57 +1,41 @@
-import type { Metadata } from "next";
-import "./globals.css";
-import Navbar from "@/components/NavBar";
-import Footer from "@/components/Footer";
+"use client";
 
-export const metadata: Metadata = {
-  metadataBase: new URL("https://calculadoraemprendedora.com"),
-  title: {
-    default: "Calculadora Emprendedora",
-    template: "%s | Calculadora Emprendedora",
-  },
-  description:
-    "Calculadoras simples para emprendedores: margen, rentabilidad e interés compuesto. Gratis y fáciles de usar.",
-  alternates: {
-    canonical: "/",
-  },
-  openGraph: {
-    type: "website",
-    url: "https://calculadoraemprendedora.com",
-    title: "Calculadora Emprendedora",
-    description:
-      "Calculadoras simples para emprendedores: margen, rentabilidad e interés compuesto. Gratis y fáciles de usar.",
-    siteName: "Calculadora Emprendedora",
-    locale: "es_AR",
-    images: [
-      {
-        url: "/opengraph-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Calculadora Emprendedora",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Calculadora Emprendedora",
-    description:
-      "Calculadoras simples para emprendedores: margen, rentabilidad e interés compuesto. Gratis y fáciles de usar.",
-    images: ["/twitter-image.png"], // o "/opengraph-image.png" si usás una sola
-  },
-};
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function Navbar() {
+  const pathname = usePathname();
+
+  const active = (path: string) =>
+    pathname === path
+      ? "bg-white text-zinc-900"
+      : "bg-white/10 text-white hover:bg-white/20";
+
   return (
-    <html lang="es">
-      <body className="min-h-screen bg-zinc-950 text-white">
-        <Navbar />
-        <div className="w-full">{children}</div>
-        <Footer />
-      </body>
-    </html>
+    <header className="border-b border-white/10 bg-zinc-950/60 backdrop-blur px-6 py-4">
+      <div className="mx-auto max-w-5xl flex items-center justify-between">
+
+        <Link href="/" className="font-semibold tracking-tight">
+          Calculadora Emprendedora
+        </Link>
+
+        <div className="flex gap-2 text-sm font-semibold">
+          <Link
+            href="/"
+            className={`px-4 py-2 rounded-xl ${active("/")}`}
+          >
+            Margen
+          </Link>
+
+          <Link
+            href="/interes-compuesto"
+            className={`px-4 py-2 rounded-xl ${active("/interes-compuesto")}`}
+          >
+            Interés compuesto
+          </Link>
+        </div>
+
+      </div>
+    </header>
   );
 }
