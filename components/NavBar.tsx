@@ -25,11 +25,16 @@ export default function Navbar() {
             <Link href="/" className={linkClass("/")}>
               Margen
             </Link>
+
             <Link
               href="/interes-compuesto"
               className={linkClass("/interes-compuesto")}
             >
               Interés compuesto
+            </Link>
+
+            <Link href="/markup" className={linkClass("/markup")}>
+              Markup
             </Link>
           </nav>
         </div>

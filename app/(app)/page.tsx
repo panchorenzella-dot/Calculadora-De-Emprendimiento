@@ -100,7 +100,7 @@ export default function Page() {
 
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
-      <div className="mx-auto max-w-5xl px-4 py-10">
+      <div className="mx-auto max-w-5xl px-4 py-0">
         <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
           Calculadora de Margen para tu negocio
         </h1>
