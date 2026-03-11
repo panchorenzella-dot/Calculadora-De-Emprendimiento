@@ -27,6 +27,7 @@ export default function MoneyInput({
 
       <div className="flex items-center gap-2 rounded-xl bg-zinc-900 px-4 py-3 ring-1 ring-white/10 focus-within:ring-white/30">
         <span className="text-white/60">{prefix}</span>
+
         <input
           className={`w-full bg-transparent outline-none ${
             isZero ? "text-white/40" : "text-white"

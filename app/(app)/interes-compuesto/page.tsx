@@ -6,35 +6,106 @@ import Card from "@/components/Card";
 import { fmtMoney, fmtNum } from "@/lib/format";
 import { onlyDigits, parseDigitsToNumber } from "@/lib/numberInput";
 
+type FrecuenciaCapitalizacion =
+  | "anual"
+  | "semestral"
+  | "trimestral"
+  | "mensual"
+  | "semanal"
+  | "diaria";
+
+const PERIODOS_POR_ANIO: Record<FrecuenciaCapitalizacion, number> = {
+  anual: 1,
+  semestral: 2,
+  trimestral: 4,
+  mensual: 12,
+  semanal: 52,
+  diaria: 365,
+};
+
+const LABEL_FRECUENCIA: Record<FrecuenciaCapitalizacion, string> = {
+  anual: "Anualmente",
+  semestral: "Semestralmente",
+  trimestral: "Trimestralmente",
+  mensual: "Mensualmente",
+  semanal: "Semanalmente",
+  diaria: "Diariamente",
+};
+
 export default function InteresCompuestoPage() {
   const [currency, setCurrency] = useState<Currency>("ARS");
 
   const [principal, setPrincipal] = useState("0");
   const [aporteMensual, setAporteMensual] = useState("0");
-  const [tasaAnualPct, setTasaAnualPct] = useState("0");
   const [anios, setAnios] = useState("1");
+  const [tasaAnualPct, setTasaAnualPct] = useState("0");
+  const [rangoVarianzaPct, setRangoVarianzaPct] = useState("0");
+  const [frecuenciaCapitalizacion, setFrecuenciaCapitalizacion] =
+    useState<FrecuenciaCapitalizacion>("anual");
 
   const calc = useMemo(() => {
     const P = parseDigitsToNumber(principal);
     const PMT = parseDigitsToNumber(aporteMensual);
-    const rAnual = parseDigitsToNumber(tasaAnualPct) / 100;
-
     const years = Math.max(0, parseDigitsToNumber(anios));
-    const n = 12;
-    const periods = n * years;
-    const r = rAnual / n;
 
-    const fvPrincipal = P * Math.pow(1 + r, periods);
+    const tasaCentral = parseDigitsToNumber(tasaAnualPct) / 100;
+    const rango = parseDigitsToNumber(rangoVarianzaPct) / 100;
 
-    const fvAportes =
-      r === 0 ? PMT * periods : PMT * ((Math.pow(1 + r, periods) - 1) / r);
+    const tasaBaja = Math.max(0, tasaCentral - rango);
+    const tasaAlta = Math.max(0, tasaCentral + rango);
 
-    const fvTotal = fvPrincipal + fvAportes;
-    const totalAportado = P + PMT * periods;
-    const interesGanado = fvTotal - totalAportado;
+    const m = PERIODOS_POR_ANIO[frecuenciaCapitalizacion];
+    const mesesTotales = Math.round(years * 12);
 
-    return { fvTotal, totalAportado, interesGanado, periods, r };
-  }, [principal, aporteMensual, tasaAnualPct, anios]);
+    const calcularEscenario = (tasaAnual: number) => {
+      const tasaPorCapitalizacion = tasaAnual / m;
+
+      const tasaMensualEquivalente =
+        tasaAnual === 0
+          ? 0
+          : Math.pow(1 + tasaPorCapitalizacion, m / 12) - 1;
+
+      let saldo = P;
+
+      for (let i = 0; i < mesesTotales; i++) {
+        saldo = saldo * (1 + tasaMensualEquivalente);
+        saldo += PMT;
+      }
+
+      const totalAportado = P + PMT * mesesTotales;
+      const interesGanado = saldo - totalAportado;
+
+      return {
+        fvTotal: saldo,
+        totalAportado,
+        interesGanado,
+        tasaPorCapitalizacion,
+        tasaMensualEquivalente,
+      };
+    };
+
+    const escenarioBajo = calcularEscenario(tasaBaja);
+    const escenarioCentral = calcularEscenario(tasaCentral);
+    const escenarioAlto = calcularEscenario(tasaAlta);
+
+    return {
+      mesesTotales,
+      capitalizacionesTotales: years * m,
+      tasaCentral,
+      tasaBaja,
+      tasaAlta,
+      escenarioBajo,
+      escenarioCentral,
+      escenarioAlto,
+    };
+  }, [
+    principal,
+    aporteMensual,
+    anios,
+    tasaAnualPct,
+    rangoVarianzaPct,
+    frecuenciaCapitalizacion,
+  ]);
 
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
@@ -44,8 +115,9 @@ export default function InteresCompuestoPage() {
         </h1>
 
         <p className="mt-2 text-white/70">
-          Calculá el valor futuro de una inversión con aportes mensuales y
-          estimá cuánto podrías acumular con el paso del tiempo.
+          Calculá cómo puede crecer una inversión en el tiempo con aportes
+          mensuales, una tasa estimada y distintas frecuencias de
+          capitalización.
         </p>
 
         <div className="mt-6 flex items-center gap-3">
@@ -73,14 +145,29 @@ export default function InteresCompuestoPage() {
               />
 
               <MoneyInput
-                label="Aporte mensual"
+                label="Contribución mensual"
                 valueDigits={aporteMensual}
                 onChangeDigits={setAporteMensual}
                 currency={currency}
               />
 
               <label className="grid gap-2">
-                <span className="text-sm text-white/70">Tasa anual (%)</span>
+                <span className="text-sm text-white/70">
+                  Cantidad de tiempo en años
+                </span>
+                <input
+                  className="rounded-xl bg-zinc-900 px-4 py-3 outline-none ring-1 ring-white/10 focus:ring-white/30"
+                  inputMode="numeric"
+                  value={anios}
+                  onChange={(e) => setAnios(onlyDigits(e.target.value))}
+                  placeholder="1"
+                />
+              </label>
+
+              <label className="grid gap-2">
+                <span className="text-sm text-white/70">
+                  Tasa de interés estimada anual (%)
+                </span>
                 <input
                   className="rounded-xl bg-zinc-900 px-4 py-3 outline-none ring-1 ring-white/10 focus:ring-white/30"
                   inputMode="numeric"
@@ -91,19 +178,45 @@ export default function InteresCompuestoPage() {
               </label>
 
               <label className="grid gap-2">
-                <span className="text-sm text-white/70">Años</span>
+                <span className="text-sm text-white/70">
+                  Rango de varianza de tasas (%)
+                </span>
                 <input
                   className="rounded-xl bg-zinc-900 px-4 py-3 outline-none ring-1 ring-white/10 focus:ring-white/30"
                   inputMode="numeric"
-                  value={anios}
-                  onChange={(e) => setAnios(onlyDigits(e.target.value))}
-                  placeholder="1"
+                  value={rangoVarianzaPct}
+                  onChange={(e) =>
+                    setRangoVarianzaPct(onlyDigits(e.target.value))
+                  }
+                  placeholder="0"
                 />
               </label>
 
+              <label className="grid gap-2">
+                <span className="text-sm text-white/70">
+                  Frecuencia de capitalización
+                </span>
+                <select
+                  className="rounded-xl bg-zinc-900 px-4 py-3 outline-none ring-1 ring-white/10 focus:ring-white/30"
+                  value={frecuenciaCapitalizacion}
+                  onChange={(e) =>
+                    setFrecuenciaCapitalizacion(
+                      e.target.value as FrecuenciaCapitalizacion
+                    )
+                  }
+                >
+                  <option value="anual">Anualmente</option>
+                  <option value="semestral">Semestralmente</option>
+                  <option value="trimestral">Trimestralmente</option>
+                  <option value="mensual">Mensualmente</option>
+                  <option value="semanal">Semanalmente</option>
+                  <option value="diaria">Diariamente</option>
+                </select>
+              </label>
+
               <div className="text-xs text-white/50">
-                Períodos: <b>{fmtNum(calc.periods, 0)}</b> · Tasa mensual:{" "}
-                <b>{fmtNum(calc.r * 100, 4)}%</b>
+                Meses: <b>{fmtNum(calc.mesesTotales, 0)}</b> ·
+                Capitalizaciones: <b>{fmtNum(calc.capitalizacionesTotales, 0)}</b>
               </div>
             </div>
           </div>
@@ -112,26 +225,63 @@ export default function InteresCompuestoPage() {
             <h2 className="text-xl font-semibold">Resultados</h2>
 
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              <Card title="Valor futuro" value={fmtMoney(calc.fvTotal, currency)} />
+              <Card
+                title="Valor futuro estimado"
+                value={fmtMoney(calc.escenarioCentral.fvTotal, currency)}
+              />
               <Card
                 title="Total aportado"
-                value={fmtMoney(calc.totalAportado, currency)}
+                value={fmtMoney(calc.escenarioCentral.totalAportado, currency)}
               />
               <Card
                 title="Interés ganado"
-                value={fmtMoney(calc.interesGanado, currency)}
+                value={fmtMoney(calc.escenarioCentral.interesGanado, currency)}
               />
               <Card
                 title="Rendimiento sobre aportes"
                 value={
-                  calc.totalAportado <= 0
+                  calc.escenarioCentral.totalAportado <= 0
                     ? "—"
                     : `${fmtNum(
-                        (calc.interesGanado / calc.totalAportado) * 100,
+                        (calc.escenarioCentral.interesGanado /
+                          calc.escenarioCentral.totalAportado) *
+                          100,
                         1
                       )}%`
                 }
               />
+            </div>
+
+            <div className="mt-6 grid gap-3 rounded-2xl border border-white/10 bg-zinc-900/40 p-4 text-sm">
+              <div>
+                <span className="text-white/60">Escenario bajo</span>
+                <div className="font-semibold">
+                  {fmtMoney(calc.escenarioBajo.fvTotal, currency)}
+                </div>
+                <div className="text-white/50">
+                  Tasa: {fmtNum(calc.tasaBaja * 100, 2)}%
+                </div>
+              </div>
+
+              <div>
+                <span className="text-white/60">Escenario estimado</span>
+                <div className="font-semibold">
+                  {fmtMoney(calc.escenarioCentral.fvTotal, currency)}
+                </div>
+                <div className="text-white/50">
+                  Tasa: {fmtNum(calc.tasaCentral * 100, 2)}%
+                </div>
+              </div>
+
+              <div>
+                <span className="text-white/60">Escenario alto</span>
+                <div className="font-semibold">
+                  {fmtMoney(calc.escenarioAlto.fvTotal, currency)}
+                </div>
+                <div className="text-white/50">
+                  Tasa: {fmtNum(calc.tasaAlta * 100, 2)}%
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -141,26 +291,33 @@ export default function InteresCompuestoPage() {
             <h3 className="text-lg font-semibold">Cómo lo calculamos</h3>
             <ul className="mt-4 list-disc space-y-2 pl-5 text-sm text-white/70">
               <li>
-                Períodos = <b>años × 12</b>
+                Se toma una <b>tasa anual estimada</b>.
               </li>
               <li>
-                Tasa mensual = <b>tasa anual / 12</b>
+                Se aplica un <b>rango de varianza</b> para generar tres
+                escenarios: bajo, estimado y alto.
               </li>
               <li>
-                Valor futuro de la inversión inicial = <b>P × (1 + r)^n</b>
+                La tasa anual se divide según la frecuencia de capitalización
+                elegida: <b>{LABEL_FRECUENCIA[frecuenciaCapitalizacion]}</b>.
               </li>
               <li>
-                Valor futuro de los aportes mensuales ={" "}
-                <b>PMT × [((1+r)^n − 1) / r]</b>
+                Luego se obtiene una <b>tasa mensual equivalente</b> para poder
+                combinarla con aportes mensuales.
               </li>
               <li>
-                Valor futuro total = <b>FV inversión inicial + FV aportes</b>
+                Se simula el crecimiento mes a mes durante{" "}
+                <b>{fmtNum(calc.mesesTotales, 0)}</b> meses.
               </li>
               <li>
-                Total aportado = <b>inversión inicial + (aporte mensual × n)</b>
+                En cada mes el saldo gana interés y después se suma la
+                contribución mensual.
               </li>
               <li>
-                Interés ganado = <b>valor futuro total − total aportado</b>
+                Valor futuro = <b>saldo final acumulado</b>.
+              </li>
+              <li>
+                Interés ganado = <b>valor futuro − total aportado</b>.
               </li>
             </ul>
           </div>
@@ -169,9 +326,9 @@ export default function InteresCompuestoPage() {
             <h3 className="text-lg font-semibold">Limitaciones</h3>
             <ul className="mt-4 list-disc space-y-2 pl-5 text-sm text-white/70">
               <li>No contempla inflación, impuestos, comisiones ni devaluación.</li>
-              <li>Asume que la tasa se mantiene constante durante todo el período.</li>
+              <li>Asume que la tasa se mantiene constante en cada escenario.</li>
               <li>Los aportes mensuales se consideran al final de cada mes.</li>
-              <li>No incluye variaciones en el rendimiento mes a mes.</li>
+              <li>La variación de tasas es una simulación simple, no una proyección real de mercado.</li>
               <li>Es una estimación financiera, no una garantía de resultado real.</li>
             </ul>
           </div>
@@ -196,9 +353,8 @@ export default function InteresCompuestoPage() {
             </h2>
             <p className="mt-3 text-white/75">
               Esta calculadora sirve para estimar cuánto podría crecer una
-              inversión con el paso del tiempo. Te ayuda a proyectar el valor
-              futuro, comparar escenarios de aportes mensuales y entender cómo
-              influye la tasa anual en el resultado final.
+              inversión con el paso del tiempo según distintos escenarios de
+              tasa y capitalización.
             </p>
           </div>
 
@@ -209,19 +365,17 @@ export default function InteresCompuestoPage() {
             <p className="mt-3 text-white/75">
               En interés compuesto, el tiempo es una de las variables más
               importantes. Cuanto más años dejes trabajar la inversión, mayor es
-              el efecto acumulado. Por eso empezar antes, aunque sea con aportes
-              más chicos, puede generar una diferencia muy grande a largo plazo.
+              el efecto acumulado.
             </p>
           </div>
 
           <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
             <h2 className="text-2xl font-semibold">Ejemplo práctico</h2>
             <p className="mt-3 text-white/75">
-              Si invertís $1.000.000 al inicio, aportás $100.000 por mes, obtenés
-              una tasa anual del 12% y mantenés esa estrategia durante varios
-              años, el valor acumulado final va a ser bastante mayor que la suma
-              de tus aportes. Esa diferencia es justamente el efecto del interés
-              compuesto.
+              Si invertís un monto inicial, hacés contribuciones mensuales y
+              mantenés una tasa durante varios años, el valor acumulado final
+              puede superar ampliamente la suma de tus aportes por efecto de la
+              capitalización.
             </p>
           </div>
         </section>

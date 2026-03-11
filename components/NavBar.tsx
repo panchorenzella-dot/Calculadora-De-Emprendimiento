@@ -7,37 +7,39 @@ export default function Navbar() {
   const pathname = usePathname();
 
   const linkClass = (href: string) =>
-    `rounded-xl px-4 py-2 text-sm font-semibold transition ${
+    `text-lg font-semibold transition ${
       pathname === href
-        ? "bg-white text-zinc-900"
-        : "bg-white/10 text-white hover:bg-white/20"
+        ? "text-white"
+        : "text-white/70 hover:text-white"
     }`;
 
   return (
     <header className="border-b border-white/10 bg-zinc-950/60 backdrop-blur">
-      <div className="w-full px-4 py-4">
-        <div className="flex items-center justify-between">
-          <Link href="/" className="font-semibold tracking-tight">
-            Calculadora Emprendedora
+      <div className="relative flex items-center px-6 py-4">
+
+        {/* Logo izquierda */}
+        <Link href="/" className="text-lg font-semibold tracking-tight">
+          Calculadora Emprendedora
+        </Link>
+
+        {/* Links centro */}
+        <nav className="absolute left-1/2 flex -translate-x-1/2 gap-10">
+          <Link href="/calculadoras" className={linkClass("/calculadoras")}>
+            Inicio
           </Link>
 
-          <nav className="flex gap-2">
-            <Link href="/" className={linkClass("/")}>
-              Margen
-            </Link>
+          <Link href="/contacto" className={linkClass("/contacto")}>
+            Contacto
+          </Link>
 
-            <Link
-              href="/interes-compuesto"
-              className={linkClass("/interes-compuesto")}
-            >
-              Interés compuesto
-            </Link>
+          <Link
+            href="/politica-de-privacidad"
+            className={linkClass("/politica-privacidad")}
+          >
+            Política de privacidad
+          </Link>
+        </nav>
 
-            <Link href="/markup" className={linkClass("/markup")}>
-              Precio Venta
-            </Link>
-          </nav>
-        </div>
       </div>
     </header>
   );
