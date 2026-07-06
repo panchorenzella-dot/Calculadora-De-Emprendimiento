@@ -4,8 +4,8 @@ export default function AppLayout({
   children: React.ReactNode;
 }) {
   return (
-    <main className="min-h-screen bg-zinc-950 text-white">
-      <div className="mx-auto w-full max-w-5xl px-4 py-10">
+    <main className="min-h-screen bg-zinc-950 pt-20 text-white sm:pt-16">
+      <div className="mx-auto w-full max-w-5xl px-4 pb-10">
         {children}
       </div>
     </main>

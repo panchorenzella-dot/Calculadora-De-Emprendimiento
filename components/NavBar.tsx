@@ -22,24 +22,6 @@ export default function Navbar() {
           Calculadora Emprendedora
         </Link>
 
-        {/* Links centro */}
-        <nav className="absolute left-1/2 flex -translate-x-1/2 gap-10">
-          <Link href="/calculadoras" className={linkClass("/calculadoras")}>
-            Inicio
-          </Link>
-
-          <Link href="/contacto" className={linkClass("/contacto")}>
-            Contacto
-          </Link>
-
-          <Link
-            href="/politica-de-privacidad"
-            className={linkClass("/politica-privacidad")}
-          >
-            Política de privacidad
-          </Link>
-        </nav>
-
       </div>
     </header>
   );
