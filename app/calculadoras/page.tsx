@@ -88,31 +88,44 @@ const secciones: Section[] = [
         tags: ["interés compuesto", "inversión", "ahorro", "capital"],
       },
       {
-        title: "Ahorro mensual",
+        title: "Inversion con Aporte Mensual",
         description:
-          "Calculá cuánto podés juntar según tu aporte mensual, plazo y objetivo.",
-        idealFor: "Personas que quieren ahorrar con metas claras",
-        href: "",
+          "Calculá cuánto podés juntar invirtiendo todos los meses.",
+        idealFor: "Ideal para planificar inversiones mensuales en pesos o dólares.",
+        href: "/aporte-mensual",
         tags: ["ahorro", "mensual", "meta", "inversión"],
-        comingSoon: true,
       },
       {
         title: "ROI de inversión",
         description:
           "Medí cuánto rinde una inversión comparando capital inicial y resultado final.",
         idealFor: "Inversiones personales y proyectos",
-        href: "",
+        href: "/roi-inversion",
         tags: ["roi", "inversión", "retorno", "capital"],
-        comingSoon: true,
       },
       {
         title: "Recupero de capital",
         description:
           "Calculá cuánto tardás en recuperar el dinero invertido en un activo o proyecto.",
         idealFor: "Inversores y emprendedores",
-        href: "",
+        href: "/recupero-capital",
         tags: ["recupero", "capital", "inversión", "retorno"],
-        comingSoon: true,
+      },
+            {
+        title: "Meta de Ahorro",
+        description:
+          "Calculá cuánto necesitás ahorrar por mes.",
+        idealFor: "Ideal para planificar una meta de ahorro.",
+        href: "/meta-ahorro",
+        tags: ["ahorro", "mensual", "meta", "inversión"],
+      },
+            {
+        title: "Rendimiento Real",
+        description:
+          "Calculá si realmente ganaste después de la inflación.",
+        idealFor: "Ideal para medir el poder de compra de una inversión.",
+        href: "/rendimiento-real",
+        tags: ["ahorro", "mensual", "meta", "inversión"],
       },
     ],
   },
@@ -296,7 +309,6 @@ export default function CalculadorasPage() {
                   if (calc.comingSoon || !calc.href) {
                     return <div key={calc.title}>{cardContent}</div>;
                   }
-
                   return (
                     <Link key={calc.href} href={calc.href}>
                       {cardContent}

@@ -3,45 +3,21 @@
 import { type FormEvent, type ReactNode, useState } from "react";
 
 type Currency = "ARS" | "USD";
-type Frequency = "annual" | "monthly" | "daily";
 
 type Results = {
-  valorFuturo: number;
-  totalAportado: number;
-  interesGanado: number;
+  capitalFinal: number;
+  totalInvertido: number;
+  gananciaGenerada: number;
   rendimientoTotal: number;
-  mesesTotales: number;
+  aportesRealizados: number;
+  aportePromedio: number;
+  ultimoAporteMensual: number;
   escenarioConservador: number;
   escenarioEstimado: number;
   escenarioOptimista: number;
   tasaConservadora: number;
   tasaEstimada: number;
   tasaOptimista: number;
-};
-
-const frequencies: Record<
-  Frequency,
-  {
-    label: string;
-    periodsPerYear: number;
-    helper: string;
-  }
-> = {
-  annual: {
-    label: "Anual",
-    periodsPerYear: 1,
-    helper: "El interés se capitaliza una vez por año.",
-  },
-  monthly: {
-    label: "Mensual",
-    periodsPerYear: 12,
-    helper: "El interés se capitaliza todos los meses.",
-  },
-  daily: {
-    label: "Diaria",
-    periodsPerYear: 365,
-    helper: "El interés se capitaliza todos los días.",
-  },
 };
 
 function parseInput(value: string) {
@@ -72,104 +48,123 @@ function formatPercent(value: number) {
   return `${safeValue.toFixed(2)} %`;
 }
 
-function calculateCompoundInterest({
-  inversionInicial,
+function simulateMonthlyInvestment({
+  capitalInicial,
   aporteMensual,
   anos,
-  tasaAnual,
-  frecuencia,
+  rendimientoAnual,
+  aumentoAnualAporte,
 }: {
-  inversionInicial: number;
+  capitalInicial: number;
   aporteMensual: number;
   anos: number;
-  tasaAnual: number;
-  frecuencia: Frequency;
+  rendimientoAnual: number;
+  aumentoAnualAporte: number;
 }) {
-  const safeInversionInicial = Math.max(0, inversionInicial);
+  const safeCapitalInicial = Math.max(0, capitalInicial);
   const safeAporteMensual = Math.max(0, aporteMensual);
   const safeAnos = Math.max(0, anos);
-  const safeTasaAnual = Math.max(0, tasaAnual);
+  const safeRendimientoAnual = Math.max(0, rendimientoAnual);
+  const safeAumentoAnualAporte = Math.max(0, aumentoAnualAporte);
 
   const mesesTotales = Math.round(safeAnos * 12);
-  const periodsPerYear = frequencies[frecuencia].periodsPerYear;
-  const tasaAnualDecimal = safeTasaAnual / 100;
+  const tasaMensual = Math.pow(1 + safeRendimientoAnual / 100, 1 / 12) - 1;
+  const aumentoAporteDecimal = safeAumentoAnualAporte / 100;
 
-  const tasaPorPeriodo = tasaAnualDecimal / periodsPerYear;
-  const tasaMensualEquivalente =
-    Math.pow(1 + tasaPorPeriodo, periodsPerYear / 12) - 1;
-
-  let saldo = safeInversionInicial;
+  let saldo = safeCapitalInicial;
+  let aporteActual = safeAporteMensual;
+  let totalInvertido = safeCapitalInicial;
+  let sumaAportesMensuales = 0;
+  let aportesRealizados = 0;
+  let ultimoAporteMensual = 0;
 
   for (let mes = 1; mes <= mesesTotales; mes++) {
-    saldo = saldo * (1 + tasaMensualEquivalente);
-    saldo = saldo + safeAporteMensual;
+    saldo = saldo * (1 + tasaMensual);
+
+    saldo = saldo + aporteActual;
+    totalInvertido = totalInvertido + aporteActual;
+    sumaAportesMensuales = sumaAportesMensuales + aporteActual;
+    aportesRealizados = aportesRealizados + 1;
+    ultimoAporteMensual = aporteActual;
+
+    if (mes % 12 === 0) {
+      aporteActual = aporteActual * (1 + aumentoAporteDecimal);
+    }
   }
 
-  return saldo;
+  const gananciaGenerada = saldo - totalInvertido;
+
+  const rendimientoTotal =
+    totalInvertido > 0 ? (gananciaGenerada / totalInvertido) * 100 : 0;
+
+  const aportePromedio =
+    aportesRealizados > 0 ? sumaAportesMensuales / aportesRealizados : 0;
+
+  return {
+    capitalFinal: saldo,
+    totalInvertido,
+    gananciaGenerada,
+    rendimientoTotal,
+    aportesRealizados,
+    aportePromedio,
+    ultimoAporteMensual,
+  };
 }
 
 function calculateResults({
-  inversionInicial,
+  capitalInicial,
   aporteMensual,
   anos,
-  tasaAnual,
-  frecuencia,
+  rendimientoAnual,
+  aumentoAnualAporte,
 }: {
-  inversionInicial: number;
+  capitalInicial: number;
   aporteMensual: number;
   anos: number;
-  tasaAnual: number;
-  frecuencia: Frequency;
+  rendimientoAnual: number;
+  aumentoAnualAporte: number;
 }): Results {
-  const safeTasaAnual = Math.max(0, tasaAnual);
+  const safeRendimientoAnual = Math.max(0, rendimientoAnual);
 
-  const tasaConservadora = Math.max(0, safeTasaAnual - 5);
-  const tasaEstimada = safeTasaAnual;
-  const tasaOptimista = safeTasaAnual + 5;
+  const tasaConservadora = Math.max(0, safeRendimientoAnual - 5);
+  const tasaEstimada = safeRendimientoAnual;
+  const tasaOptimista = safeRendimientoAnual + 5;
 
-  const valorFuturo = calculateCompoundInterest({
-    inversionInicial,
+  const conservador = simulateMonthlyInvestment({
+    capitalInicial,
     aporteMensual,
     anos,
-    tasaAnual: tasaEstimada,
-    frecuencia,
+    rendimientoAnual: tasaConservadora,
+    aumentoAnualAporte,
   });
 
-  const escenarioConservador = calculateCompoundInterest({
-    inversionInicial,
+  const estimado = simulateMonthlyInvestment({
+    capitalInicial,
     aporteMensual,
     anos,
-    tasaAnual: tasaConservadora,
-    frecuencia,
+    rendimientoAnual: tasaEstimada,
+    aumentoAnualAporte,
   });
 
-  const escenarioOptimista = calculateCompoundInterest({
-    inversionInicial,
+  const optimista = simulateMonthlyInvestment({
+    capitalInicial,
     aporteMensual,
     anos,
-    tasaAnual: tasaOptimista,
-    frecuencia,
+    rendimientoAnual: tasaOptimista,
+    aumentoAnualAporte,
   });
-
-  const mesesTotales = Math.round(Math.max(0, anos) * 12);
-
-  const totalAportado =
-    Math.max(0, inversionInicial) + Math.max(0, aporteMensual) * mesesTotales;
-
-  const interesGanado = valorFuturo - totalAportado;
-
-  const rendimientoTotal =
-    totalAportado > 0 ? (interesGanado / totalAportado) * 100 : 0;
 
   return {
-    valorFuturo,
-    totalAportado,
-    interesGanado,
-    rendimientoTotal,
-    mesesTotales,
-    escenarioConservador,
-    escenarioEstimado: valorFuturo,
-    escenarioOptimista,
+    capitalFinal: estimado.capitalFinal,
+    totalInvertido: estimado.totalInvertido,
+    gananciaGenerada: estimado.gananciaGenerada,
+    rendimientoTotal: estimado.rendimientoTotal,
+    aportesRealizados: estimado.aportesRealizados,
+    aportePromedio: estimado.aportePromedio,
+    ultimoAporteMensual: estimado.ultimoAporteMensual,
+    escenarioConservador: conservador.capitalFinal,
+    escenarioEstimado: estimado.capitalFinal,
+    escenarioOptimista: optimista.capitalFinal,
     tasaConservadora,
     tasaEstimada,
     tasaOptimista,
@@ -215,7 +210,7 @@ function InputField({
           placeholder="0"
           className={`w-full appearance-none rounded-2xl border border-zinc-800 bg-zinc-950 py-3 text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-zinc-500 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
             prefix ? "pl-9" : "pl-4"
-          } ${suffix ? "pr-12" : "pr-4"}`}
+          } ${suffix ? "pr-14" : "pr-4"}`}
         />
 
         {suffix && (
@@ -293,7 +288,7 @@ function ScenarioCard({
         <div>
           <p className="font-semibold text-zinc-100">{title}</p>
           <p className="mt-1 text-sm text-zinc-500">
-            Tasa anual: {formatPercent(rate)}
+            Rendimiento anual: {formatPercent(rate)}
           </p>
         </div>
 
@@ -324,14 +319,14 @@ function SeoSection({
   );
 }
 
-export default function InteresCompuestoPage() {
+export default function InversionConAportesMensualesPage() {
   const [currency, setCurrency] = useState<Currency>("ARS");
 
-  const [inversionInicial, setInversionInicial] = useState("");
+  const [capitalInicial, setCapitalInicial] = useState("");
   const [aporteMensual, setAporteMensual] = useState("");
   const [anos, setAnos] = useState("");
-  const [tasaAnual, setTasaAnual] = useState("");
-  const [frecuencia, setFrecuencia] = useState<Frequency>("monthly");
+  const [rendimientoAnual, setRendimientoAnual] = useState("");
+  const [aumentoAnualAporte, setAumentoAnualAporte] = useState("");
 
   const [results, setResults] = useState<Results | null>(null);
 
@@ -340,28 +335,31 @@ export default function InteresCompuestoPage() {
   function handleCalculate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const inversionInicialNumber = parseInput(inversionInicial);
+    const capitalInicialNumber = parseInput(capitalInicial);
     const aporteMensualNumber = parseInput(aporteMensual);
     const anosNumber = parseInput(anos);
-    const tasaAnualNumber = parseInput(tasaAnual);
+    const rendimientoAnualNumber = parseInput(rendimientoAnual);
+    const aumentoAnualAporteNumber = parseInput(aumentoAnualAporte);
 
     const calculatedResults = calculateResults({
-      inversionInicial: inversionInicialNumber,
+      capitalInicial: capitalInicialNumber,
       aporteMensual: aporteMensualNumber,
       anos: anosNumber,
-      tasaAnual: tasaAnualNumber,
-      frecuencia,
+      rendimientoAnual: rendimientoAnualNumber,
+      aumentoAnualAporte: aumentoAnualAporteNumber,
     });
 
     setResults(calculatedResults);
   }
 
   const emptyResults: Results = {
-    valorFuturo: 0,
-    totalAportado: 0,
-    interesGanado: 0,
+    capitalFinal: 0,
+    totalInvertido: 0,
+    gananciaGenerada: 0,
     rendimientoTotal: 0,
-    mesesTotales: 0,
+    aportesRealizados: 0,
+    aportePromedio: 0,
+    ultimoAporteMensual: 0,
     escenarioConservador: 0,
     escenarioEstimado: 0,
     escenarioOptimista: 0,
@@ -382,11 +380,13 @@ export default function InteresCompuestoPage() {
           </p>
 
           <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
-            Interés compuesto
+            Inversión con aportes mensuales
           </h1>
 
           <p className="mt-4 max-w-3xl text-lg leading-relaxed text-zinc-400">
-            Calculá cuánto puede crecer una inversión con el paso del tiempo.
+            Calculá cuánto podés juntar invirtiendo todos los meses, con una
+            inversión inicial, aportes mensuales, rendimiento anual estimado y
+            aumento anual del aporte.
           </p>
         </section>
 
@@ -433,19 +433,27 @@ export default function InteresCompuestoPage() {
 
                 <div className="space-y-4">
                   <InputField
-                    label="Inversión inicial"
-                    value={inversionInicial}
-                    onChange={setInversionInicial}
+                    label="Capital inicial"
+                    value={capitalInicial}
+                    onChange={setCapitalInicial}
                     prefix={moneyPrefix}
-                    helper="Es el dinero con el que empezás la inversión o simulación."
+                    helper="Es el dinero con el que empezás la inversión."
                   />
 
                   <InputField
-                    label="Aporte mensual"
+                    label="Aporte mensual inicial"
                     value={aporteMensual}
                     onChange={setAporteMensual}
                     prefix={moneyPrefix}
-                    helper="Es el monto que pensás sumar todos los meses. Si no vas a aportar, dejalo en 0."
+                    helper="Es el monto que pensás invertir todos los meses al comienzo."
+                  />
+
+                  <InputField
+                    label="Aumento anual del aporte"
+                    value={aumentoAnualAporte}
+                    onChange={setAumentoAnualAporte}
+                    suffix="%"
+                    helper="Opcional. Sirve para simular que cada año aumentás tu aporte mensual. Si no aplica, dejalo en 0."
                   />
                 </div>
               </div>
@@ -461,43 +469,16 @@ export default function InteresCompuestoPage() {
                     value={anos}
                     onChange={setAnos}
                     suffix="años"
-                    helper="Cantidad de años que pensás mantener la inversión."
+                    helper="Cantidad de años que pensás invertir todos los meses."
                   />
 
                   <InputField
-                    label="Tasa anual estimada"
-                    value={tasaAnual}
-                    onChange={setTasaAnual}
+                    label="Rendimiento anual estimado"
+                    value={rendimientoAnual}
+                    onChange={setRendimientoAnual}
                     suffix="%"
-                    helper="Ingresá una tasa anual estimada. Por ejemplo: 10, 20, 30 o 50."
+                    helper="Ingresá un rendimiento anual estimado. Por ejemplo: 10, 20, 30 o 50."
                   />
-
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-zinc-200">
-                      Capitalización
-                    </label>
-
-                    <div className="grid gap-3 sm:grid-cols-3">
-                      {(Object.keys(frequencies) as Frequency[]).map((item) => (
-                        <button
-                          key={item}
-                          type="button"
-                          onClick={() => setFrecuencia(item)}
-                          className={`rounded-2xl border px-4 py-3 text-left text-sm font-medium transition ${
-                            frecuencia === item
-                              ? "border-zinc-500 bg-white text-black"
-                              : "border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-zinc-600 hover:text-white"
-                          }`}
-                        >
-                          {frequencies[item].label}
-                        </button>
-                      ))}
-                    </div>
-
-                    <p className="mt-2 text-xs leading-relaxed text-zinc-500">
-                      {frequencies[frecuencia].helper}
-                    </p>
-                  </div>
                 </div>
               </div>
 
@@ -521,21 +502,21 @@ export default function InteresCompuestoPage() {
 
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               <ResultCard
-                title="Valor futuro estimado"
-                value={formatMoney(displayedResults.valorFuturo, currency)}
+                title="Capital final estimado"
+                value={formatMoney(displayedResults.capitalFinal, currency)}
                 muted={isMuted}
                 highlight
               />
 
               <ResultCard
-                title="Total aportado"
-                value={formatMoney(displayedResults.totalAportado, currency)}
+                title="Total invertido"
+                value={formatMoney(displayedResults.totalInvertido, currency)}
                 muted={isMuted}
               />
 
               <ResultCard
-                title="Interés ganado"
-                value={formatMoney(displayedResults.interesGanado, currency)}
+                title="Ganancia generada"
+                value={formatMoney(displayedResults.gananciaGenerada, currency)}
                 muted={isMuted}
               />
 
@@ -546,20 +527,40 @@ export default function InteresCompuestoPage() {
               />
 
               <ResultCard
-                title="Meses invertidos"
-                value={`${formatNumber(displayedResults.mesesTotales)} meses`}
+                title="Aportes realizados"
+                value={`${formatNumber(displayedResults.aportesRealizados)} aportes`}
                 muted={isMuted}
               />
 
               <ResultCard
-                title="Capitalización elegida"
-                value={frequencies[frecuencia].label}
+                title="Aporte mensual promedio"
+                value={formatMoney(displayedResults.aportePromedio, currency)}
+                muted={isMuted}
+              />
+
+              <ResultCard
+                title="Último aporte mensual"
+                value={formatMoney(
+                  displayedResults.ultimoAporteMensual,
+                  currency
+                )}
+                muted={isMuted}
+              />
+
+              <ResultCard
+                title="Tipo de cálculo"
+                value="Aportes mensuales"
                 muted={isMuted}
               />
             </div>
 
             <div className="mt-8">
               <h3 className="text-xl font-bold">Escenarios</h3>
+
+              <p className="mt-2 text-sm leading-relaxed text-zinc-500">
+                Simulación con un rendimiento anual 5 puntos menor, el
+                rendimiento ingresado y un rendimiento 5 puntos mayor.
+              </p>
 
               <div className="mt-5 grid gap-4">
                 <ScenarioCard
@@ -602,35 +603,38 @@ export default function InteresCompuestoPage() {
 
           <ul className="mt-4 space-y-2 text-sm leading-relaxed text-zinc-400">
             <li>
-              • Total aportado = inversión inicial + aporte mensual × cantidad
-              de meses.
+              • Se parte del capital inicial y del aporte mensual inicial.
             </li>
             <li>
-              • La tasa anual estimada se convierte en una tasa mensual
-              equivalente según la capitalización elegida.
+              • El rendimiento anual estimado se convierte en una tasa mensual
+              equivalente.
             </li>
             <li>
               • Cada mes se aplica el rendimiento sobre el saldo acumulado.
             </li>
             <li>
-              • Después de aplicar el rendimiento mensual, se suma el aporte
-              mensual.
+              • Luego se suma el aporte mensual correspondiente a ese mes.
             </li>
             <li>
-              • Valor futuro = saldo final acumulado al terminar el período.
+              • Si ingresaste un aumento anual del aporte, el aporte mensual
+              crece una vez por año.
             </li>
             <li>
-              • Interés ganado = valor futuro − total aportado.
+              • Total invertido = capital inicial + todos los aportes mensuales
+              realizados.
             </li>
             <li>
-              • Rendimiento total = interés ganado / total aportado × 100.
+              • Ganancia generada = capital final estimado − total invertido.
             </li>
             <li>
-              • Escenario conservador = tasa anual estimada − 5 puntos
+              • Rendimiento total = ganancia generada / total invertido × 100.
+            </li>
+            <li>
+              • Escenario conservador = rendimiento anual estimado − 5 puntos
               porcentuales.
             </li>
             <li>
-              • Escenario optimista = tasa anual estimada + 5 puntos
+              • Escenario optimista = rendimiento anual estimado + 5 puntos
               porcentuales.
             </li>
           </ul>
@@ -649,10 +653,7 @@ export default function InteresCompuestoPage() {
               devaluación.
             </li>
             <li>
-              • La tasa anual puede cambiar con el tiempo.
-            </li>
-            <li>
-              • Los aportes mensuales se consideran al final de cada mes.
+              • El rendimiento anual puede cambiar con el tiempo.
             </li>
             <li>
               • No contempla retiros parciales durante el período.
@@ -661,8 +662,10 @@ export default function InteresCompuestoPage() {
               • No mide riesgo, volatilidad ni probabilidad de pérdida.
             </li>
             <li>
-              • Los escenarios son estimaciones simples para comparar posibles
-              resultados.
+              • Los aportes mensuales se consideran al final de cada mes.
+            </li>
+            <li>
+              • El aumento anual del aporte es una estimación simple.
             </li>
             <li>
               • Los resultados son una simulación matemática, no asesoramiento
@@ -672,110 +675,110 @@ export default function InteresCompuestoPage() {
         </section>
 
         <section className="mt-10 space-y-8 rounded-3xl border border-zinc-800 bg-zinc-950 p-6 leading-relaxed text-zinc-400">
-          <SeoSection title="Calculadora de interés compuesto">
+          <SeoSection title="Calculadora de inversión con aportes mensuales">
             <p>
-              Esta calculadora de interés compuesto permite estimar cuánto puede
-              crecer una inversión con el paso del tiempo. Podés cargar una
-              inversión inicial, un aporte mensual, una tasa anual estimada y la
-              cantidad de años para proyectar el valor futuro de tu capital.
+              Esta calculadora de inversión con aportes mensuales permite
+              estimar cuánto podés acumular si invertís dinero todos los meses.
+              Podés ingresar un capital inicial, un aporte mensual, un plazo en
+              años, un rendimiento anual estimado y un posible aumento anual del
+              aporte.
             </p>
 
             <p>
-              La herramienta también muestra el total aportado, el interés
-              ganado, el rendimiento total y tres escenarios posibles:
-              conservador, estimado y optimista. Esto ayuda a comparar cómo
-              cambia el resultado cuando la tasa anual es menor o mayor a la
-              esperada.
-            </p>
-          </SeoSection>
-
-          <SeoSection title="Qué es el interés compuesto">
-            <p>
-              El interés compuesto es el crecimiento que se genera cuando los
-              intereses obtenidos se reinvierten y empiezan también a generar
-              nuevos intereses. Es decir, el rendimiento no se calcula siempre
-              sobre el capital inicial, sino sobre un saldo acumulado que va
-              creciendo con el tiempo.
-            </p>
-
-            <p>
-              Por eso, el interés compuesto suele tener más impacto cuanto más
-              largo es el plazo. En una inversión de pocos meses, el efecto puede
-              ser limitado. En cambio, en varios años, la diferencia entre
-              aportar y reinvertir puede volverse mucho más importante.
+              La herramienta muestra el capital final estimado, el total
+              invertido de tu bolsillo, la ganancia generada, el rendimiento
+              total, la cantidad de aportes realizados y distintos escenarios de
+              rendimiento.
             </p>
           </SeoSection>
 
           <SeoSection title="Para qué sirve esta calculadora">
             <p>
-              Esta calculadora sirve para planificar inversiones, objetivos de
-              ahorro o simulaciones financieras. Puede usarse para estimar cuánto
-              podrías juntar si invertís una suma inicial y además sumás dinero
-              todos los meses.
+              Esta calculadora sirve para planificar una estrategia de inversión
+              mensual. Es útil para personas que quieren invertir todos los
+              meses, ahorrar a largo plazo, proyectar capital futuro o comparar
+              distintos niveles de aporte.
             </p>
 
             <p>
-              También puede servir para comparar diferentes estrategias. Por
-              ejemplo, podés probar qué pasa si aumentás el aporte mensual, si
-              extendés el plazo, si bajás la tasa anual o si cambiás la
-              frecuencia de capitalización.
+              También puede servir para responder preguntas simples como cuánto
+              podrías juntar invirtiendo $50.000 por mes, cuánto impacta aumentar
+              el aporte todos los años o qué diferencia hay entre invertir
+              durante 3, 5, 10 o más años.
             </p>
           </SeoSection>
 
-          <SeoSection title="Qué significa el valor futuro">
+          <SeoSection title="Qué diferencia tiene con una calculadora de interés compuesto">
             <p>
-              El valor futuro es el monto estimado que podrías tener al final del
-              período elegido. Incluye la inversión inicial, todos los aportes
-              mensuales y los intereses acumulados durante el plazo.
+              Una calculadora de interés compuesto suele enfocarse en el
+              crecimiento de un capital inicial con una tasa determinada. Esta
+              calculadora, en cambio, pone el foco en el hábito de invertir todos
+              los meses.
             </p>
 
             <p>
-              Este resultado no debe interpretarse como una ganancia garantizada.
-              Es una proyección basada en los datos ingresados. En una inversión
-              real, el resultado puede variar por cambios de tasa, inflación,
-              comisiones, impuestos, riesgo del activo o movimientos del mercado.
-            </p>
-          </SeoSection>
-
-          <SeoSection title="Diferencia entre total aportado e interés ganado">
-            <p>
-              El total aportado es la suma del dinero que pusiste de tu bolsillo:
-              inversión inicial más todos los aportes mensuales. El interés
-              ganado, en cambio, es la diferencia entre el valor futuro y ese
-              total aportado.
-            </p>
-
-            <p>
-              Separar estos dos datos es importante porque permite entender qué
-              parte del capital final viene de tus propios aportes y qué parte
-              viene del rendimiento generado por la inversión.
+              Por eso incluye datos como el aporte mensual, la cantidad total de
+              aportes, el aporte promedio y el aumento anual del aporte. Es una
+              herramienta más orientada a planificar una inversión constante en
+              el tiempo.
             </p>
           </SeoSection>
 
-          <SeoSection title="Ejemplo práctico de interés compuesto">
+          <SeoSection title="Qué significa el capital final estimado">
             <p>
-              Supongamos que una persona empieza con una inversión inicial de
-              $100.000, aporta $20.000 por mes durante 5 años y estima una tasa
-              anual del 30 %. La calculadora proyecta cuánto podría acumular al
-              final del período y separa el total aportado del interés ganado.
+              El capital final estimado es el monto que podrías tener al terminar
+              el plazo elegido. Incluye el capital inicial, todos los aportes
+              mensuales realizados y la ganancia generada por el rendimiento
+              anual estimado.
             </p>
 
             <p>
-              En los primeros meses, la mayor parte del crecimiento suele venir
-              de los aportes mensuales. Pero con el paso del tiempo, el saldo
-              acumulado crece y los intereses empiezan a tener un peso mayor en
-              el resultado final.
+              Este resultado es una proyección matemática. No significa que la
+              inversión vaya a dar exactamente ese resultado, porque en la vida
+              real pueden existir cambios de tasa, comisiones, inflación,
+              impuestos o variaciones del mercado.
             </p>
           </SeoSection>
 
-          <SeoSection title="Errores comunes al calcular interés compuesto">
+          <SeoSection title="Qué significa el total invertido">
+            <p>
+              El total invertido es la suma de todo el dinero que aportaste de tu
+              bolsillo. Incluye el capital inicial y todos los aportes mensuales
+              realizados durante el plazo elegido.
+            </p>
+
+            <p>
+              Separar el total invertido de la ganancia generada es importante
+              porque permite ver cuánto del capital final corresponde a tus
+              aportes y cuánto corresponde al rendimiento de la inversión.
+            </p>
+          </SeoSection>
+
+          <SeoSection title="Ejemplo práctico">
+            <p>
+              Supongamos que una persona empieza con $100.000, invierte $50.000
+              por mes durante 5 años y estima un rendimiento anual del 20 %. La
+              calculadora proyecta el capital final y separa cuánto fue dinero
+              aportado y cuánto fue ganancia generada.
+            </p>
+
+            <p>
+              Si además esa persona aumenta su aporte mensual cada año, el
+              capital final puede crecer más rápido. Por eso el campo de aumento
+              anual del aporte sirve para simular una estrategia más realista,
+              especialmente cuando los ingresos o la capacidad de ahorro crecen
+              con el tiempo.
+            </p>
+          </SeoSection>
+
+          <SeoSection title="Errores comunes al proyectar aportes mensuales">
             <ul className="space-y-2">
-              <li>• Confundir tasa anual con tasa mensual.</li>
-              <li>• Creer que una tasa estimada se mantiene fija para siempre.</li>
+              <li>• Pensar que el rendimiento anual está garantizado.</li>
               <li>• No considerar inflación, impuestos o comisiones.</li>
-              <li>• Confundir el total aportado con la ganancia real.</li>
+              <li>• Confundir capital final con ganancia neta.</li>
+              <li>• No separar el total invertido de la ganancia generada.</li>
+              <li>• Estimar aportes mensuales que después no se pueden sostener.</li>
               <li>• No tener en cuenta que toda inversión puede tener riesgo.</li>
-              <li>• Pensar que el resultado proyectado está garantizado.</li>
             </ul>
           </SeoSection>
 
@@ -785,39 +788,28 @@ export default function InteresCompuestoPage() {
             </h3>
 
             <p className="mt-2">
-              Sí. Podés usarla tanto para pesos argentinos como para dólares. La
+              Sí. Podés usarla tanto en pesos argentinos como en dólares. La
               lógica del cálculo es la misma; lo que cambia es la moneda en la
               que interpretás los resultados.
             </p>
 
             <h3 className="mt-5 text-lg font-semibold text-white">
-              ¿La tasa anual está garantizada?
+              ¿Qué pasa si no tengo capital inicial?
             </h3>
 
             <p className="mt-2">
-              No. La tasa anual es una estimación. En una inversión real puede
-              cambiar por inflación, mercado, riesgo, comisiones, impuestos o
-              variaciones del instrumento elegido.
+              Podés dejar el capital inicial en cero. En ese caso, la
+              calculadora proyecta el crecimiento solamente a partir de los
+              aportes mensuales.
             </p>
 
             <h3 className="mt-5 text-lg font-semibold text-white">
-              ¿Qué pasa si no hago aportes mensuales?
+              ¿Qué pasa si no quiero aumentar el aporte todos los años?
             </h3>
 
             <p className="mt-2">
-              Podés dejar el aporte mensual en cero. En ese caso, la calculadora
-              proyecta solamente el crecimiento de la inversión inicial.
-            </p>
-
-            <h3 className="mt-5 text-lg font-semibold text-white">
-              ¿Qué capitalización conviene elegir?
-            </h3>
-
-            <p className="mt-2">
-              Depende de cómo se comporte la inversión que querés simular. Si los
-              intereses se reinvierten una vez por año, elegí capitalización
-              anual. Si se reinvierten todos los meses, elegí mensual. Si querés
-              una simulación más frecuente, podés elegir diaria.
+              Podés dejar el aumento anual del aporte en cero. En ese caso, la
+              calculadora considera que aportás siempre el mismo monto mensual.
             </p>
 
             <h3 className="mt-5 text-lg font-semibold text-white">
@@ -825,9 +817,18 @@ export default function InteresCompuestoPage() {
             </h3>
 
             <p className="mt-2">
-              No. Esta calculadora muestra una estimación nominal. Eso significa
-              que no descuenta inflación, impuestos, comisiones ni cambios en el
-              poder de compra.
+              No. Esta calculadora muestra una estimación nominal. No descuenta
+              inflación, impuestos, comisiones ni cambios en el poder de compra.
+            </p>
+
+            <h3 className="mt-5 text-lg font-semibold text-white">
+              ¿Es una recomendación de inversión?
+            </h3>
+
+            <p className="mt-2">
+              No. Es una herramienta de simulación. Sirve para hacer cálculos y
+              comparar escenarios, pero no reemplaza el análisis financiero ni el
+              asesoramiento profesional.
             </p>
           </SeoSection>
         </section>
