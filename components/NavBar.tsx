@@ -14,7 +14,7 @@ export default function Navbar() {
 
   const linkClass = (href: string) =>
     `whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition ${
-      pathname === href || (href === "/" && pathname === "/calculadoras")
+      pathname === href
         ? "bg-white/10 text-white"
         : "text-white/65 hover:bg-white/5 hover:text-white"
     }`;
@@ -35,7 +35,7 @@ export default function Navbar() {
 
               <p className="mt-1 max-w-2xl text-sm leading-5 text-white/55">
                 Herramientas simples para calcular precios, ganancias,
-                inversion y rentabilidad.
+                inversión y rentabilidad.
               </p>
             </div>
           </Link>

@@ -305,28 +305,49 @@ export default function CalculadorasPage() {
             </div>
           </div>
 
-          <div className="grid gap-4 px-5 py-5 text-sm text-white/60 sm:grid-cols-3 sm:px-8">
-            <div>
-              <span className="block text-2xl font-semibold text-white">
-                {secciones.length}
-              </span>
-              Categorías principales
+          <div className="grid gap-3 px-5 py-5 sm:grid-cols-3 sm:px-8">
+            <div className="rounded-2xl border border-white/10 bg-zinc-950/55 p-4 shadow-lg shadow-black/10">
+              <p className="text-xs font-medium uppercase tracking-[0.16em] text-white/38">
+                Categorías
+              </p>
+              <div className="mt-3 flex items-end justify-between gap-3">
+                <span className="text-3xl font-semibold tracking-tight text-white">
+                  {secciones.length}
+                </span>
+                <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-medium text-white/55">
+                  principales
+                </span>
+              </div>
             </div>
 
-            <div>
-              <span className="block text-2xl font-semibold text-white">
-                {secciones
-                  .flatMap((section) => section.calculators)
-                  .filter((calc) => !calc.comingSoon).length}
-              </span>
-              Calculadoras disponibles
+            <div className="rounded-2xl border border-white/10 bg-zinc-950/55 p-4 shadow-lg shadow-black/10">
+              <p className="text-xs font-medium uppercase tracking-[0.16em] text-white/38">
+                Disponibles
+              </p>
+              <div className="mt-3 flex items-end justify-between gap-3">
+                <span className="text-3xl font-semibold tracking-tight text-white">
+                  {secciones
+                    .flatMap((section) => section.calculators)
+                    .filter((calc) => !calc.comingSoon).length}
+                </span>
+                <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-medium text-white/55">
+                  online
+                </span>
+              </div>
             </div>
 
-            <div>
-              <span className="block text-2xl font-semibold text-white">
-                {comingSoonCalculators.length}
-              </span>
-              Próximas herramientas
+            <div className="rounded-2xl border border-white/10 bg-zinc-950/55 p-4 shadow-lg shadow-black/10">
+              <p className="text-xs font-medium uppercase tracking-[0.16em] text-white/38">
+                Próximas
+              </p>
+              <div className="mt-3 flex items-end justify-between gap-3">
+                <span className="text-3xl font-semibold tracking-tight text-white">
+                  {comingSoonCalculators.length}
+                </span>
+                <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-medium text-white/55">
+                  en desarrollo
+                </span>
+              </div>
             </div>
           </div>
         </section>
