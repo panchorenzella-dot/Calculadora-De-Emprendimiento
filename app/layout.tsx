@@ -15,30 +15,31 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://calculadoraemprendedora.com"),
+  metadataBase: new URL("https://www.calculadoraemprendedora.com"),
+
   title: {
-    default: "Calculadora de Margen de Ganancia | Calculadora Emprendedora",
+    default: "Calculadora Emprendedora",
     template: "%s | Calculadora Emprendedora",
   },
+
   description:
-    "Calculadora de margen de ganancia para emprendedores. Calculá precio, ganancia mensual, punto de equilibrio y recupero de inversión de forma simple.",
-  alternates: {
-    canonical: "/",
-  },
+    "Calculadoras online para emprendedores: margen de ganancia, precio de venta, punto de equilibrio, costos, rentabilidad, inversión y ahorro.",
+
   openGraph: {
-    title: "Calculadora de Margen de Ganancia | Calculadora Emprendedora",
+    title: "Calculadora Emprendedora",
     description:
-      "Calculá margen, ganancia mensual, punto de equilibrio y recupero de inversión para tu negocio.",
-    url: "https://calculadoraemprendedora.com",
+      "Herramientas simples para calcular costos, márgenes, precios, rentabilidad, inversión y ahorro.",
+    url: "https://www.calculadoraemprendedora.com",
     siteName: "Calculadora Emprendedora",
     locale: "es_AR",
     type: "website",
   },
+
   twitter: {
     card: "summary_large_image",
-    title: "Calculadora de Margen de Ganancia | Calculadora Emprendedora",
+    title: "Calculadora Emprendedora",
     description:
-      "Calculá margen, ganancia mensual, punto de equilibrio y recupero de inversión para tu negocio.",
+      "Calculadoras online para emprendedores, negocios, inversión y ahorro.",
   },
 };
 
@@ -54,7 +55,7 @@ export default function RootLayout({
       >
         <div className="min-h-screen flex flex-col">
           <Navbar />
-          <div className="flex-1">{children}</div>
+          <main className="flex-1">{children}</main>
           <Footer />
         </div>
       </body>
