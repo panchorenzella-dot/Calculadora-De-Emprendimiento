@@ -21,7 +21,7 @@ export default function Page() {
     const costos = parseDigitsToNumber(costosTotales);
     const finalValue = parseDigitsToNumber(valorFinal);
 
-    const gananciaNeta = finalValue - inversion - costos;
+    const gananciaNeta = ingresos + finalValue - inversion - costos;
     const roi = inversion > 0 ? (gananciaNeta / inversion) * 100 : 0;
 
     const retornoBruto = finalValue - inversion;

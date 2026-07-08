@@ -5,7 +5,7 @@ export default function AppLayout({
 }) {
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
-      <div className="mx-auto w-full max-w-5xl px-4 pb-10">
+      <div className="mx-auto w-full max-w-5xl px-4 pb-10 pt-6">
         {children}
       </div>
     </main>
