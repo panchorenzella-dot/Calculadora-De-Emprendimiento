@@ -197,37 +197,6 @@ const secciones: Section[] = [
   },
 ];
 
-const seoItems = [
-  {
-    title: "Margen de ganancia",
-    text: "Usala cuando querés saber cuánto te queda después de restar costos y gastos.",
-  },
-  {
-    title: "Precio de venta",
-    text: "Sirve para definir cuánto cobrar sin perder rentabilidad.",
-  },
-  {
-    title: "Punto de equilibrio",
-    text: "Te muestra cuántas unidades necesitás vender para cubrir tus costos.",
-  },
-  {
-    title: "ROI",
-    text: "Ayuda a medir si una inversión devuelve más de lo que costó.",
-  },
-  {
-    title: "Recupero de inversión",
-    text: "Indica cuánto tiempo necesitás para recuperar el capital invertido.",
-  },
-  {
-    title: "Interés compuesto",
-    text: "Es ideal para proyectar crecimiento de capital con el paso del tiempo.",
-  },
-  {
-    title: "Ahorro mensual",
-    text: "Te ayuda a calcular cuánto guardar cada mes para alcanzar una meta.",
-  },
-];
-
 function matchesSearch(calc: Calculator, query: string) {
   const searchableText = [
     calc.title,
@@ -272,21 +241,19 @@ export default function CalculadorasPage() {
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
       <div className="mx-auto max-w-6xl px-4 py-10 sm:py-12">
-        <section className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.035] shadow-2xl shadow-black/20">
-          <div className="border-b border-white/10 px-5 py-8 sm:px-8 sm:py-10">
+        <section className="rounded-2xl border border-white/10 bg-white/[0.035] px-5 py-7 sm:px-8 sm:py-9">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/45">
-              Calculadora Emprendedora
+              Directorio de herramientas
             </p>
 
             <div className="mt-4 grid gap-6 lg:grid-cols-[1fr_360px] lg:items-end">
               <div>
                 <h1 className="max-w-3xl text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                  Las mejores calculadoras para emprendedores
+                  Calculadoras online
                 </h1>
 
-                <p className="mt-4 max-w-2xl text-base leading-7 text-white/65">
-                  Calculá precios, ganancias, costos, inversión y rentabilidad
-                  de tu negocio en minutos.
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-white/60 sm:text-base">
+                  Buscá una herramienta o recorré las categorías disponibles.
                 </p>
               </div>
 
@@ -303,53 +270,6 @@ export default function CalculadorasPage() {
                 />
               </div>
             </div>
-          </div>
-
-          <div className="grid gap-3 px-5 py-5 sm:grid-cols-3 sm:px-8">
-            <div className="rounded-2xl border border-white/10 bg-zinc-950/55 p-4 shadow-lg shadow-black/10">
-              <p className="text-xs font-medium uppercase tracking-[0.16em] text-white/38">
-                Categorías
-              </p>
-              <div className="mt-3 flex items-end justify-between gap-3">
-                <span className="text-3xl font-semibold tracking-tight text-white">
-                  {secciones.length}
-                </span>
-                <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-medium text-white/55">
-                  principales
-                </span>
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-zinc-950/55 p-4 shadow-lg shadow-black/10">
-              <p className="text-xs font-medium uppercase tracking-[0.16em] text-white/38">
-                Disponibles
-              </p>
-              <div className="mt-3 flex items-end justify-between gap-3">
-                <span className="text-3xl font-semibold tracking-tight text-white">
-                  {secciones
-                    .flatMap((section) => section.calculators)
-                    .filter((calc) => !calc.comingSoon).length}
-                </span>
-                <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-medium text-white/55">
-                  online
-                </span>
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-zinc-950/55 p-4 shadow-lg shadow-black/10">
-              <p className="text-xs font-medium uppercase tracking-[0.16em] text-white/38">
-                Próximas
-              </p>
-              <div className="mt-3 flex items-end justify-between gap-3">
-                <span className="text-3xl font-semibold tracking-tight text-white">
-                  {comingSoonCalculators.length}
-                </span>
-                <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-medium text-white/55">
-                  en desarrollo
-                </span>
-              </div>
-            </div>
-          </div>
         </section>
 
         {hasResults ? (
@@ -417,10 +337,8 @@ export default function CalculadorasPage() {
                     Próximas calculadoras
                   </h2>
 
-                  <p className="mt-2 max-w-3xl text-sm leading-6 text-white/60">
-                    Herramientas planificadas para ampliar el catálogo sin
-                    mezclar funciones todavía no disponibles con las calculadoras
-                    listas para usar.
+                  <p className="mt-2 text-sm text-white/60">
+                    Nuevas herramientas que estamos preparando.
                   </p>
                 </div>
 
@@ -466,30 +384,6 @@ export default function CalculadorasPage() {
           </div>
         )}
 
-        <section className="mt-14 rounded-2xl border border-white/10 bg-white/[0.03] p-6 sm:p-8">
-          <h2 className="text-2xl font-bold tracking-tight">
-            ¿Qué calculadora necesito usar?
-          </h2>
-
-          <p className="mt-3 max-w-3xl text-sm leading-6 text-white/62">
-            Cada calculadora responde una pregunta distinta del negocio. Elegí
-            la que mejor se ajuste a la decisión que tenés que tomar.
-          </p>
-
-          <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {seoItems.map((item) => (
-              <div
-                key={item.title}
-                className="rounded-xl border border-white/10 bg-zinc-950/45 p-4"
-              >
-                <h3 className="font-semibold text-white">{item.title}</h3>
-                <p className="mt-2 text-sm leading-6 text-white/62">
-                  {item.text}
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
       </div>
     </main>
   );

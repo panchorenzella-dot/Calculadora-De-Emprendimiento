@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import CalculadorasClient from "./CalculadorasClient";
 
 export const metadata: Metadata = {
-  title: "Calculadoras online",
+  title: { absolute: "Calculadoras online | Calculadora Emprendedora" },
   description:
-    "Calculadoras online para emprendedores: negocios, costos, rentabilidad, inversión, ahorro, margen de ganancia, precio de venta y punto de equilibrio.",
+    "Todas las herramientas para calcular precios, márgenes, rentabilidad, inversiones, punto de equilibrio y costos por tipo de negocio.",
 };
 
 export default function Page() {
