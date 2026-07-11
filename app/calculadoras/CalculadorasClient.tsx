@@ -241,12 +241,13 @@ export default function CalculadorasPage() {
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
       <div className="mx-auto max-w-6xl px-4 py-10 sm:py-12">
-        <section className="rounded-2xl border border-white/10 bg-white/[0.035] px-5 py-7 sm:px-8 sm:py-9">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/45">
+        <section className="relative overflow-hidden rounded-3xl border border-emerald-300/15 bg-gradient-to-br from-emerald-300/[0.07] via-white/[0.035] to-sky-300/[0.035] px-5 py-8 shadow-2xl shadow-black/20 sm:px-8 sm:py-10">
+            <div className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full bg-emerald-300/10 blur-3xl" />
+            <p className="relative text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300/75">
               Directorio de herramientas
             </p>
 
-            <div className="mt-4 grid gap-6 lg:grid-cols-[1fr_360px] lg:items-end">
+            <div className="relative mt-4 grid gap-6 lg:grid-cols-[1fr_360px] lg:items-end">
               <div>
                 <h1 className="max-w-3xl text-3xl font-bold tracking-tight text-white sm:text-4xl">
                   Calculadoras online
@@ -266,7 +267,7 @@ export default function CalculadorasPage() {
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
                   placeholder="Precio, margen, inversión..."
-                  className="w-full rounded-xl border border-white/10 bg-zinc-900/90 px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/35 focus:border-white/30 focus:bg-zinc-900"
+                  className="w-full rounded-xl border border-emerald-300/15 bg-zinc-950/75 px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/35 focus:border-emerald-300/45 focus:bg-zinc-950"
                 />
               </div>
             </div>
@@ -277,6 +278,9 @@ export default function CalculadorasPage() {
             {availableSections.map((section) => (
               <section key={section.title}>
                 <div className="mb-6">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300/60">
+                    Herramientas disponibles
+                  </p>
                   <h2 className="text-2xl font-bold tracking-tight">
                     {section.title}
                   </h2>
@@ -289,13 +293,13 @@ export default function CalculadorasPage() {
                 <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                   {section.calculators.map((calc) => (
                     <Link key={calc.href} href={calc.href} className="group">
-                      <article className="flex h-full min-h-[250px] flex-col rounded-2xl border border-white/10 bg-zinc-900/55 p-5 shadow-lg shadow-black/10 transition duration-200 group-hover:-translate-y-0.5 group-hover:border-white/25 group-hover:bg-zinc-900">
+                      <article className="flex h-full min-h-[250px] flex-col rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.055] to-emerald-300/[0.025] p-5 shadow-lg shadow-black/10 transition duration-200 group-hover:-translate-y-0.5 group-hover:border-emerald-300/30 group-hover:shadow-emerald-950/20">
                         <div className="flex items-start justify-between gap-4">
                           <h3 className="text-xl font-semibold tracking-tight text-white">
                             {calc.title}
                           </h3>
 
-                          <span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-xs font-medium text-white/45">
+                          <span className="rounded-full border border-emerald-300/15 bg-emerald-300/[0.07] px-2.5 py-1 text-xs font-medium text-emerald-200/70">
                             Online
                           </span>
                         </div>
@@ -315,7 +319,7 @@ export default function CalculadorasPage() {
                         </div>
 
                         <div className="mt-auto pt-5">
-                          <span className="text-sm font-semibold text-white transition group-hover:text-white/80">
+                          <span className="text-sm font-semibold text-emerald-200 transition group-hover:text-emerald-100">
                             Usar calculadora →
                           </span>
                         </div>
@@ -346,7 +350,7 @@ export default function CalculadorasPage() {
                   {comingSoonCalculators.map((calc) => (
                     <article
                       key={calc.title}
-                      className="flex h-full min-h-[220px] flex-col rounded-2xl border border-dashed border-white/15 bg-white/[0.025] p-5"
+                    className="flex h-full min-h-[220px] flex-col rounded-2xl border border-dashed border-emerald-300/15 bg-emerald-300/[0.025] p-5"
                     >
                       <div className="flex items-start justify-between gap-4">
                         <h3 className="text-xl font-semibold tracking-tight text-white/85">

@@ -96,7 +96,7 @@ export default function Home() {
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link
               href="/calculadoras"
-              className="rounded-xl bg-white px-5 py-3 text-center text-sm font-semibold text-zinc-950 transition hover:bg-white/90"
+              className="rounded-xl bg-white px-5 py-3 text-center text-sm font-bold !text-black transition hover:bg-emerald-50"
             >
               Ver calculadoras
             </Link>

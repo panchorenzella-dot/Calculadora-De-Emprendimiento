@@ -9,6 +9,7 @@ export default function Navbar() {
   const links = [
     { href: "/", label: "Inicio" },
     { href: "/calculadoras", label: "Calculadoras" },
+    { href: "/perfil", label: "Perfil" },
     { href: "/contacto", label: "Contacto" },
   ];
 
@@ -34,7 +35,7 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`${linkClass(link.href)} ${link.href === "/contacto" ? "hidden sm:inline-flex" : ""}`}
+                className={`${linkClass(link.href)} ${link.href === "/contacto" ? "hidden md:inline-flex" : ""}`}
               >
                 {link.label}
               </Link>

@@ -1,3 +1,5 @@
+import CalculatorScenarioCapture from "@/components/CalculatorScenarioCapture";
+
 export default function AppLayout({
   children,
 }: {
@@ -7,6 +9,7 @@ export default function AppLayout({
     <main className="min-h-screen bg-zinc-950 text-white">
       <div className="mx-auto w-full max-w-5xl px-4 pb-10 pt-6">
         {children}
+        <CalculatorScenarioCapture />
       </div>
     </main>
   );
