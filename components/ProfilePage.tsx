@@ -22,11 +22,25 @@ function resultPreview(scenario: SavedScenario) {
   return text.slice(0, 150) || "Resultado guardado";
 }
 
+function profileFromUser(user: Session["user"] | undefined) {
+  const metadata = user?.user_metadata ?? {};
+  return {
+    full_name: metadata.full_name || metadata.name || "",
+    phone: metadata.phone || "",
+    business_name: metadata.business_name || "",
+    role: metadata.role || "",
+    city: metadata.city || "",
+  };
+}
+
 export default function ProfilePage() {
   const configured = Boolean(getSupabaseClient());
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(configured);
   const [scenarios, setScenarios] = useState<SavedScenario[]>([]);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [profile, setProfile] = useState({ full_name: "", phone: "", business_name: "", role: "", city: "" });
   const [message, setMessage] = useState(
     configured ? "" : "Falta configurar Supabase para habilitar el perfil."
   );
@@ -49,12 +63,14 @@ export default function ProfilePage() {
 
     void supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
+      setProfile(profileFromUser(data.session?.user));
       setLoading(false);
       if (data.session) void loadScenarios();
     });
 
     const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession);
+      setProfile(profileFromUser(nextSession?.user));
       setLoading(false);
       if (nextSession) void loadScenarios();
       else setScenarios([]);
@@ -62,6 +78,22 @@ export default function ProfilePage() {
 
     return () => data.subscription.unsubscribe();
   }, []);
+
+  async function saveProfile(event: React.FormEvent) {
+    event.preventDefault();
+    const supabase = getSupabaseClient();
+    if (!supabase) return;
+    setSaving(true);
+    setMessage("");
+    const { data, error } = await supabase.auth.updateUser({ data: profile });
+    setSaving(false);
+    if (error) setMessage(`No se pudo guardar el perfil: ${error.message}`);
+    else {
+      if (data.user) setSession((current) => current ? { ...current, user: data.user } : current);
+      setEditing(false);
+      setMessage("Tus datos se actualizaron correctamente.");
+    }
+  }
 
   async function removeScenario(id: string) {
     if (!window.confirm("¿Eliminar este escenario?")) return;
@@ -114,7 +146,7 @@ export default function ProfilePage() {
         <button
           type="button"
           onClick={() => getSupabaseClient()?.auth.signOut()}
-          className="w-fit rounded-xl border border-white/15 px-4 py-2.5 text-sm font-semibold hover:bg-white/5"
+          className="w-fit rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm font-semibold text-red-300 transition hover:border-red-400/50 hover:bg-red-500/20"
         >
           Cerrar sesión
         </button>
@@ -187,12 +219,37 @@ export default function ProfilePage() {
       <section className="mt-10 grid gap-5 lg:grid-cols-2">
         <article className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
           <p className="text-xs uppercase tracking-[0.16em] text-white/40">Datos personales</p>
-          <dl className="mt-5 grid gap-4 text-sm sm:grid-cols-2">
-            <div><dt className="text-white/40">Nombre</dt><dd className="mt-1">{name}</dd></div>
-            <div><dt className="text-white/40">Email</dt><dd className="mt-1 break-all">{user.email}</dd></div>
-            <div><dt className="text-white/40">Fecha de registro</dt><dd className="mt-1">{formatDate(user.created_at)}</dd></div>
-          </dl>
-          <button disabled className="mt-6 rounded-xl border border-white/10 px-4 py-2.5 text-sm text-white/35">Editar perfil · Próximamente</button>
+          {editing ? (
+            <form onSubmit={saveProfile} className="mt-5 grid gap-4 sm:grid-cols-2">
+              {[
+                ["full_name", "Nombre completo", "Tu nombre"], ["phone", "Teléfono", "+54 9..."],
+                ["business_name", "Emprendimiento", "Nombre de tu negocio"], ["role", "Actividad", "Ej. comerciante"],
+                ["city", "Ciudad", "Tu ciudad"],
+              ].map(([key, label, placeholder]) => (
+                <label key={key} className="grid gap-2 text-sm text-white/55">
+                  {label}
+                  <input value={profile[key as keyof typeof profile]} onChange={(e) => setProfile({ ...profile, [key]: e.target.value })} placeholder={placeholder} className="rounded-xl border border-white/10 bg-zinc-900 px-3.5 py-2.5 text-white outline-none focus:border-emerald-300/50" />
+                </label>
+              ))}
+              <div className="flex gap-2 sm:col-span-2">
+                <button disabled={saving} className="rounded-xl bg-emerald-300 px-4 py-2.5 text-sm font-semibold text-zinc-950 disabled:opacity-60">{saving ? "Guardando..." : "Guardar cambios"}</button>
+                <button type="button" onClick={() => setEditing(false)} className="rounded-xl border border-white/10 px-4 py-2.5 text-sm text-white/60 hover:bg-white/5">Cancelar</button>
+              </div>
+            </form>
+          ) : (
+            <>
+              <dl className="mt-5 grid gap-4 text-sm sm:grid-cols-2">
+                <div><dt className="text-white/40">Nombre</dt><dd className="mt-1">{name}</dd></div>
+                <div><dt className="text-white/40">Email</dt><dd className="mt-1 break-all">{user.email}</dd></div>
+                <div><dt className="text-white/40">Teléfono</dt><dd className="mt-1">{profile.phone || "Sin completar"}</dd></div>
+                <div><dt className="text-white/40">Emprendimiento</dt><dd className="mt-1">{profile.business_name || "Sin completar"}</dd></div>
+                <div><dt className="text-white/40">Actividad</dt><dd className="mt-1">{profile.role || "Sin completar"}</dd></div>
+                <div><dt className="text-white/40">Ciudad</dt><dd className="mt-1">{profile.city || "Sin completar"}</dd></div>
+                <div><dt className="text-white/40">Fecha de registro</dt><dd className="mt-1">{formatDate(user.created_at)}</dd></div>
+              </dl>
+              <button onClick={() => setEditing(true)} className="mt-6 rounded-xl border border-emerald-300/25 bg-emerald-300/5 px-4 py-2.5 text-sm font-semibold text-emerald-300 hover:bg-emerald-300/10">Editar perfil</button>
+            </>
+          )}
         </article>
 
         <article className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.05] to-emerald-300/[0.035] p-6">
