@@ -18,6 +18,7 @@ type QuotaResult = {
   used: number;
   quota_limit: number;
   resets_at: string;
+  plan?: "free" | "pro";
 };
 
 const instructions = `Sos el Asistente IA de Calculadora Emprendedora, especializado en negocios, costos, precios, rentabilidad, inversiones y planificación financiera para usuarios de Argentina y Latinoamérica. Respondé en español rioplatense natural, claro y respetuoso.
@@ -51,16 +52,21 @@ export async function POST(request: Request) {
     const { data: quotaRows, error: quotaError } = await supabase.rpc("consume_ai_quota", { p_kind: body.mode });
     if (quotaError) {
       console.error("AI quota error", quotaError.message);
-      return NextResponse.json({ error: "No pudimos verificar tu límite. Revisá que la migración 004_free_ai_quotas.sql esté aplicada." }, { status: 503 });
+      return NextResponse.json({ error: "No pudimos verificar tu límite. Revisá que estén aplicadas las migraciones de Supabase." }, { status: 503 });
     }
     const quota = (quotaRows as QuotaResult[] | null)?.[0];
+    const plan = quota?.plan === "pro" ? "pro" : "free";
     if (!quota?.allowed) {
       const reset = quota?.resets_at
         ? new Intl.DateTimeFormat("es-AR", { timeZone: "America/Argentina/Buenos_Aires", dateStyle: "medium", timeStyle: "short" }).format(new Date(quota.resets_at))
         : null;
-      const errorMessage = body.mode === "analysis"
-        ? `Ya usaste el análisis semanal del plan gratuito.${reset ? ` Se habilita nuevamente el ${reset}.` : ""}`
-        : `Alcanzaste los 10 mensajes diarios del plan gratuito.${reset ? ` Podés volver a escribir desde el ${reset}.` : ""}`;
+      const errorMessage = plan === "pro"
+        ? body.mode === "analysis"
+          ? `Alcanzaste los 30 análisis mensuales de Pro.${reset ? ` Se renuevan el ${reset}.` : ""}`
+          : `Alcanzaste los 300 mensajes mensuales de Pro.${reset ? ` Se renuevan el ${reset}.` : ""}`
+        : body.mode === "analysis"
+          ? `Ya usaste el análisis semanal del plan gratuito.${reset ? ` Se habilita nuevamente el ${reset}.` : ""}`
+          : `Alcanzaste los 5 mensajes diarios del plan gratuito.${reset ? ` Podés volver a escribir desde el ${reset}.` : ""}`;
       return NextResponse.json({ error: errorMessage, code: "AI_QUOTA_REACHED", quota }, { status: 429 });
     }
     const apiKey = process.env.OPENAI_API_KEY;
@@ -75,7 +81,13 @@ export async function POST(request: Request) {
     const aiResponse = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ model: process.env.OPENAI_MODEL || "gpt-5.4-mini", input, max_output_tokens: body.mode === "analysis" ? 4500 : 2200 }),
+      body: JSON.stringify({
+        model: plan === "pro"
+          ? process.env.OPENAI_PRO_MODEL || process.env.OPENAI_MODEL || "gpt-5.4-mini"
+          : process.env.OPENAI_FREE_MODEL || "gpt-5-mini",
+        input,
+        max_output_tokens: body.mode === "analysis" ? 4500 : 2200,
+      }),
     });
     const data = await aiResponse.json();
     if (!aiResponse.ok) {
@@ -85,7 +97,7 @@ export async function POST(request: Request) {
     }
     const text = extractText(data);
     if (!text) return NextResponse.json({ error: "La IA no devolvió contenido. Intentá nuevamente." }, { status: 502 });
-    return NextResponse.json({ text, quota: { used: quota.used, limit: quota.quota_limit, resetsAt: quota.resets_at } });
+    return NextResponse.json({ text, quota: { used: quota.used, limit: quota.quota_limit, resetsAt: quota.resets_at, plan } });
   } catch (error) {
     if (error instanceof z.ZodError) return NextResponse.json({ error: "Los datos enviados no son válidos." }, { status: 400 });
     console.error("AI route error", error);

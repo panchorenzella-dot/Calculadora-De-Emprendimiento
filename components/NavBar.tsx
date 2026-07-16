@@ -9,6 +9,7 @@ export default function Navbar() {
   const links = [
     { href: "/", label: "Inicio" },
     { href: "/calculadoras", label: "Calculadoras" },
+    { href: "/precios", label: "Planes" },
     { href: "/perfil", label: "Perfil" },
     { href: "/contacto", label: "Contacto" },
   ];
@@ -23,8 +24,9 @@ export default function Navbar() {
   return (
     <header className="border-b border-white/10 bg-zinc-950">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
-          <Link href="/" className="min-w-0 truncate text-sm font-semibold tracking-tight text-white sm:text-base">
-            Calculadora Emprendedora
+          <Link href="/" aria-label="Calculadora Emprendedora" className="shrink-0 font-semibold tracking-tight text-white">
+            <span className="grid h-8 w-8 place-items-center rounded-full border border-emerald-200/15 bg-emerald-200/[0.06] text-xs text-emerald-100 sm:hidden">CE</span>
+            <span className="hidden text-base sm:inline">Calculadora Emprendedora</span>
           </Link>
 
           <nav
@@ -35,7 +37,7 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`${linkClass(link.href)} ${link.href === "/contacto" ? "hidden md:inline-flex" : ""}`}
+                className={`${linkClass(link.href)} ${link.href === "/" ? "hidden sm:inline-flex" : ""} ${link.href === "/contacto" ? "hidden lg:inline-flex" : ""}`}
               >
                 {link.label}
               </Link>

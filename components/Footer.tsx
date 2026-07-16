@@ -7,6 +7,9 @@ export default function Footer() {
         <div>© {new Date().getFullYear()} Calculadora Emprendedora</div>
 
         <div className="flex gap-4">
+          <Link className="hover:text-white" href="/precios">
+            Planes
+          </Link>
           <Link className="hover:text-white" href="/perfil">
             Perfil
           </Link>

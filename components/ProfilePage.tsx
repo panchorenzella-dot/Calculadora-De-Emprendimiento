@@ -8,7 +8,7 @@ import AuthModal from "@/components/AuthModal";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import type { SavedScenario } from "@/types/scenario";
 
-type View = "inicio" | "analisis" | "escenarios" | "cuenta";
+type View = "inicio" | "analisis" | "escenarios" | "plan" | "cuenta";
 type Conversation = {
   id: string;
   title: string;
@@ -17,6 +17,19 @@ type Conversation = {
   scenario_id: string | null;
   created_at: string;
   updated_at: string;
+};
+type PlanInfo = {
+  plan: "free" | "pro";
+  status: "inactive" | "trialing" | "active" | "past_due" | "canceled";
+  current_period_end: string | null;
+  cancel_at_period_end: boolean;
+};
+
+const FREE_PLAN: PlanInfo = {
+  plan: "free",
+  status: "inactive",
+  current_period_end: null,
+  cancel_at_period_end: false,
 };
 
 function formatDate(value?: string) {
@@ -44,6 +57,7 @@ const navigation: Array<{ id: View; label: string; symbol: string }> = [
   { id: "inicio", label: "Resumen", symbol: "⌂" },
   { id: "analisis", label: "Análisis IA", symbol: "✦" },
   { id: "escenarios", label: "Escenarios", symbol: "▱" },
+  { id: "plan", label: "Mi plan", symbol: "◆" },
   { id: "cuenta", label: "Cuenta", symbol: "○" },
 ];
 
@@ -54,6 +68,7 @@ export default function ProfilePage() {
   const [view, setView] = useState<View>("inicio");
   const [scenarios, setScenarios] = useState<SavedScenario[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [plan, setPlan] = useState<PlanInfo>(FREE_PLAN);
   const [editing, setEditing] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -63,14 +78,20 @@ export default function ProfilePage() {
   async function loadData() {
     const supabase = getSupabaseClient();
     if (!supabase) return;
-    const [scenarioResponse, conversationResponse] = await Promise.all([
+    const [scenarioResponse, conversationResponse, planResponse] = await Promise.all([
       supabase.from("saved_scenarios").select("*").order("created_at", { ascending: false }),
       supabase.from("ai_conversations").select("id,title,calculator_name,calculator_path,scenario_id,created_at,updated_at").order("updated_at", { ascending: false }),
+      supabase.from("user_plans").select("plan,status,current_period_end,cancel_at_period_end").maybeSingle(),
     ]);
     if (scenarioResponse.error) setMessage(`No se pudieron cargar los escenarios: ${scenarioResponse.error.message}`);
     else setScenarios((scenarioResponse.data as SavedScenario[]) ?? []);
     if (conversationResponse.error) setMessage("No se pudieron cargar los análisis. Verificá la última migración de Supabase.");
     else setConversations((conversationResponse.data as Conversation[]) ?? []);
+    const planData = planResponse.data as PlanInfo | null;
+    const proIsActive = planData?.plan === "pro"
+      && (planData.status === "active" || planData.status === "trialing")
+      && (!planData.current_period_end || new Date(planData.current_period_end) > new Date());
+    setPlan(proIsActive && planData ? planData : FREE_PLAN);
   }
 
   useEffect(() => {
@@ -87,7 +108,7 @@ export default function ProfilePage() {
       setProfile(profileFromUser(nextSession?.user));
       setLoading(false);
       if (nextSession) void loadData();
-      else { setScenarios([]); setConversations([]); }
+      else { setScenarios([]); setConversations([]); setPlan(FREE_PLAN); }
     });
     return () => data.subscription.unsubscribe();
   }, []);
@@ -162,13 +183,29 @@ export default function ProfilePage() {
 
         {view === "inicio" && <>
           <div><p className="text-xs text-emerald-200/60">Tu espacio de trabajo</p><h1 className="mt-2 text-3xl font-semibold tracking-tight">Hola, {name.split(" ")[0]}</h1><p className="mt-2 text-sm text-white/40">Retomá una conversación o revisá los números que guardaste.</p></div>
-          <section className="mt-8 grid gap-3 sm:grid-cols-3"><div className="rounded-2xl border border-white/[0.07] bg-white/[0.025] p-5"><p className="text-xs text-white/35">Análisis IA</p><p className="mt-3 text-3xl font-medium">{conversations.length}</p><button onClick={() => setView("analisis")} className="mt-3 text-sm text-white/40 hover:text-white">Ver conversaciones →</button></div><div className="rounded-2xl border border-white/[0.07] bg-white/[0.025] p-5"><p className="text-xs text-white/35">Escenarios</p><p className="mt-3 text-3xl font-medium">{scenarios.length}</p><button onClick={() => setView("escenarios")} className="mt-3 text-sm text-white/40 hover:text-white">Administrar →</button></div><div className="rounded-2xl border border-white/[0.07] bg-[radial-gradient(circle_at_top_right,rgba(110,231,183,0.09),transparent_70%)] p-5"><p className="text-xs text-white/35">Perfil completo</p><p className="mt-3 text-3xl font-medium">{profileProgress}%</p><div className="mt-4 h-1 overflow-hidden rounded-full bg-white/[0.07]"><div className="h-full rounded-full bg-emerald-300/70" style={{ width: `${profileProgress}%` }}/></div></div></section>
+          <section className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-2xl border border-white/[0.07] bg-white/[0.025] p-5"><p className="text-xs text-white/35">Análisis IA</p><p className="mt-3 text-3xl font-medium">{conversations.length}</p><button onClick={() => setView("analisis")} className="mt-3 text-sm text-white/40 hover:text-white">Ver conversaciones →</button></div>
+            <div className="rounded-2xl border border-white/[0.07] bg-white/[0.025] p-5"><p className="text-xs text-white/35">Escenarios</p><p className="mt-3 text-3xl font-medium">{scenarios.length}</p><button onClick={() => setView("escenarios")} className="mt-3 text-sm text-white/40 hover:text-white">Administrar →</button></div>
+            <div className="rounded-2xl border border-emerald-300/15 bg-[radial-gradient(circle_at_top_right,rgba(110,231,183,0.12),transparent_70%)] p-5"><p className="text-xs text-emerald-100/45">Plan actual</p><p className="mt-3 text-2xl font-medium text-emerald-100">{plan.plan === "pro" ? "Pro" : "Gratis"}</p><button onClick={() => setView("plan")} className="mt-4 text-sm text-emerald-100/50 hover:text-emerald-100">Ver límites →</button></div>
+            <div className="rounded-2xl border border-white/[0.07] bg-white/[0.025] p-5"><p className="text-xs text-white/35">Perfil completo</p><p className="mt-3 text-3xl font-medium">{profileProgress}%</p><div className="mt-4 h-1 overflow-hidden rounded-full bg-white/[0.07]"><div className="h-full rounded-full bg-emerald-300/70" style={{ width: `${profileProgress}%` }}/></div></div>
+          </section>
           <section className="mt-9"><div className="flex items-center justify-between"><h2 className="text-lg font-medium">Continuar donde lo dejaste</h2><button onClick={() => setView("analisis")} className="text-sm text-white/35 hover:text-white">Ver todo</button></div><div className="mt-3">{conversations.length ? conversations.slice(0, 3).map((item) => <AnalysisRow key={item.id} conversation={item}/>) : <div className="rounded-2xl border border-dashed border-white/10 p-8 text-center"><p className="text-sm text-white/35">Todavía no generaste ningún análisis.</p><Link href="/calculadoras" className="mt-4 inline-block rounded-full border border-white/12 bg-black px-3.5 py-1.5 text-sm text-white/70">Elegir calculadora</Link></div>}</div></section>
         </>}
 
         {view === "analisis" && <><div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs text-emerald-200/60">Historial inteligente</p><h1 className="mt-2 text-3xl font-semibold tracking-tight">Análisis IA</h1><p className="mt-2 text-sm text-white/40">Abrí una conversación exactamente donde la dejaste.</p></div><Link href="/calculadoras" className="rounded-full border border-white/12 bg-black px-3.5 py-2 text-center text-sm text-white/75 hover:bg-zinc-900">Nuevo análisis</Link></div><section className="mt-8">{conversations.length ? conversations.map((item) => <AnalysisRow key={item.id} conversation={item}/>) : <p className="rounded-2xl border border-dashed border-white/10 p-10 text-center text-sm text-white/35">No hay análisis guardados todavía.</p>}</section></>}
 
         {view === "escenarios" && <><div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs text-emerald-200/60">Biblioteca de cálculos</p><h1 className="mt-2 text-3xl font-semibold tracking-tight">Escenarios</h1><p className="mt-2 text-sm text-white/40">Organizá, renombrá y revisá todos tus resultados.</p></div><Link href="/calculadoras" className="rounded-full border border-white/12 bg-black px-3.5 py-2 text-center text-sm text-white/75 hover:bg-zinc-900">Crear escenario</Link></div><section className="mt-8">{scenarios.length ? scenarios.map((item) => <ScenarioRow key={item.id} scenario={item}/>) : <p className="rounded-2xl border border-dashed border-white/10 p-10 text-center text-sm text-white/35">No hay escenarios guardados todavía.</p>}</section></>}
+
+        {view === "plan" && <>
+          <div><p className="text-xs text-emerald-200/60">Suscripción</p><h1 className="mt-2 text-3xl font-semibold tracking-tight">Mi plan</h1><p className="mt-2 text-sm text-white/40">Consultá tu nivel de acceso y los límites de la inteligencia artificial.</p></div>
+          <section className="relative mt-8 overflow-hidden rounded-[26px] border border-emerald-300/20 bg-[linear-gradient(145deg,rgba(16,185,129,0.12),rgba(255,255,255,0.025)_55%,rgba(0,0,0,0.12))] p-6 sm:p-8">
+            <div className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-emerald-300/[0.08] blur-3xl" />
+            <div className="relative flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between"><div><div className="flex items-center gap-2"><span className="rounded-full border border-emerald-200/20 bg-emerald-200/[0.08] px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-emerald-100">{plan.plan === "pro" ? "Pro" : "Gratis"}</span>{plan.plan === "pro" && <span className="text-xs text-white/35">Activo</span>}</div><h2 className="mt-5 text-3xl font-semibold tracking-tight">{plan.plan === "pro" ? "Más espacio para profundizar" : "Todo lo esencial para empezar"}</h2><p className="mt-3 max-w-xl text-sm leading-6 text-white/45">{plan.plan === "pro" ? "Tu cuenta tiene acceso al modelo avanzado y a los cupos mensuales ampliados." : "Podés usar todas las calculadoras, guardar escenarios y probar el asistente con límites gratuitos."}</p></div>{plan.plan === "free" && <Link href="/precios" className="relative shrink-0 rounded-full bg-emerald-300 px-4 py-2.5 text-center text-sm font-bold text-emerald-950 hover:bg-emerald-200">Conocer Pro</Link>}</div>
+            <div className="relative mt-8 grid gap-3 sm:grid-cols-2"><div className="rounded-2xl border border-white/[0.08] bg-black/20 p-5"><p className="text-xs text-white/35">Análisis con IA</p><p className="mt-2 text-2xl font-semibold text-white/90">{plan.plan === "pro" ? "30 por mes" : "1 por semana"}</p></div><div className="rounded-2xl border border-white/[0.08] bg-black/20 p-5"><p className="text-xs text-white/35">Mensajes de seguimiento</p><p className="mt-2 text-2xl font-semibold text-white/90">{plan.plan === "pro" ? "300 por mes" : "5 por día"}</p></div></div>
+            {plan.plan === "pro" && plan.current_period_end && <p className="relative mt-5 text-xs text-white/35">{plan.cancel_at_period_end ? "El acceso termina" : "El período se renueva"} el {formatDate(plan.current_period_end)}.</p>}
+          </section>
+          <section className="mt-8 grid gap-4 sm:grid-cols-3"><div className="rounded-2xl border border-white/[0.07] p-5"><p className="text-sm font-medium text-white/75">Tus datos siguen siendo tuyos</p><p className="mt-2 text-xs leading-5 text-white/35">Cambiar de plan no elimina escenarios ni conversaciones guardadas.</p></div><div className="rounded-2xl border border-white/[0.07] p-5"><p className="text-sm font-medium text-white/75">Renovación clara</p><p className="mt-2 text-xs leading-5 text-white/35">La plataforma te muestra cuándo vuelve a habilitarse cada cupo.</p></div><div className="rounded-2xl border border-white/[0.07] p-5"><p className="text-sm font-medium text-white/75">Sin sorpresas</p><p className="mt-2 text-xs leading-5 text-white/35">Si alcanzás un límite, tus cálculos continúan disponibles.</p></div></section>
+        </>}
 
         {view === "cuenta" && <><div><p className="text-xs text-emerald-200/60">Configuración</p><h1 className="mt-2 text-3xl font-semibold tracking-tight">Cuenta y perfil</h1><p className="mt-2 text-sm text-white/40">Personalizá la información asociada a tu espacio.</p></div><section className="mt-8 border-y border-white/[0.07] py-6"><div className="flex items-center justify-between"><div><h2 className="font-medium">Datos personales</h2><p className="mt-1 text-xs text-white/35">Esta información ayuda a personalizar futuras funciones.</p></div>{!editing && <button onClick={() => setEditing(true)} className="rounded-full border border-white/12 bg-black px-3.5 py-1.5 text-sm text-white/70 hover:bg-zinc-900">Editar</button>}</div>{editing ? <form onSubmit={saveProfile} className="mt-6 grid gap-4 sm:grid-cols-2">{[["full_name","Nombre completo","Tu nombre"],["phone","Teléfono","+54 9..."],["business_name","Emprendimiento","Nombre del negocio"],["role","Actividad","Ej. comerciante"],["city","Ciudad","Tu ciudad"]].map(([key,label,placeholder]) => <label key={key} className="grid gap-2 text-xs text-white/40">{label}<input value={profile[key as keyof typeof profile]} onChange={(event) => setProfile({ ...profile, [key]: event.target.value })} placeholder={placeholder} className="rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-3 text-sm text-white outline-none focus:border-white/20"/></label>)}<div className="flex gap-2 sm:col-span-2"><button disabled={saving} className="rounded-full bg-white px-4 py-2 text-sm font-medium text-zinc-950">{saving ? "Guardando..." : "Guardar cambios"}</button><button type="button" onClick={() => setEditing(false)} className="rounded-full border border-white/10 px-4 py-2 text-sm text-white/50">Cancelar</button></div></form> : <dl className="mt-6 grid gap-5 text-sm sm:grid-cols-2"><div><dt className="text-xs text-white/30">Nombre</dt><dd className="mt-1 text-white/75">{name}</dd></div><div><dt className="text-xs text-white/30">Email</dt><dd className="mt-1 break-all text-white/75">{user.email}</dd></div><div><dt className="text-xs text-white/30">Teléfono</dt><dd className="mt-1 text-white/75">{profile.phone || "Sin completar"}</dd></div><div><dt className="text-xs text-white/30">Emprendimiento</dt><dd className="mt-1 text-white/75">{profile.business_name || "Sin completar"}</dd></div><div><dt className="text-xs text-white/30">Actividad</dt><dd className="mt-1 text-white/75">{profile.role || "Sin completar"}</dd></div><div><dt className="text-xs text-white/30">Ciudad</dt><dd className="mt-1 text-white/75">{profile.city || "Sin completar"}</dd></div></dl>}</section><section className="py-6"><h2 className="font-medium">Sesión</h2><p className="mt-1 text-xs text-white/35">Cuenta creada el {formatDate(user.created_at)}.</p><button onClick={() => getSupabaseClient()?.auth.signOut()} className="mt-5 rounded-full border border-red-400/20 bg-red-500/[0.06] px-4 py-2 text-sm font-medium text-red-300 hover:bg-red-500/10">Cerrar sesión</button></section></>}
       </div>

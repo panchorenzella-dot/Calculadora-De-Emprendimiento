@@ -208,8 +208,11 @@ export default function Home() {
           Iniciá sesión para conservar tus cálculos, consultarlos desde cualquier
           dispositivo y recibir un análisis contextual con recomendaciones para
           tomar decisiones más claras. El plan gratuito incluye un análisis por
-          semana y hasta diez mensajes de seguimiento por día.
+          semana y hasta cinco mensajes de seguimiento por día.
         </p>
+        <Link href="/precios" className="mt-6 inline-flex rounded-full border border-emerald-200/20 bg-emerald-200/[0.07] px-4 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-200/[0.12]">
+          Comparar Gratis y Pro →
+        </Link>
       </section>
 
       <section className="mx-auto max-w-4xl py-16 sm:py-20">
