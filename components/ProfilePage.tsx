@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 import AuthModal from "@/components/AuthModal";
 import PlanUsageDashboard, { type UsageItem } from "@/components/PlanUsageDashboard";
+import { PLAN_GRACE_DAYS } from "@/lib/plans";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import type { SavedScenario } from "@/types/scenario";
 
@@ -25,6 +26,7 @@ type PlanInfo = {
   current_period_start: string | null;
   current_period_end: string | null;
   cancel_at_period_end: boolean;
+  provider: string | null;
 };
 
 const FREE_PLAN: PlanInfo = {
@@ -33,6 +35,7 @@ const FREE_PLAN: PlanInfo = {
   current_period_start: null,
   current_period_end: null,
   cancel_at_period_end: false,
+  provider: null,
 };
 
 function defaultUsage(plan: "free" | "pro" = "free"): UsageItem[] {
@@ -93,7 +96,7 @@ export default function ProfilePage() {
     const [scenarioResponse, conversationResponse, planResponse, usageResponse] = await Promise.all([
       supabase.from("saved_scenarios").select("*").order("created_at", { ascending: false }),
       supabase.from("ai_conversations").select("id,title,calculator_name,calculator_path,scenario_id,created_at,updated_at").order("updated_at", { ascending: false }),
-      supabase.from("user_plans").select("plan,status,current_period_start,current_period_end,cancel_at_period_end").maybeSingle(),
+      supabase.from("user_plans").select("plan,status,current_period_start,current_period_end,cancel_at_period_end,provider").maybeSingle(),
       supabase.rpc("get_my_usage_summary"),
     ]);
     if (scenarioResponse.error) setMessage(`No se pudieron cargar los escenarios: ${scenarioResponse.error.message}`);
@@ -101,9 +104,14 @@ export default function ProfilePage() {
     if (conversationResponse.error) setMessage("No se pudieron cargar los análisis. Verificá la última migración de Supabase.");
     else setConversations((conversationResponse.data as Conversation[]) ?? []);
     const planData = planResponse.data as PlanInfo | null;
+    const periodEnd = planData?.current_period_end ? new Date(planData.current_period_end).getTime() : null;
+    const hasValidEnd = periodEnd === null || (!Number.isNaN(periodEnd) && Date.now() <= periodEnd + PLAN_GRACE_DAYS * 86_400_000);
+    const hasValidStatus = planData?.status === "active"
+      || planData?.status === "trialing"
+      || (planData?.status === "past_due" && periodEnd !== null);
     const proIsActive = planData?.plan === "pro"
-      && (planData.status === "active" || planData.status === "trialing")
-      && (!planData.current_period_end || new Date(planData.current_period_end) > new Date());
+      && hasValidStatus
+      && hasValidEnd;
     const effectivePlan = proIsActive && planData ? planData : FREE_PLAN;
     setPlan(effectivePlan);
     const usageData = usageResponse.data as UsageItem[] | null;

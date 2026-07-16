@@ -19,6 +19,8 @@ export const PLAN_LIMITS = {
 
 export type PlanName = keyof typeof PLAN_LIMITS;
 
+export const PLAN_GRACE_DAYS = 2;
+
 export const BILLING_OPTIONS = [
   { id: "monthly", label: "Mensual", months: 1, totalUsd: 19.99, monthlyUsd: 19.99, discount: 0 },
   { id: "quarterly", label: "Trimestral", months: 3, totalUsd: 53.99, monthlyUsd: 18, discount: 10 },

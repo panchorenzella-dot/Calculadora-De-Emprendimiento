@@ -26,6 +26,31 @@ create policy "Users can view their own plan"
 revoke insert, update, delete on public.user_plans from anon, authenticated;
 grant select on public.user_plans to authenticated;
 
+create or replace function public.has_pro_access(p_user_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.user_plans user_plan
+    where user_plan.user_id = p_user_id
+      and user_plan.plan = 'pro'
+      and (
+        (user_plan.status in ('active', 'trialing') and user_plan.current_period_end is null)
+        or (
+          user_plan.status in ('active', 'trialing', 'past_due')
+          and user_plan.current_period_end is not null
+          and user_plan.current_period_end + interval '2 days' > pg_catalog.now()
+        )
+      )
+  );
+$$;
+
+revoke all on function public.has_pro_access(uuid) from public, anon, authenticated;
+
 create or replace function public.set_user_plans_updated_at()
 returns trigger
 language plpgsql
@@ -72,16 +97,9 @@ begin
     raise exception 'Authentication required';
   end if;
 
-  select 'pro'
-    into v_plan
-    from public.user_plans
-   where user_id = v_user_id
-     and plan = 'pro'
-     and status in ('active', 'trialing')
-     and (current_period_end is null or current_period_end > pg_catalog.now())
-   limit 1;
-
-  v_plan := pg_catalog.coalesce(v_plan, 'free');
+  if public.has_pro_access(v_user_id) then
+    v_plan := 'pro';
+  end if;
 
   if v_plan = 'pro' then
     if p_kind = 'analysis' then
