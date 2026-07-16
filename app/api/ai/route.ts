@@ -13,6 +13,13 @@ const RequestSchema = z.object({
   message: z.string().max(4000).optional(),
 });
 
+type QuotaResult = {
+  allowed: boolean;
+  used: number;
+  quota_limit: number;
+  resets_at: string;
+};
+
 const instructions = `Sos el Asistente IA de Calculadora Emprendedora, especializado en negocios, costos, precios, rentabilidad, inversiones y planificación financiera para usuarios de Argentina y Latinoamérica. Respondé en español rioplatense natural, claro y respetuoso.
 
 Reglas: basate solamente en los datos provistos; nunca inventes cifras. Diferenciá hechos, cálculos, supuestos y estimaciones. Si falta un dato decisivo, preguntalo. Podés hacer simulaciones matemáticas solicitadas por el usuario, mostrando qué cambió y comparando contra el escenario original. No modifiques los datos originales. No des garantías ni te presentes como contador o asesor financiero. Para decisiones sensibles, indicá qué conviene validar profesionalmente. Mantenete enfocado en temas de la plataforma.
@@ -33,11 +40,29 @@ export async function POST(request: Request) {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     if (!token || !url || !anonKey) return NextResponse.json({ error: "Necesitás iniciar sesión." }, { status: 401 });
-    const supabase = createClient(url, anonKey, { auth: { persistSession: false } });
+    const supabase = createClient(url, anonKey, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+      auth: { persistSession: false },
+    });
     const { data: { user }, error } = await supabase.auth.getUser(token);
     if (error || !user) return NextResponse.json({ error: "Tu sesión venció. Volvé a ingresar." }, { status: 401 });
 
     const body = RequestSchema.parse(await request.json());
+    const { data: quotaRows, error: quotaError } = await supabase.rpc("consume_ai_quota", { p_kind: body.mode });
+    if (quotaError) {
+      console.error("AI quota error", quotaError.message);
+      return NextResponse.json({ error: "No pudimos verificar tu límite. Revisá que la migración 004_free_ai_quotas.sql esté aplicada." }, { status: 503 });
+    }
+    const quota = (quotaRows as QuotaResult[] | null)?.[0];
+    if (!quota?.allowed) {
+      const reset = quota?.resets_at
+        ? new Intl.DateTimeFormat("es-AR", { timeZone: "America/Argentina/Buenos_Aires", dateStyle: "medium", timeStyle: "short" }).format(new Date(quota.resets_at))
+        : null;
+      const errorMessage = body.mode === "analysis"
+        ? `Ya usaste el análisis semanal del plan gratuito.${reset ? ` Se habilita nuevamente el ${reset}.` : ""}`
+        : `Alcanzaste los 10 mensajes diarios del plan gratuito.${reset ? ` Podés volver a escribir desde el ${reset}.` : ""}`;
+      return NextResponse.json({ error: errorMessage, code: "AI_QUOTA_REACHED", quota }, { status: 429 });
+    }
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) return NextResponse.json({ error: "La IA todavía no está configurada. Falta agregar la clave de OpenAI." }, { status: 503 });
     const context = `CALCULADORA Y ESCENARIO ACTUAL:\n${JSON.stringify(body.context, null, 2)}`;
@@ -60,7 +85,7 @@ export async function POST(request: Request) {
     }
     const text = extractText(data);
     if (!text) return NextResponse.json({ error: "La IA no devolvió contenido. Intentá nuevamente." }, { status: 502 });
-    return NextResponse.json({ text });
+    return NextResponse.json({ text, quota: { used: quota.used, limit: quota.quota_limit, resetsAt: quota.resets_at } });
   } catch (error) {
     if (error instanceof z.ZodError) return NextResponse.json({ error: "Los datos enviados no son válidos." }, { status: 400 });
     console.error("AI route error", error);

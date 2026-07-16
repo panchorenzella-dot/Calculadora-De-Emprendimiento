@@ -158,28 +158,32 @@ export default function AiAssistant({ draft, hasResults, initialConversationId, 
     setOpen(true);
     setLoading(true);
     setError("");
-    const linkedScenarioId = mode === "analysis" && !conversationId
-      ? await saveAnalysisScenario(session.user.id)
-      : scenarioId;
-    if (mode === "analysis" && !conversationId && !linkedScenarioId) { setLoading(false); return; }
-    const id = await ensureConversation(session.user.id, linkedScenarioId);
-    if (!id) { setLoading(false); return; }
     const userMessage: Message | null = mode === "chat" && question ? { role: "user", content: question } : null;
     const previous = messages;
     if (userMessage) {
       setMessages([...previous, userMessage]);
       setMessage("");
-      await persistMessage(id, session.user.id, userMessage);
     }
     try {
       const response = await fetch("/api/ai", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` }, body: JSON.stringify({ mode, context: draft, messages: previous.slice(-20), message: question }) });
       const data = await response.json() as { text?: string; error?: string };
       if (!response.ok || !data.text) throw new Error(data.error || "No pudimos obtener una respuesta.");
+      const linkedScenarioId = mode === "analysis" && !conversationId
+        ? await saveAnalysisScenario(session.user.id)
+        : scenarioId;
+      if (mode === "analysis" && !conversationId && !linkedScenarioId) return;
+      const id = await ensureConversation(session.user.id, linkedScenarioId);
+      if (!id) return;
       const assistantMessage: Message = { role: "assistant", content: data.text };
       setMessages((current) => [...current, assistantMessage]);
+      if (userMessage) await persistMessage(id, session.user.id, userMessage);
       await persistMessage(id, session.user.id, assistantMessage);
       await loadHistory();
     } catch (requestError) {
+      if (userMessage) {
+        setMessages(previous);
+        setMessage(question ?? "");
+      }
       setError(requestError instanceof Error ? requestError.message : "Ocurrió un error.");
     } finally {
       setLoading(false);
@@ -254,7 +258,8 @@ export default function AiAssistant({ draft, hasResults, initialConversationId, 
         <div className="max-w-2xl">
           <div className="flex items-center gap-3"><span className="grid h-9 w-9 place-items-center rounded-full border border-emerald-300/20 bg-emerald-300/[0.06] text-emerald-200"><SparkIcon className="h-4 w-4"/></span><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/45">Asistente inteligente</p><p className="mt-0.5 text-sm text-emerald-200/70">Análisis contextual de tu cálculo</p></div></div>
           <h2 className="mt-4 text-xl font-semibold tracking-tight sm:text-2xl">Convertí el resultado en decisiones concretas</h2>
-          <p className="mt-2 max-w-xl text-sm leading-6 text-white/50">Recibí un diagnóstico detallado y continuá en un chat libre que ya conoce todos los números de este escenario.</p>
+          <p className="mt-2 max-w-xl text-sm leading-6 text-white/50">Recibí un diagnóstico detallado y continuá en un chat que ya conoce todos los números de este escenario.</p>
+          <p className="mt-2 text-xs text-white/30">Plan gratuito: 1 análisis por semana · 10 mensajes de chat por día.</p>
         </div>
         <button onClick={() => void ask("analysis")} disabled={loading} className="group shrink-0 rounded-full border border-white/15 bg-black px-4 py-2 text-sm font-medium text-white/90 transition hover:border-white/25 hover:bg-zinc-900 hover:text-white disabled:opacity-60">{loading ? "Preparando análisis..." : <span className="flex items-center gap-2">Iniciar análisis <span className="transition-transform group-hover:translate-x-0.5">→</span></span>}</button>
       </div>
@@ -292,7 +297,7 @@ export default function AiAssistant({ draft, hasResults, initialConversationId, 
         </div>
 
         <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#08090a] via-[#08090a] to-transparent px-4 pb-4 pt-12 lg:left-[286px] sm:px-6 sm:pb-6">
-          <div className="pointer-events-auto mx-auto max-w-4xl"><form onSubmit={(event) => { event.preventDefault(); submitMessage(); }} className="relative rounded-[24px] border border-white/10 bg-[#151719] p-1.5 shadow-[0_24px_90px_rgba(0,0,0,0.5)] focus-within:border-white/20"><textarea value={message} onChange={(event) => setMessage(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); submitMessage(); } }} placeholder="Preguntá, profundizá o pedí una simulación..." rows={2} className="block max-h-36 min-h-12 w-full resize-none bg-transparent px-3 py-2 pr-12 text-[15px] leading-6 text-white outline-none placeholder:text-white/30"/><button disabled={loading || !message.trim()} aria-label="Enviar mensaje" className="absolute bottom-2.5 right-2.5 grid h-8 w-8 place-items-center rounded-full bg-white text-zinc-950 transition hover:bg-zinc-200 disabled:bg-white/10 disabled:text-white/20"><SendIcon/></button></form><p className="mt-2 text-center text-[11px] text-white/25">Enter para enviar · Shift + Enter para una nueva línea</p></div>
+          <div className="pointer-events-auto mx-auto max-w-4xl"><form onSubmit={(event) => { event.preventDefault(); submitMessage(); }} className="relative rounded-[24px] border border-white/10 bg-[#151719] p-1.5 shadow-[0_24px_90px_rgba(0,0,0,0.5)] focus-within:border-white/20"><textarea value={message} onChange={(event) => setMessage(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); submitMessage(); } }} placeholder="Preguntá, profundizá o pedí una simulación..." rows={2} className="block max-h-36 min-h-12 w-full resize-none bg-transparent px-3 py-2 pr-12 text-[15px] leading-6 text-white outline-none placeholder:text-white/30"/><button disabled={loading || !message.trim()} aria-label="Enviar mensaje" className="absolute bottom-2.5 right-2.5 grid h-8 w-8 place-items-center rounded-full bg-white text-zinc-950 transition hover:bg-zinc-200 disabled:bg-white/10 disabled:text-white/20"><SendIcon/></button></form><p className="mt-2 text-center text-[11px] text-white/25">Plan gratuito: 10 mensajes diarios · Enter para enviar · Shift + Enter para una nueva línea</p></div>
         </div>
       </main>
 

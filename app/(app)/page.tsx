@@ -199,14 +199,16 @@ export default function Home() {
 
       <section className="overflow-hidden rounded-3xl border border-emerald-300/15 bg-emerald-300/[0.055] p-6 sm:p-9">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300/75">
-          Lo que viene
+          Cuenta gratuita
         </p>
         <h2 className="mt-3 text-2xl font-bold tracking-tight">
-          Próximamente: guardar escenarios, comparar resultados e IA
+          Guardá escenarios y analizalos con inteligencia artificial
         </h2>
         <p className="mt-4 max-w-3xl text-sm leading-7 text-white/62 sm:text-base">
-          Estamos preparando funciones para que puedas guardar cálculos,
-          comparar opciones y recibir recomendaciones más claras para tu negocio.
+          Iniciá sesión para conservar tus cálculos, consultarlos desde cualquier
+          dispositivo y recibir un análisis contextual con recomendaciones para
+          tomar decisiones más claras. El plan gratuito incluye un análisis por
+          semana y hasta diez mensajes de seguimiento por día.
         </p>
       </section>
 
