@@ -21,8 +21,8 @@ export type PlanName = keyof typeof PLAN_LIMITS;
 
 export const BILLING_OPTIONS = [
   { id: "monthly", label: "Mensual", months: 1, totalUsd: 19.99, monthlyUsd: 19.99, discount: 0 },
-  { id: "quarterly", label: "Trimestral", months: 3, totalUsd: 53.97, monthlyUsd: 17.99, discount: 10 },
-  { id: "annual", label: "Anual", months: 12, totalUsd: 191.9, monthlyUsd: 15.99, discount: 20 },
+  { id: "quarterly", label: "Trimestral", months: 3, totalUsd: 53.99, monthlyUsd: 18, discount: 10 },
+  { id: "annual", label: "Anual", months: 12, totalUsd: 191.99, monthlyUsd: 16, discount: 20 },
 ] as const;
 
 export type BillingInterval = (typeof BILLING_OPTIONS)[number]["id"];
