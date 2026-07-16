@@ -6,7 +6,7 @@ export default function AppLayout({
   children: React.ReactNode;
 }) {
   return (
-    <main className="min-h-screen bg-zinc-950 text-white">
+    <main className="calculator-theme min-h-screen bg-zinc-950 text-white">
       <div className="mx-auto w-full max-w-5xl px-4 pb-10 pt-6">
         {children}
         <CalculatorScenarioCapture />

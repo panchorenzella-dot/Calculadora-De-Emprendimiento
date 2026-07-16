@@ -52,24 +52,21 @@ export default function Page() {
         </p>
 
         <div className="mt-6 flex items-center gap-3">
-          <span className="text-sm text-white/70">Moneda</span>
-          <select
-            className="rounded-xl bg-zinc-900 px-4 py-2 outline-none ring-1 ring-white/10 focus:ring-white/30"
-            value={currency}
-            onChange={(e) => setCurrency(e.target.value as Currency)}
-          >
-            <option value="ARS">ARS ($)</option>
-            <option value="USD">USD (US$)</option>
-          </select>
+          <span className="text-sm text-white/50">Moneda</span>
+          <div className="inline-flex rounded-xl border border-white/10 bg-black/40 p-1 shadow-inner shadow-black/40">
+            {(["ARS", "USD"] as Currency[]).map((item) => (
+              <button key={item} type="button" onClick={() => setCurrency(item)} className={`rounded-lg px-3 py-1.5 text-sm font-medium tracking-wide transition ${currency === item ? "bg-zinc-800 text-white shadow-sm shadow-black ring-1 ring-inset ring-white/10" : "text-white/40 hover:bg-white/5 hover:text-white/75"}`}>{item}</button>
+            ))}
+          </div>
         </div>
 
         <div className="mt-4 flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() => setModo("desde_ganancia")}
-            className={`rounded-xl px-4 py-2 text-sm font-semibold ring-1 ${
+            className={`rounded-full px-3 py-1.5 text-sm font-medium ring-1 ${
               modo === "desde_ganancia"
-                ? "bg-white text-zinc-950 ring-white"
+                ? "bg-zinc-800 text-white shadow-sm shadow-black ring-1 ring-inset ring-white/10"
                 : "bg-white/10 text-white ring-white/10 hover:bg-white/20"
             }`}
           >
@@ -79,9 +76,9 @@ export default function Page() {
           <button
             type="button"
             onClick={() => setModo("desde_precio")}
-            className={`rounded-xl px-4 py-2 text-sm font-semibold ring-1 ${
+            className={`rounded-full px-3 py-1.5 text-sm font-medium ring-1 ${
               modo === "desde_precio"
-                ? "bg-white text-zinc-950 ring-white"
+                ? "bg-zinc-800 text-white shadow-sm shadow-black ring-1 ring-inset ring-white/10"
                 : "bg-white/10 text-white ring-white/10 hover:bg-white/20"
             }`}
           >

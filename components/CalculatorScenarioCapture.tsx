@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import SaveScenarioButton from "@/components/SaveScenarioButton";
+import AiAssistant from "@/components/AiAssistant";
 import type { ScenarioDraft, ScenarioValue } from "@/types/scenario";
 
 const calculators: Record<string, { type: string; name: string }> = {
@@ -114,7 +115,13 @@ export default function CalculatorScenarioCapture() {
     const seoHeading = Array.from(document.querySelectorAll("h2, h3")).find(
       (heading) => {
         const text = cleanLabel(heading.textContent || "").toLowerCase();
-        return text.startsWith("qué es") || text.startsWith("¿qué es");
+        return (
+          text.startsWith("cómo lo calculamos") ||
+          text.startsWith("como lo calculamos") ||
+          text.startsWith("qué es") ||
+          text.startsWith("¿qué es") ||
+          text.startsWith("ejemplo práctico")
+        );
       }
     );
     const seoSection = seoHeading?.closest("section");
@@ -171,10 +178,10 @@ export default function CalculatorScenarioCapture() {
   if (!portalTarget) return null;
 
   return createPortal(
-    <SaveScenarioButton
-      draft={snapshot?.draft ?? null}
-      hasResults={snapshot?.hasResults ?? false}
-    />,
+    <>
+      <AiAssistant draft={snapshot?.draft ?? null} hasResults={snapshot?.hasResults ?? false} />
+      <SaveScenarioButton draft={snapshot?.draft ?? null} hasResults={snapshot?.hasResults ?? false} />
+    </>,
     portalTarget
   );
 }

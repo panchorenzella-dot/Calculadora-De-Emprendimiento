@@ -14,7 +14,7 @@ export default function Navbar() {
   ];
 
   const linkClass = (href: string) =>
-    `whitespace-nowrap rounded-full px-3 py-2 text-xs font-medium transition sm:px-4 sm:text-sm ${
+    `whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition ${
       pathname === href
         ? "bg-white/10 text-white"
         : "text-white/65 hover:bg-white/5 hover:text-white"

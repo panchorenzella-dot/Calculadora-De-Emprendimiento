@@ -110,7 +110,7 @@ export default function SaveScenarioButton({ draft, hasResults }: Props) {
   }
 
   return (
-    <section className="mx-auto mt-8 max-w-5xl rounded-2xl border border-emerald-300/15 bg-emerald-300/[0.04] p-5">
+    <section className="mx-auto max-w-5xl border-b border-white/[0.07] py-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="font-semibold">¿Querés volver a este cálculo?</h2>
@@ -122,7 +122,7 @@ export default function SaveScenarioButton({ draft, hasResults }: Props) {
           type="button"
           onClick={beginSave}
           disabled={saving}
-          className="shrink-0 rounded-xl bg-emerald-300 px-5 py-3 text-sm font-semibold text-zinc-950 disabled:opacity-60"
+          className="shrink-0 rounded-full border border-white/15 bg-black px-4 py-2 text-sm font-medium text-white/90 transition hover:border-white/25 hover:bg-zinc-900 hover:text-white disabled:opacity-60"
         >
           {saving ? "Guardando..." : "Guardar escenario"}
         </button>
@@ -130,7 +130,7 @@ export default function SaveScenarioButton({ draft, hasResults }: Props) {
 
       {nameOpen && draft && (
         <form
-          className="mt-5 grid gap-3 border-t border-white/10 pt-5 sm:grid-cols-[1fr_auto]"
+          className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto]"
           onSubmit={async (event) => {
             event.preventDefault();
             await persist(draft, title);
@@ -140,9 +140,9 @@ export default function SaveScenarioButton({ draft, hasResults }: Props) {
             value={title}
             onChange={(event) => setTitle(event.target.value)}
             placeholder={`Nombre opcional · ${defaultTitle(draft)}`}
-            className="rounded-xl border border-white/10 bg-zinc-900 px-4 py-3 text-sm outline-none focus:border-white/30"
+            className="rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-3 text-sm outline-none focus:border-white/20"
           />
-          <button className="rounded-xl border border-white/15 px-5 py-3 text-sm font-semibold hover:bg-white/5">
+          <button className="rounded-full bg-white px-4 py-2.5 text-sm font-medium text-zinc-950 transition hover:bg-zinc-200">
             Confirmar guardado
           </button>
         </form>

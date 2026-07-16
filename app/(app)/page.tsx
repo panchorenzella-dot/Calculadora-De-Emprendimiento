@@ -96,13 +96,13 @@ export default function Home() {
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link
               href="/calculadoras"
-              className="rounded-xl bg-white px-5 py-3 text-center text-sm font-bold !text-black transition hover:bg-emerald-50"
+              className="rounded-full bg-white px-4 py-2.5 text-center text-sm font-semibold !text-black transition hover:bg-zinc-200"
             >
               Ver calculadoras
             </Link>
             <Link
               href="/margen"
-              className="rounded-xl border border-white/15 bg-white/[0.04] px-5 py-3 text-center text-sm font-semibold text-white transition hover:border-white/30 hover:bg-white/[0.08]"
+              className="rounded-full border border-white/15 bg-white/[0.04] px-4 py-2.5 text-center text-sm font-medium text-white transition hover:border-white/30 hover:bg-white/[0.08]"
             >
               Calcular margen
             </Link>

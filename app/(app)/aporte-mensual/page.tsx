@@ -208,7 +208,7 @@ function InputField({
           value={value}
           onChange={(event) => onChange(event.target.value)}
           placeholder="0"
-          className={`w-full appearance-none rounded-2xl border border-zinc-800 bg-zinc-950 py-3 text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-zinc-500 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
+          className={`w-full appearance-none rounded-2xl border border-zinc-800 bg-zinc-950 py-3 text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-emerald-300/50 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
             prefix ? "pl-9" : "pl-4"
           } ${suffix ? "pr-14" : "pr-4"}`}
         />
@@ -398,13 +398,13 @@ export default function InversionConAportesMensualesPage() {
             <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
               <h2 className="text-2xl font-bold">Datos</h2>
 
-              <div className="flex rounded-full border border-zinc-800 bg-black p-1">
+              <div className="flex rounded-xl border border-white/10 bg-black/40 p-1 shadow-inner shadow-black/40">
                 <button
                   type="button"
                   onClick={() => setCurrency("ARS")}
-                  className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                  className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
                     currency === "ARS"
-                      ? "bg-white text-black"
+                      ? "bg-zinc-800 text-white shadow-sm shadow-black ring-1 ring-inset ring-white/10"
                       : "text-zinc-400 hover:text-white"
                   }`}
                 >
@@ -414,9 +414,9 @@ export default function InversionConAportesMensualesPage() {
                 <button
                   type="button"
                   onClick={() => setCurrency("USD")}
-                  className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                  className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
                     currency === "USD"
-                      ? "bg-white text-black"
+                      ? "bg-zinc-800 text-white shadow-sm shadow-black ring-1 ring-inset ring-white/10"
                       : "text-zinc-400 hover:text-white"
                   }`}
                 >
@@ -484,7 +484,7 @@ export default function InversionConAportesMensualesPage() {
 
               <button
                 type="submit"
-                className="w-full rounded-2xl bg-white px-5 py-3 font-semibold text-black transition hover:bg-zinc-200"
+                className="w-full rounded-full bg-white px-4 py-2.5 font-semibold text-zinc-950 transition hover:bg-zinc-200"
               >
                 Calcular
               </button>
