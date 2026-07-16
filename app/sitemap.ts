@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = "https://calculadoraemprendedora.com";
+  const base = "https://www.calculadoraemprendedora.com";
   const now = new Date();
 
   return [
@@ -17,10 +17,34 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${base}/contacto`,
       lastModified: now,
       changeFrequency: "yearly",
-      priority: 0.3,
+      priority: 0.4,
+    },
+    {
+      url: `${base}/terminos-y-condiciones`,
+      lastModified: now,
+      changeFrequency: "yearly",
+      priority: 0.4,
+    },
+    {
+      url: `${base}/cancelaciones-y-reembolsos`,
+      lastModified: now,
+      changeFrequency: "yearly",
+      priority: 0.4,
     },
     {
       url: `${base}/politica-de-privacidad`,
+      lastModified: now,
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
+    {
+      url: `${base}/arrepentimiento`,
+      lastModified: now,
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
+    {
+      url: `${base}/baja-servicio`,
       lastModified: now,
       changeFrequency: "yearly",
       priority: 0.3,

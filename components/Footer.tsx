@@ -1,25 +1,27 @@
 import Link from "next/link";
 
+const links = [
+  ["/precios", "Planes"],
+  ["/perfil", "Perfil"],
+  ["/terminos-y-condiciones", "Términos"],
+  ["/cancelaciones-y-reembolsos", "Cancelaciones"],
+  ["/politica-de-privacidad", "Privacidad"],
+  ["/contacto", "Contacto"],
+];
+
 export default function Footer() {
   return (
-    <footer className="border-t border-white/10 px-6 py-4 text-xs text-white/60">
-      <div className="flex items-center justify-between">
-        <div>© {new Date().getFullYear()} Calculadora Emprendedora</div>
-
-        <div className="flex gap-4">
-          <Link className="hover:text-white" href="/precios">
-            Planes
-          </Link>
-          <Link className="hover:text-white" href="/perfil">
-            Perfil
-          </Link>
-          <Link className="hover:text-white" href="/politica-de-privacidad">
-            Política de privacidad
-          </Link>
-          <Link className="hover:text-white" href="/contacto">
-            Contacto
-          </Link>
+    <footer className="border-t border-white/10 px-6 py-7 text-xs text-white/55">
+      <div className="mx-auto flex max-w-6xl flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p>© {new Date().getFullYear()} Calculadora Emprendedora</p>
+          <p className="mt-1 text-white/30">Un producto digital de Zella AI</p>
         </div>
+        <nav aria-label="Enlaces legales y de ayuda" className="flex flex-wrap gap-x-4 gap-y-3">
+          {links.map(([href, label]) => (
+            <Link key={href} className="transition hover:text-white" href={href}>{label}</Link>
+          ))}
+        </nav>
       </div>
     </footer>
   );
