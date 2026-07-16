@@ -2,7 +2,7 @@
 
 import type { Session } from "@supabase/supabase-js";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import AuthModal from "@/components/AuthModal";
 import PlanUsageDashboard, { type UsageItem } from "@/components/PlanUsageDashboard";
@@ -89,8 +89,9 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState({ full_name: "", phone: "", business_name: "", role: "", city: "" });
   const [message, setMessage] = useState(configured ? "" : "Falta configurar Supabase para habilitar el perfil.");
+  const paypalReturnHandled = useRef(false);
 
-  async function loadData() {
+  const loadData = useCallback(async () => {
     const supabase = getSupabaseClient();
     if (!supabase) return;
     const [scenarioResponse, conversationResponse, planResponse, usageResponse] = await Promise.all([
@@ -116,7 +117,36 @@ export default function ProfilePage() {
     setPlan(effectivePlan);
     const usageData = usageResponse.data as UsageItem[] | null;
     setUsage(!usageResponse.error && usageData?.length ? usageData : defaultUsage(effectivePlan.plan));
-  }
+  }, []);
+
+  const handlePayPalReturn = useCallback(async (activeSession: Session) => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("paypal") !== "success" || paypalReturnHandled.current) return;
+    paypalReturnHandled.current = true;
+    const subscriptionId = params.get("subscription_id");
+    window.history.replaceState({}, "", "/perfil");
+    if (!subscriptionId) {
+      setMessage("PayPal recibió la aprobación. Estamos esperando la confirmación automática del pago.");
+      return;
+    }
+
+    setMessage("Confirmando la suscripción con PayPal...");
+    try {
+      const response = await fetch("/api/paypal/subscriptions/sync", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${activeSession.access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ subscriptionId }),
+      });
+      const data = await response.json() as { message?: string; error?: string; active?: boolean; pending?: boolean };
+      setMessage(data.message || data.error || "PayPal está procesando la suscripción.");
+      if (response.ok && data.active) await loadData();
+    } catch {
+      setMessage("PayPal recibió la aprobación. El plan se activará cuando llegue la confirmación automática.");
+    }
+  }, [loadData]);
 
   useEffect(() => {
     const supabase = getSupabaseClient();
@@ -125,17 +155,23 @@ export default function ProfilePage() {
       setSession(data.session);
       setProfile(profileFromUser(data.session?.user));
       setLoading(false);
-      if (data.session) void loadData();
+      if (data.session) {
+        void loadData();
+        void handlePayPalReturn(data.session);
+      }
     });
     const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession);
       setProfile(profileFromUser(nextSession?.user));
       setLoading(false);
-      if (nextSession) void loadData();
+      if (nextSession) {
+        void loadData();
+        void handlePayPalReturn(nextSession);
+      }
       else { setScenarios([]); setConversations([]); setPlan(FREE_PLAN); setUsage(defaultUsage()); }
     });
     return () => data.subscription.unsubscribe();
-  }, []);
+  }, [handlePayPalReturn, loadData]);
 
   async function saveProfile(event: React.FormEvent) {
     event.preventDefault();

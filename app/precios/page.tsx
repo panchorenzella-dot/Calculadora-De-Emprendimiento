@@ -44,6 +44,16 @@ function CheckIcon() {
 }
 
 export default function PricingPage() {
+  const paypalMode = process.env.PAYPAL_ENV?.toLowerCase() === "live" ? "live" : "sandbox";
+  const paypalReady = Boolean(
+    process.env.PAYPAL_CLIENT_ID
+      && process.env.PAYPAL_CLIENT_SECRET
+      && process.env.PAYPAL_PLAN_MONTHLY_ID
+      && process.env.PAYPAL_PLAN_QUARTERLY_ID
+      && process.env.PAYPAL_PLAN_ANNUAL_ID
+      && (process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)
+  );
+
   return (
     <div className="relative isolate overflow-hidden bg-[#080a09] text-white">
       <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[720px] bg-[radial-gradient(circle_at_50%_-10%,rgba(52,211,153,0.18),transparent_48%)]" />
@@ -114,7 +124,7 @@ export default function PricingPage() {
           <p className="relative mt-7 max-w-md text-sm leading-6 text-white/55">
             Más margen para comparar escenarios y conversar en profundidad antes de decidir.
           </p>
-          <PricingSelector />
+          <PricingSelector paypalReady={paypalReady} paypalMode={paypalMode} />
           <div className="relative my-7 h-px bg-emerald-100/10" />
           <ul className="relative space-y-4">
             {proFeatures.map((feature) => (
@@ -159,7 +169,7 @@ export default function PricingPage() {
             <div className="py-6"><h3 className="font-medium text-white/85">¿Cuándo se renuevan los límites?</h3><p className="mt-2 text-sm leading-6 text-white/42">En Gratis, el análisis se renueva cada semana y los mensajes y escenarios cada día. En Pro, análisis y mensajes se renuevan cada mes; los escenarios son ilimitados.</p></div>
             <div className="py-6"><h3 className="font-medium text-white/85">¿Puedo pagar varios meses por adelantado?</h3><p className="mt-2 text-sm leading-6 text-white/42">Sí. La propuesta incluye pago mensual anticipado, trimestral con 10% de ahorro y anual con 20% de ahorro.</p></div>
             <div className="py-6"><h3 className="font-medium text-white/85">¿Qué pasa si llego al límite?</h3><p className="mt-2 text-sm leading-6 text-white/42">Tus cálculos y escenarios siguen disponibles. Solo tenés que esperar la renovación del cupo de IA.</p></div>
-            <div className="py-6"><h3 className="font-medium text-white/85">¿Ya puedo pagar Pro?</h3><p className="mt-2 text-sm leading-6 text-white/42">Todavía no. La cuenta, los permisos y los límites Pro ya están preparados; falta conectar el cobro para activarlo automáticamente.</p></div>
+            <div className="py-6"><h3 className="font-medium text-white/85">¿Ya puedo pagar Pro?</h3><p className="mt-2 text-sm leading-6 text-white/42">{paypalReady ? paypalMode === "sandbox" ? "El flujo está habilitado en modo de prueba. No se mueve dinero real hasta completar la verificación y pasar PayPal a Live." : "Sí. Elegí un período, iniciá sesión y confirmá la suscripción segura desde PayPal." : "Estamos terminando la configuración segura de PayPal antes de habilitar el botón."}</p></div>
           </div>
         </div>
       </section>
