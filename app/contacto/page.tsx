@@ -45,13 +45,12 @@ export default function ContactoPage() {
 
         <section className="mt-12 grid gap-6 rounded-3xl border border-emerald-300/15 bg-emerald-300/[0.04] p-7 md:grid-cols-[1fr_auto] md:items-center">
           <div>
-            <p className="text-sm text-emerald-300">Atención al consumidor</p>
+            <p className="text-sm text-emerald-300">Soporte</p>
             <h2 className="mt-2 break-all text-xl font-semibold sm:text-2xl">
               calculadoraemprendedora@gmail.com
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-white/55">
-              El canal recibe solicitudes las 24 horas. El horario de atención es de lunes a
-              viernes de 9:00 a 17:00 (UTC-3), excepto feriados.
+              Escribinos por consultas sobre la plataforma, pagos, suscripciones o privacidad.
             </p>
           </div>
           <a
@@ -63,25 +62,13 @@ export default function ContactoPage() {
         </section>
 
         <section className="mt-8 rounded-3xl border border-white/10 bg-white/[0.025] p-7">
-          <p className="text-xs uppercase tracking-[0.18em] text-white/40">Gestiones online</p>
-          <h2 className="mt-3 text-2xl font-semibold">Suscripciones y derechos del consumidor</h2>
+          <p className="text-xs uppercase tracking-[0.18em] text-white/40">Ayuda con tu plan</p>
+          <h2 className="mt-3 text-2xl font-semibold">Suscripciones y reembolsos</h2>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-white/55">
-            Podés iniciar estas gestiones directamente desde la web, sin tener que ingresar a tu
-            cuenta. Al enviarlas recibís un código de identificación.
+            Podés administrar la renovación desde PayPal o escribirnos si necesitás ayuda con
+            una suscripción, un cobro o un reembolso.
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
-            <Link
-              href="/arrepentimiento"
-              className="rounded-full border border-emerald-300/30 bg-emerald-300/10 px-4 py-2 text-sm font-semibold text-emerald-200 hover:bg-emerald-300/15"
-            >
-              Botón de arrepentimiento
-            </Link>
-            <Link
-              href="/baja-servicio"
-              className="rounded-full border border-emerald-300/30 bg-emerald-300/10 px-4 py-2 text-sm font-semibold text-emerald-200 hover:bg-emerald-300/15"
-            >
-              Botón de baja de servicio
-            </Link>
             <Link
               href="/cancelaciones-y-reembolsos"
               className="rounded-full border border-white/15 bg-black px-4 py-2 text-sm font-medium text-white/75 hover:bg-zinc-900"

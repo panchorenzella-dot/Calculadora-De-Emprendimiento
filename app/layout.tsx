@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/NavBar";
 import Footer from "@/components/Footer";
-import ConsumerRightsBar from "@/components/ConsumerRightsBar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,7 +31,6 @@ export const metadata: Metadata = {
       "Herramientas simples para calcular costos, márgenes, precios, rentabilidad, inversión y ahorro.",
     url: "https://www.calculadoraemprendedora.com",
     siteName: "Calculadora Emprendedora",
-    locale: "es_AR",
     type: "website",
   },
 
@@ -56,7 +54,6 @@ export default function RootLayout({
       >
         <div className="min-h-screen flex flex-col">
           <Navbar />
-          <ConsumerRightsBar />
           <div className="flex-1">{children}</div>
           <Footer />
         </div>

@@ -33,22 +33,19 @@ export default function PoliticaPage() {
         <LegalSection number="5" title="Pagos y suscripciones">
           <p>PayPal procesa los pagos y administra la autorización de las suscripciones. Zella AI recibe identificadores, estado, período y eventos necesarios para activar, renovar, suspender, cancelar o reembolsar Pro. No recibimos ni almacenamos el número completo de tu tarjeta ni tus credenciales bancarias.</p>
         </LegalSection>
-        <LegalSection number="6" title="Solicitudes del consumidor">
-          <p>Si utilizás los botones de arrepentimiento o baja, guardamos nombre, email, referencia opcional, detalle, código, estado y fecha del trámite. Para limitar abusos conservamos un valor hash de la dirección técnica de origen, no la dirección IP en bruto.</p>
-        </LegalSection>
-        <LegalSection number="7" title="Proveedores de servicio">
+        <LegalSection number="6" title="Proveedores de servicio">
           <p>Utilizamos Supabase para autenticación y datos; OpenAI para respuestas de IA; Vercel para alojamiento; y PayPal para pagos. Cada proveedor trata información para prestar su servicio y aplica sus propias condiciones y medidas de seguridad.</p>
         </LegalSection>
-        <LegalSection number="8" title="Cookies y almacenamiento local">
+        <LegalSection number="7" title="Cookies y almacenamiento local">
           <p>Usamos cookies o almacenamiento necesarios para mantener la sesión, completar el ingreso y recordar información temporal. Si incorporamos medición o publicidad no esencial, actualizaremos esta política y aplicaremos los controles que correspondan.</p>
         </LegalSection>
-        <LegalSection number="9" title="Tus opciones">
+        <LegalSection number="8" title="Tus opciones">
           <p>Podés editar tu perfil, eliminar escenarios y conversaciones, cerrar sesión y solicitar acceso, corrección o eliminación de datos. La baja de Pro no elimina automáticamente la cuenta. Algunas constancias pueden conservarse para cumplir obligaciones legales, prevenir fraude o resolver reclamos.</p>
         </LegalSection>
-        <LegalSection number="10" title="Seguridad y conservación">
+        <LegalSection number="9" title="Seguridad y conservación">
           <p>Aplicamos controles razonables para que cada usuario acceda a sus propios datos y separamos las claves privadas del navegador. Conservamos la información mientras la cuenta esté activa o durante el tiempo necesario para prestar el servicio y cumplir obligaciones.</p>
         </LegalSection>
-        <LegalSection number="11" title="Cambios en esta política">
+        <LegalSection number="10" title="Cambios en esta política">
           <p>Podemos actualizar esta política cuando cambien funciones, proveedores o prácticas. La versión vigente y su fecha estarán publicadas aquí.</p>
         </LegalSection>
       </div>

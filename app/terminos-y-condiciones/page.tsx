@@ -40,9 +40,9 @@ export default function TerminosPage() {
           <p>Los planes Pro se cobran por adelantado en dólares estadounidenses mediante PayPal. El precio, período y renovación automática se muestran antes de confirmar la suscripción. PayPal o el emisor del medio de pago pueden aplicar conversión, comisiones o impuestos fuera del control de Zella AI.</p>
           <p>La suscripción se renueva automáticamente hasta su cancelación. Un pago fallido puede generar suspensión, reintentos de cobro y un período técnico de gracia de hasta dos días, sin extender el período contratado.</p>
         </LegalSection>
-        <LegalSection number="7" title="Cancelación, baja y arrepentimiento">
-          <p>Podés cancelar futuras renovaciones desde PayPal o utilizar el <Link className="text-emerald-300 hover:text-emerald-200" href="/baja-servicio">Botón de baja de servicio</Link>, sin necesidad de iniciar sesión. La baja no elimina automáticamente tu cuenta ni tus datos guardados.</p>
-          <p>También podés ejercer el derecho aplicable desde el <Link className="text-emerald-300 hover:text-emerald-200" href="/arrepentimiento">Botón de arrepentimiento</Link>. Las condiciones de devolución y excepciones se detallan en la <Link className="text-emerald-300 hover:text-emerald-200" href="/cancelaciones-y-reembolsos">política de cancelaciones y reembolsos</Link>.</p>
+        <LegalSection number="7" title="Cancelación y reembolsos">
+          <p>Podés cancelar futuras renovaciones desde la administración de pagos automáticos de PayPal. La cancelación detiene cobros futuros, pero no elimina automáticamente tu cuenta ni tus datos guardados.</p>
+          <p>Las condiciones para solicitar la revisión de un cobro o un reembolso se detallan en la <Link className="text-emerald-300 hover:text-emerald-200" href="/cancelaciones-y-reembolsos">política de cancelaciones y reembolsos</Link>.</p>
         </LegalSection>
         <LegalSection number="8" title="Disponibilidad y proveedores">
           <p>El servicio depende de internet y de proveedores como Vercel, Supabase, OpenAI y PayPal. Podemos realizar mantenimiento o enfrentar interrupciones fuera de nuestro control. Aplicamos esfuerzos razonables para restablecer el servicio, sin garantizar disponibilidad ininterrumpida.</p>

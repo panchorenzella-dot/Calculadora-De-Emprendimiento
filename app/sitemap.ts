@@ -27,8 +27,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/terminos-y-condiciones",
     "/cancelaciones-y-reembolsos",
     "/politica-de-privacidad",
-    "/arrepentimiento",
-    "/baja-servicio",
   ];
 
   return routes.map((route) => ({
