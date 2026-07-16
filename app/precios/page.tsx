@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import PricingSelector from "@/components/PricingSelector";
 import { PLAN_LIMITS } from "@/lib/plans";
 
 export const metadata: Metadata = {
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
 
 const freeFeatures = [
   "Todas las calculadoras del sitio",
-  "Escenarios guardados en tu cuenta",
+  `${PLAN_LIMITS.free.scenarios} escenarios guardados por día`,
   `${PLAN_LIMITS.free.analysis} análisis con IA por semana`,
   `${PLAN_LIMITS.free.chat} mensajes de seguimiento por día`,
   "Historial de análisis y conversaciones",
@@ -20,6 +21,7 @@ const freeFeatures = [
 const proFeatures = [
   `${PLAN_LIMITS.pro.analysis} análisis con IA por mes`,
   `${PLAN_LIMITS.pro.chat} mensajes de seguimiento por mes`,
+  "Escenarios guardados ilimitados",
   "Modelo de IA con mayor capacidad",
   "Todas las calculadoras y escenarios guardados",
   "Historial completo en todos tus dispositivos",
@@ -27,7 +29,7 @@ const proFeatures = [
 
 const comparisons = [
   ["Calculadoras", "Todas", "Todas"],
-  ["Escenarios guardados", "Incluidos", "Incluidos"],
+  ["Escenarios guardados", "3 por día", "Ilimitados"],
   ["Análisis con IA", "1 por semana", "30 por mes"],
   ["Mensajes con IA", "5 por día", "300 por mes"],
   ["Modelo de IA", "Esencial", "Mayor capacidad"],
@@ -106,18 +108,13 @@ export default function PricingPage() {
                 <p className="text-sm font-semibold text-emerald-200">Pro</p>
                 <span className="rounded-full bg-emerald-300 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-950">Recomendado</span>
               </div>
-              <h2 className="mt-4 text-3xl font-semibold tracking-tight">Próximamente</h2>
-              <p className="mt-1 text-sm text-emerald-100/45">Suscripción mensual</p>
             </div>
             <span className="rounded-full border border-emerald-200/20 bg-emerald-200/[0.06] px-3 py-1 text-xs text-emerald-100/70">30 + 300</span>
           </div>
           <p className="relative mt-7 max-w-md text-sm leading-6 text-white/55">
             Más margen para comparar escenarios y conversar en profundidad antes de decidir.
           </p>
-          <div aria-disabled="true" className="relative mt-7 cursor-not-allowed rounded-full bg-emerald-300/80 px-4 py-3 text-center text-sm font-bold text-emerald-950/75">
-            Activar Pro · pagos próximamente
-          </div>
-          <p className="relative mt-2 text-center text-[11px] text-white/30">Se habilitará cuando conectemos el sistema de cobro.</p>
+          <PricingSelector />
           <div className="relative my-7 h-px bg-emerald-100/10" />
           <ul className="relative space-y-4">
             {proFeatures.map((feature) => (
@@ -159,7 +156,8 @@ export default function PricingPage() {
             <h2 className="mt-4 text-3xl font-semibold tracking-tight">Antes de elegir</h2>
           </div>
           <div className="divide-y divide-white/[0.08] border-y border-white/[0.08]">
-            <div className="py-6"><h3 className="font-medium text-white/85">¿Cuándo se renuevan los límites?</h3><p className="mt-2 text-sm leading-6 text-white/42">En Gratis, el análisis se renueva cada semana y los mensajes cada día. En Pro, ambos cupos se renuevan al comenzar cada mes.</p></div>
+            <div className="py-6"><h3 className="font-medium text-white/85">¿Cuándo se renuevan los límites?</h3><p className="mt-2 text-sm leading-6 text-white/42">En Gratis, el análisis se renueva cada semana y los mensajes y escenarios cada día. En Pro, análisis y mensajes se renuevan cada mes; los escenarios son ilimitados.</p></div>
+            <div className="py-6"><h3 className="font-medium text-white/85">¿Puedo pagar varios meses por adelantado?</h3><p className="mt-2 text-sm leading-6 text-white/42">Sí. La propuesta incluye pago mensual anticipado, trimestral con 10% de ahorro y anual con 20% de ahorro.</p></div>
             <div className="py-6"><h3 className="font-medium text-white/85">¿Qué pasa si llego al límite?</h3><p className="mt-2 text-sm leading-6 text-white/42">Tus cálculos y escenarios siguen disponibles. Solo tenés que esperar la renovación del cupo de IA.</p></div>
             <div className="py-6"><h3 className="font-medium text-white/85">¿Ya puedo pagar Pro?</h3><p className="mt-2 text-sm leading-6 text-white/42">Todavía no. La cuenta, los permisos y los límites Pro ya están preparados; falta conectar el cobro para activarlo automáticamente.</p></div>
           </div>

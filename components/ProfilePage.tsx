@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import AuthModal from "@/components/AuthModal";
+import PlanUsageDashboard, { type UsageItem } from "@/components/PlanUsageDashboard";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import type { SavedScenario } from "@/types/scenario";
 
@@ -21,6 +22,7 @@ type Conversation = {
 type PlanInfo = {
   plan: "free" | "pro";
   status: "inactive" | "trialing" | "active" | "past_due" | "canceled";
+  current_period_start: string | null;
   current_period_end: string | null;
   cancel_at_period_end: boolean;
 };
@@ -28,9 +30,18 @@ type PlanInfo = {
 const FREE_PLAN: PlanInfo = {
   plan: "free",
   status: "inactive",
+  current_period_start: null,
   current_period_end: null,
   cancel_at_period_end: false,
 };
+
+function defaultUsage(plan: "free" | "pro" = "free"): UsageItem[] {
+  return [
+    { resource: "analysis", used: 0, quota_limit: plan === "pro" ? 30 : 1, resets_at: null, plan },
+    { resource: "chat", used: 0, quota_limit: plan === "pro" ? 300 : 5, resets_at: null, plan },
+    { resource: "scenario", used: 0, quota_limit: plan === "pro" ? null : 3, resets_at: null, plan },
+  ];
+}
 
 function formatDate(value?: string) {
   if (!value) return "—";
@@ -69,6 +80,7 @@ export default function ProfilePage() {
   const [scenarios, setScenarios] = useState<SavedScenario[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [plan, setPlan] = useState<PlanInfo>(FREE_PLAN);
+  const [usage, setUsage] = useState<UsageItem[]>(defaultUsage());
   const [editing, setEditing] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -78,10 +90,11 @@ export default function ProfilePage() {
   async function loadData() {
     const supabase = getSupabaseClient();
     if (!supabase) return;
-    const [scenarioResponse, conversationResponse, planResponse] = await Promise.all([
+    const [scenarioResponse, conversationResponse, planResponse, usageResponse] = await Promise.all([
       supabase.from("saved_scenarios").select("*").order("created_at", { ascending: false }),
       supabase.from("ai_conversations").select("id,title,calculator_name,calculator_path,scenario_id,created_at,updated_at").order("updated_at", { ascending: false }),
-      supabase.from("user_plans").select("plan,status,current_period_end,cancel_at_period_end").maybeSingle(),
+      supabase.from("user_plans").select("plan,status,current_period_start,current_period_end,cancel_at_period_end").maybeSingle(),
+      supabase.rpc("get_my_usage_summary"),
     ]);
     if (scenarioResponse.error) setMessage(`No se pudieron cargar los escenarios: ${scenarioResponse.error.message}`);
     else setScenarios((scenarioResponse.data as SavedScenario[]) ?? []);
@@ -91,7 +104,10 @@ export default function ProfilePage() {
     const proIsActive = planData?.plan === "pro"
       && (planData.status === "active" || planData.status === "trialing")
       && (!planData.current_period_end || new Date(planData.current_period_end) > new Date());
-    setPlan(proIsActive && planData ? planData : FREE_PLAN);
+    const effectivePlan = proIsActive && planData ? planData : FREE_PLAN;
+    setPlan(effectivePlan);
+    const usageData = usageResponse.data as UsageItem[] | null;
+    setUsage(!usageResponse.error && usageData?.length ? usageData : defaultUsage(effectivePlan.plan));
   }
 
   useEffect(() => {
@@ -108,7 +124,7 @@ export default function ProfilePage() {
       setProfile(profileFromUser(nextSession?.user));
       setLoading(false);
       if (nextSession) void loadData();
-      else { setScenarios([]); setConversations([]); setPlan(FREE_PLAN); }
+      else { setScenarios([]); setConversations([]); setPlan(FREE_PLAN); setUsage(defaultUsage()); }
     });
     return () => data.subscription.unsubscribe();
   }, []);
@@ -197,13 +213,13 @@ export default function ProfilePage() {
         {view === "escenarios" && <><div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs text-emerald-200/60">Biblioteca de cálculos</p><h1 className="mt-2 text-3xl font-semibold tracking-tight">Escenarios</h1><p className="mt-2 text-sm text-white/40">Organizá, renombrá y revisá todos tus resultados.</p></div><Link href="/calculadoras" className="rounded-full border border-white/12 bg-black px-3.5 py-2 text-center text-sm text-white/75 hover:bg-zinc-900">Crear escenario</Link></div><section className="mt-8">{scenarios.length ? scenarios.map((item) => <ScenarioRow key={item.id} scenario={item}/>) : <p className="rounded-2xl border border-dashed border-white/10 p-10 text-center text-sm text-white/35">No hay escenarios guardados todavía.</p>}</section></>}
 
         {view === "plan" && <>
-          <div><p className="text-xs text-emerald-200/60">Suscripción</p><h1 className="mt-2 text-3xl font-semibold tracking-tight">Mi plan</h1><p className="mt-2 text-sm text-white/40">Consultá tu nivel de acceso y los límites de la inteligencia artificial.</p></div>
+          <div><p className="text-xs text-emerald-200/60">Suscripción</p><h1 className="mt-2 text-3xl font-semibold tracking-tight">Mi plan</h1><p className="mt-2 text-sm text-white/40">Consultá tu nivel de acceso, tus consumos y la próxima fecha de renovación.</p></div>
           <section className="relative mt-8 overflow-hidden rounded-[26px] border border-emerald-300/20 bg-[linear-gradient(145deg,rgba(16,185,129,0.12),rgba(255,255,255,0.025)_55%,rgba(0,0,0,0.12))] p-6 sm:p-8">
             <div className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-emerald-300/[0.08] blur-3xl" />
             <div className="relative flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between"><div><div className="flex items-center gap-2"><span className="rounded-full border border-emerald-200/20 bg-emerald-200/[0.08] px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-emerald-100">{plan.plan === "pro" ? "Pro" : "Gratis"}</span>{plan.plan === "pro" && <span className="text-xs text-white/35">Activo</span>}</div><h2 className="mt-5 text-3xl font-semibold tracking-tight">{plan.plan === "pro" ? "Más espacio para profundizar" : "Todo lo esencial para empezar"}</h2><p className="mt-3 max-w-xl text-sm leading-6 text-white/45">{plan.plan === "pro" ? "Tu cuenta tiene acceso al modelo avanzado y a los cupos mensuales ampliados." : "Podés usar todas las calculadoras, guardar escenarios y probar el asistente con límites gratuitos."}</p></div>{plan.plan === "free" && <Link href="/precios" className="relative shrink-0 rounded-full bg-emerald-300 px-4 py-2.5 text-center text-sm font-bold text-emerald-950 hover:bg-emerald-200">Conocer Pro</Link>}</div>
-            <div className="relative mt-8 grid gap-3 sm:grid-cols-2"><div className="rounded-2xl border border-white/[0.08] bg-black/20 p-5"><p className="text-xs text-white/35">Análisis con IA</p><p className="mt-2 text-2xl font-semibold text-white/90">{plan.plan === "pro" ? "30 por mes" : "1 por semana"}</p></div><div className="rounded-2xl border border-white/[0.08] bg-black/20 p-5"><p className="text-xs text-white/35">Mensajes de seguimiento</p><p className="mt-2 text-2xl font-semibold text-white/90">{plan.plan === "pro" ? "300 por mes" : "5 por día"}</p></div></div>
-            {plan.plan === "pro" && plan.current_period_end && <p className="relative mt-5 text-xs text-white/35">{plan.cancel_at_period_end ? "El acceso termina" : "El período se renueva"} el {formatDate(plan.current_period_end)}.</p>}
+            <div className="relative mt-8 grid gap-3 sm:grid-cols-3"><div className="rounded-2xl border border-white/[0.08] bg-black/20 p-5"><p className="text-xs text-white/35">Análisis con IA</p><p className="mt-2 text-xl font-semibold text-white/90">{plan.plan === "pro" ? "30 por mes" : "1 por semana"}</p></div><div className="rounded-2xl border border-white/[0.08] bg-black/20 p-5"><p className="text-xs text-white/35">Mensajes</p><p className="mt-2 text-xl font-semibold text-white/90">{plan.plan === "pro" ? "300 por mes" : "5 por día"}</p></div><div className="rounded-2xl border border-white/[0.08] bg-black/20 p-5"><p className="text-xs text-white/35">Escenarios</p><p className="mt-2 text-xl font-semibold text-white/90">{plan.plan === "pro" ? "Ilimitados" : "3 por día"}</p></div></div>
           </section>
+          <PlanUsageDashboard plan={plan} usage={usage} />
           <section className="mt-8 grid gap-4 sm:grid-cols-3"><div className="rounded-2xl border border-white/[0.07] p-5"><p className="text-sm font-medium text-white/75">Tus datos siguen siendo tuyos</p><p className="mt-2 text-xs leading-5 text-white/35">Cambiar de plan no elimina escenarios ni conversaciones guardadas.</p></div><div className="rounded-2xl border border-white/[0.07] p-5"><p className="text-sm font-medium text-white/75">Renovación clara</p><p className="mt-2 text-xs leading-5 text-white/35">La plataforma te muestra cuándo vuelve a habilitarse cada cupo.</p></div><div className="rounded-2xl border border-white/[0.07] p-5"><p className="text-sm font-medium text-white/75">Sin sorpresas</p><p className="mt-2 text-xs leading-5 text-white/35">Si alcanzás un límite, tus cálculos continúan disponibles.</p></div></section>
         </>}
 

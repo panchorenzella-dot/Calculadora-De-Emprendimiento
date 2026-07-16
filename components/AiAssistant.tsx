@@ -10,6 +10,7 @@ import type { ScenarioDraft } from "@/types/scenario";
 
 type Message = { role: "user" | "assistant"; content: string };
 type Conversation = { id: string; title: string; updated_at: string };
+type ScenarioQuotaResult = { allowed: boolean; scenario_id: string | null; resets_at: string | null };
 type Props = {
   draft: ScenarioDraft | null;
   hasResults: boolean;
@@ -74,6 +75,7 @@ export default function AiAssistant({ draft, hasResults, initialConversationId, 
   const [scenarioId, setScenarioId] = useState<string | null>(initialScenarioId);
   const [history, setHistory] = useState<Conversation[]>([]);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [copied, setCopied] = useState(false);
   const [contextOpen, setContextOpen] = useState(false);
   const [renaming, setRenaming] = useState(false);
@@ -117,24 +119,40 @@ export default function AiAssistant({ draft, hasResults, initialConversationId, 
     return data.session;
   }
 
-  async function saveAnalysisScenario(userId: string) {
+  async function saveAnalysisScenario() {
     if (scenarioId) return scenarioId;
     const supabase = getSupabaseClient();
     if (!supabase || !draft) return null;
     const title = `Análisis IA · ${draft.calculatorName} · ${new Intl.DateTimeFormat("es-AR").format(new Date())}`;
-    const { data, error: scenarioError } = await supabase.from("saved_scenarios").insert({
-      user_id: userId,
-      calculator_type: draft.calculatorType,
-      title,
-      inputs: { ...draft.inputs, calculator_path: draft.calculatorPath },
-      results: draft.results,
-    }).select("id").single();
+    const { data, error: quotaError } = await supabase.rpc("save_scenario_with_quota", {
+      p_calculator_type: draft.calculatorType,
+      p_title: title,
+      p_inputs: { ...draft.inputs, calculator_path: draft.calculatorPath },
+      p_results: draft.results,
+    });
+    let quota = (data as ScenarioQuotaResult[] | null)?.[0];
+    let scenarioError = quotaError;
+    if (quotaError?.code === "PGRST202") {
+      const legacy = await supabase.from("saved_scenarios").insert({
+        user_id: (await supabase.auth.getUser()).data.user?.id,
+        calculator_type: draft.calculatorType,
+        title,
+        inputs: { ...draft.inputs, calculator_path: draft.calculatorPath },
+        results: draft.results,
+      }).select("id").single();
+      scenarioError = legacy.error;
+      if (legacy.data?.id) quota = { allowed: true, scenario_id: legacy.data.id, resets_at: null };
+    }
     if (scenarioError) {
-      setError(`No pudimos guardar el escenario del análisis: ${scenarioError.message}`);
+      setNotice("El análisis continuará, pero no pudimos guardar su escenario. Revisá la migración 006 de Supabase.");
       return null;
     }
-    setScenarioId(data.id);
-    return data.id as string;
+    if (!quota?.allowed || !quota.scenario_id) {
+      setNotice("El análisis continuará y quedará en tu historial, pero hoy ya usaste los 3 escenarios del plan Gratis. En Pro son ilimitados.");
+      return null;
+    }
+    setScenarioId(quota.scenario_id);
+    return quota.scenario_id;
   }
 
   async function ensureConversation(userId: string, linkedScenarioId?: string | null) {
@@ -158,6 +176,7 @@ export default function AiAssistant({ draft, hasResults, initialConversationId, 
     setOpen(true);
     setLoading(true);
     setError("");
+    setNotice("");
     const userMessage: Message | null = mode === "chat" && question ? { role: "user", content: question } : null;
     const previous = messages;
     if (userMessage) {
@@ -169,9 +188,8 @@ export default function AiAssistant({ draft, hasResults, initialConversationId, 
       const data = await response.json() as { text?: string; error?: string };
       if (!response.ok || !data.text) throw new Error(data.error || "No pudimos obtener una respuesta.");
       const linkedScenarioId = mode === "analysis" && !conversationId
-        ? await saveAnalysisScenario(session.user.id)
+        ? await saveAnalysisScenario()
         : scenarioId;
-      if (mode === "analysis" && !conversationId && !linkedScenarioId) return;
       const id = await ensureConversation(session.user.id, linkedScenarioId);
       if (!id) return;
       const assistantMessage: Message = { role: "assistant", content: data.text };
@@ -196,6 +214,7 @@ export default function AiAssistant({ draft, hasResults, initialConversationId, 
     setScenarioId(null);
     setMessages([]);
     setError("");
+    setNotice("");
     if (standalone) window.location.assign("/calculadoras");
     else if (onClose) onClose();
     else setOpen(false);
@@ -264,6 +283,7 @@ export default function AiAssistant({ draft, hasResults, initialConversationId, 
         <button onClick={() => void ask("analysis")} disabled={loading} className="group shrink-0 rounded-full border border-white/15 bg-black px-4 py-2 text-sm font-medium text-white/90 transition hover:border-white/25 hover:bg-zinc-900 hover:text-white disabled:opacity-60">{loading ? "Preparando análisis..." : <span className="flex items-center gap-2">Iniciar análisis <span className="transition-transform group-hover:translate-x-0.5">→</span></span>}</button>
       </div>
       {!open && error && <p className="mt-5 rounded-xl border border-red-400/20 bg-red-500/10 p-3 text-sm text-red-200">{error}</p>}
+      {!open && notice && <p className="mt-5 rounded-xl border border-emerald-300/15 bg-emerald-300/[0.06] p-3 text-sm text-emerald-100/75">{notice}</p>}
     </section>}
 
     {open && <div role="dialog" aria-modal="true" aria-label="Chat de análisis con IA" className="fixed inset-0 z-[120] flex bg-[#08090a] text-white">
@@ -291,6 +311,7 @@ export default function AiAssistant({ draft, hasResults, initialConversationId, 
             <div className="space-y-9">{messages.map((item, index) => item.role === "user" ? <div key={index} className="ml-auto max-w-[88%] rounded-[22px] rounded-br-md bg-white/[0.07] px-4 py-2.5 text-[15px] leading-6 text-white/85 sm:max-w-[72%]">{item.content}</div> : <article key={index} className="grid gap-3 sm:grid-cols-[36px_1fr]"><span className="grid h-9 w-9 place-items-center rounded-full border border-emerald-300/15 bg-emerald-300/[0.055] text-emerald-200"><SparkIcon className="h-4 w-4"/></span><div className="min-w-0 px-1 py-1 sm:px-2"><div className="mb-4 flex items-center justify-between"><p className="text-sm font-medium text-white/50">Análisis del asistente</p><span className="text-xs text-emerald-200/55">Basado en tus datos</span></div><AssistantContent content={item.content}/></div></article>)}
               {loading && <div className="grid gap-3 sm:grid-cols-[34px_1fr]"><span className="grid h-8 w-8 place-items-center rounded-full border border-emerald-300/15 bg-emerald-300/[0.055] text-emerald-200"><SparkIcon className="h-3.5 w-3.5"/></span><div className="px-2 py-2"><div className="flex items-center gap-3 text-sm text-white/45"><span className="flex gap-1"><i className="h-1.5 w-1.5 animate-pulse rounded-full bg-white/35"/><i className="h-1.5 w-1.5 animate-pulse rounded-full bg-white/35 [animation-delay:150ms]"/><i className="h-1.5 w-1.5 animate-pulse rounded-full bg-white/35 [animation-delay:300ms]"/></span>Analizando tu escenario en profundidad</div></div></div>}
               {error && <p className="rounded-xl border border-red-400/20 bg-red-500/10 p-3 text-sm text-red-200">{error}</p>}
+              {notice && <p className="rounded-xl border border-emerald-300/15 bg-emerald-300/[0.06] p-3 text-sm text-emerald-100/75">{notice}</p>}
               <div ref={bottomRef}/>
             </div>
           </div>

@@ -12,6 +12,14 @@ type Props = {
   draft: ScenarioDraft | null;
   hasResults: boolean;
 };
+type ScenarioQuotaResult = {
+  allowed: boolean;
+  scenario_id: string | null;
+  used: number;
+  quota_limit: number | null;
+  resets_at: string | null;
+  plan: "free" | "pro";
+};
 
 function defaultTitle(draft: ScenarioDraft) {
   return `${draft.calculatorName} · ${new Intl.DateTimeFormat("es-AR").format(new Date())}`;
@@ -37,20 +45,43 @@ export default function SaveScenarioButton({ draft, hasResults }: Props) {
     setSaving(true);
     setStatus("Guardando...");
 
-    const { error } = await supabase.from("saved_scenarios").insert({
-      user_id: userData.user.id,
-      calculator_type: scenario.calculatorType,
-      title: customTitle?.trim() || defaultTitle(scenario),
-      inputs: {
+    const { data, error: quotaError } = await supabase.rpc("save_scenario_with_quota", {
+      p_calculator_type: scenario.calculatorType,
+      p_title: customTitle?.trim() || defaultTitle(scenario),
+      p_inputs: {
         ...scenario.inputs,
         calculator_path: scenario.calculatorPath,
       },
-      results: scenario.results,
+      p_results: scenario.results,
     });
 
     setSaving(false);
-    if (error) {
-      setStatus(`Error al guardar: ${error.message}`);
+    let quota = (data as ScenarioQuotaResult[] | null)?.[0];
+    let saveError = quotaError;
+
+    // Mantiene el guardado anterior durante el breve despliegue previo a la
+    // migración 006. Una vez creada la función, todo pasa por la cuota segura.
+    if (quotaError?.code === "PGRST202") {
+      const legacy = await supabase.from("saved_scenarios").insert({
+        user_id: userData.user.id,
+        calculator_type: scenario.calculatorType,
+        title: customTitle?.trim() || defaultTitle(scenario),
+        inputs: { ...scenario.inputs, calculator_path: scenario.calculatorPath },
+        results: scenario.results,
+      });
+      saveError = legacy.error;
+      if (!legacy.error) quota = { allowed: true, scenario_id: null, used: 0, quota_limit: 3, resets_at: null, plan: "free" };
+    }
+
+    if (saveError) {
+      setStatus("No pudimos verificar el cupo. Aplicá la migración 006 de Supabase.");
+      return false;
+    }
+    if (!quota?.allowed) {
+      const reset = quota?.resets_at
+        ? new Intl.DateTimeFormat("es-AR", { timeZone: "America/Argentina/Buenos_Aires", dateStyle: "medium", timeStyle: "short" }).format(new Date(quota.resets_at))
+        : "mañana";
+      setStatus(`Ya guardaste los 3 escenarios de hoy. El cupo gratuito vuelve el ${reset}; en Pro son ilimitados.`);
       return false;
     }
 
@@ -115,7 +146,7 @@ export default function SaveScenarioButton({ draft, hasResults }: Props) {
         <div>
           <h2 className="font-semibold">¿Querés volver a este cálculo?</h2>
           <p className="mt-1 text-sm text-white/55">
-            Guardalo gratis y encontralo después en tu perfil.
+            Gratis: hasta 3 por día · Pro: escenarios ilimitados.
           </p>
         </div>
         <button
