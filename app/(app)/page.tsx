@@ -107,6 +107,10 @@ export default function Home() {
               Calcular margen
             </Link>
           </div>
+          <div className="mt-8 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/30">
+            <span className="h-px w-8 bg-emerald-300/35" />
+            Originado por Zella AI
+          </div>
         </div>
       </section>
 

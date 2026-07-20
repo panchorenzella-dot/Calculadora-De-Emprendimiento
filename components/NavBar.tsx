@@ -24,9 +24,14 @@ export default function Navbar() {
   return (
     <header className="border-b border-white/10 bg-zinc-950">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
-          <Link href="/" aria-label="Calculadora Emprendedora" className="shrink-0 font-semibold tracking-tight text-white">
+          <Link href="/" aria-label="Calculadora Emprendedora, un producto de Zella AI" className="shrink-0 font-semibold tracking-tight text-white">
             <span className="grid h-8 w-8 place-items-center rounded-full border border-emerald-200/15 bg-emerald-200/[0.06] text-xs text-emerald-100 sm:hidden">CE</span>
-            <span className="hidden text-base sm:inline">Calculadora Emprendedora</span>
+            <span className="hidden sm:flex sm:flex-col">
+              <span className="text-base leading-tight">Calculadora Emprendedora</span>
+              <span className="mt-0.5 text-[9px] font-medium uppercase tracking-[0.18em] text-white/30">
+                Originado por Zella AI
+              </span>
+            </span>
           </Link>
 
           <nav
