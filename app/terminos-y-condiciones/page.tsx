@@ -5,7 +5,7 @@ import { LegalPageShell, LegalSection } from "@/components/LegalPageShell";
 
 export const metadata: Metadata = {
   title: "Términos y condiciones",
-  description: "Condiciones de uso y contratación de Calculadora Emprendedora, un servicio de Zella AI.",
+  description: "Condiciones de uso y contratación de Calculadora Emprendedora, un servicio de Nexora.",
 };
 
 export default function TerminosPage() {
@@ -18,7 +18,7 @@ export default function TerminosPage() {
     >
       <div className="grid gap-5">
         <LegalSection number="1" title="Identificación del servicio">
-          <p>Calculadora Emprendedora es un servicio digital operado bajo la denominación comercial Zella AI. El canal de atención es <a className="text-emerald-300 hover:text-emerald-200" href="mailto:calculadoraemprendedora@gmail.com">calculadoraemprendedora@gmail.com</a>.</p>
+          <p>Calculadora Emprendedora es un servicio digital operado bajo la denominación comercial Nexora. El canal de atención es <a className="text-emerald-300 hover:text-emerald-200" href="mailto:calculadoraemprendedora@gmail.com">calculadoraemprendedora@gmail.com</a>.</p>
           <p>La información legal y fiscal aplicable al responsable de la contratación se encontrará en los comprobantes correspondientes o podrá solicitarse por el canal de contacto, conforme la normativa aplicable.</p>
         </LegalSection>
         <LegalSection number="2" title="Aceptación y capacidad">
@@ -37,7 +37,7 @@ export default function TerminosPage() {
           <p>Los límites se renuevan según el período informado. Podemos ajustar funciones o cupos futuros, pero los cambios materiales se comunicarán y no reducirán retroactivamente un período Pro ya pagado.</p>
         </LegalSection>
         <LegalSection number="6" title="Precios, moneda y renovación">
-          <p>Los planes Pro se cobran por adelantado en dólares estadounidenses mediante PayPal. El precio, período y renovación automática se muestran antes de confirmar la suscripción. PayPal o el emisor del medio de pago pueden aplicar conversión, comisiones o impuestos fuera del control de Zella AI.</p>
+          <p>Los planes Pro se cobran por adelantado en dólares estadounidenses mediante PayPal. El precio, período y renovación automática se muestran antes de confirmar la suscripción. PayPal o el emisor del medio de pago pueden aplicar conversión, comisiones o impuestos fuera del control de Nexora.</p>
           <p>La suscripción se renueva automáticamente hasta su cancelación. Un pago fallido puede generar suspensión, reintentos de cobro y un período técnico de gracia de hasta dos días, sin extender el período contratado.</p>
         </LegalSection>
         <LegalSection number="7" title="Cancelación y reembolsos">
@@ -54,7 +54,7 @@ export default function TerminosPage() {
           <p>El tratamiento de datos personales se explica en la <Link className="text-emerald-300 hover:text-emerald-200" href="/politica-de-privacidad">Política de privacidad</Link>. No ingreses contraseñas, datos bancarios ni información sensible en las calculadoras o conversaciones con IA.</p>
         </LegalSection>
         <LegalSection number="11" title="Responsabilidad y legislación aplicable">
-          <p>Ninguna disposición limita derechos irrenunciables del consumidor. Dentro de lo permitido por la ley, Zella AI no responde por decisiones tomadas exclusivamente sobre resultados no verificados, pérdidas indirectas o fallas atribuibles a terceros.</p>
+          <p>Ninguna disposición limita derechos irrenunciables del consumidor. Dentro de lo permitido por la ley, Nexora no responde por decisiones tomadas exclusivamente sobre resultados no verificados, pérdidas indirectas o fallas atribuibles a terceros.</p>
           <p>Estos términos se interpretan conforme la legislación que resulte aplicable a la contratación, sin afectar la jurisdicción ni los derechos obligatorios que correspondan al consumidor en su país de residencia.</p>
         </LegalSection>
         <LegalSection number="12" title="Cambios y contacto">
