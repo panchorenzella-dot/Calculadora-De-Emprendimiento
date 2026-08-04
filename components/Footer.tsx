@@ -10,7 +10,7 @@ const links = [
 ];
 
 export default function Footer() {
-  const growtellaUrl = process.env.NEXT_PUBLIC_GROWTELLA_URL || "https://growtella.vercel.app";
+  const growtellaUrl = process.env.NEXT_PUBLIC_GROWTELLA_URL || "https://www.growtella.com";
 
   return (
     <footer className="border-t border-white/10 px-6 py-7 text-xs text-white/55">
