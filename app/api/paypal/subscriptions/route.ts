@@ -9,6 +9,7 @@ export const runtime = "nodejs";
 const RequestSchema = z.object({
   interval: z.enum(["monthly", "quarterly", "annual"]),
   requestId: z.uuid(),
+  checkout: z.enum(["calculator", "growtella"]).optional().default("calculator"),
 });
 
 export async function POST(request: Request) {
@@ -33,13 +34,16 @@ export async function POST(request: Request) {
     }
 
     const configuredSite = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
-    const siteUrl = configuredSite || new URL(request.url).origin;
+    const calculatorUrl = configuredSite || new URL(request.url).origin;
+    const growtellaUrl = (process.env.NEXT_PUBLIC_GROWTELLA_URL || "https://www.growtella.com").replace(/\/$/, "");
+    const checkoutSite = body.checkout === "growtella" ? growtellaUrl : calculatorUrl;
     const subscription = await createPayPalSubscription({
       interval: body.interval,
       userId: authenticated.user.id,
       requestId: body.requestId,
-      returnUrl: `${siteUrl}/perfil?paypal=success`,
-      cancelUrl: `${siteUrl}/precios?paypal=cancelled`,
+      returnUrl: body.checkout === "growtella" ? `${checkoutSite}/cuenta?paypal=success` : `${checkoutSite}/perfil?paypal=success`,
+      cancelUrl: body.checkout === "growtella" ? `${checkoutSite}/pro?paypal=cancelled` : `${checkoutSite}/precios?paypal=cancelled`,
+      brandName: body.checkout === "growtella" ? "Growtella" : "Calculadora Emprendedora",
     });
     const approvalUrl = subscription.links?.find((link) => link.rel === "approve")?.href;
     if (!approvalUrl) throw new Error("PayPal no devolvió el enlace de aprobación.");

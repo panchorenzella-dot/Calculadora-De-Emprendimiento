@@ -127,6 +127,7 @@ export async function createPayPalSubscription(input: {
   returnUrl: string;
   cancelUrl: string;
   requestId: string;
+  brandName?: string;
 }) {
   return paypalRequest<PayPalSubscription>("/v1/billing/subscriptions", {
     method: "POST",
@@ -138,7 +139,7 @@ export async function createPayPalSubscription(input: {
       plan_id: getPayPalPlanId(input.interval),
       custom_id: input.userId,
       application_context: {
-        brand_name: "Calculadora Emprendedora",
+        brand_name: input.brandName || "Calculadora Emprendedora",
         shipping_preference: "NO_SHIPPING",
         user_action: "SUBSCRIBE_NOW",
         return_url: input.returnUrl,
