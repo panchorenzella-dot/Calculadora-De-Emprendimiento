@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import HomeProfitPreview from "@/components/HomeProfitPreview";
 
 export const metadata: Metadata = {
   title: {
@@ -9,26 +10,21 @@ export const metadata: Metadata = {
     "Calculadoras online gratuitas para emprendedores: margen de ganancia, precio de venta, punto de equilibrio, ROI, interés compuesto y más.",
 };
 
-const benefits = [
+const steps = [
   {
     number: "01",
-    title: "Calculá precios reales",
-    text: "Incluí costos y el margen que necesitás antes de definir cuánto cobrar.",
+    title: "Elegí qué querés resolver",
+    text: "Buscá por objetivo o por tipo de negocio y abrí la herramienta adecuada.",
   },
   {
     number: "02",
-    title: "Entendé tu rentabilidad",
-    text: "Pasá de una estimación a números claros sobre ventas y ganancias.",
+    title: "Completá tus datos",
+    text: "Ingresá costos, precios o inversión. Cada campo explica qué información necesitás.",
   },
   {
     number: "03",
-    title: "Compará inversiones",
-    text: "Proyectá rendimientos y evaluá distintas opciones con los mismos criterios.",
-  },
-  {
-    number: "04",
-    title: "Tomá mejores decisiones",
-    text: "Usá resultados simples para decidir con más información y menos dudas.",
+    title: "Entendé el resultado",
+    text: "Recibí métricas claras y, si querés, guardá el escenario para analizarlo con IA.",
   },
 ];
 
@@ -36,14 +32,20 @@ const categories = [
   {
     title: "Por tipo de negocio",
     text: "Herramientas para gastronomía, producción, distribución, reventa y negocios a comisión.",
+    href: "/hamburgueseria",
+    action: "Ver negocios",
   },
   {
     title: "Inversión y ahorro",
     text: "Proyectá capital, aportes mensuales, metas de ahorro y rendimiento real.",
+    href: "/interes-compuesto",
+    action: "Proyectar inversión",
   },
   {
     title: "Costos y rentabilidad",
     text: "Calculá precios, márgenes, retorno y las ventas necesarias para cubrir costos.",
+    href: "/markup",
+    action: "Calcular precio",
   },
 ];
 
@@ -77,63 +79,85 @@ const featured = [
 
 export default function Home() {
   return (
-    <div className="pb-8 pt-4 sm:pt-10">
-      <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.035] px-5 py-12 shadow-2xl shadow-black/25 sm:px-10 sm:py-16 lg:px-14 lg:py-20">
+    <div className="pb-10 pt-4 sm:pt-8">
+      <section className="relative overflow-hidden rounded-[32px] border border-white/10 bg-white/[0.035] px-5 py-8 shadow-2xl shadow-black/25 sm:px-8 sm:py-10 lg:px-12 lg:py-12">
         <div className="pointer-events-none absolute -right-24 -top-28 h-72 w-72 rounded-full bg-emerald-400/10 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-32 left-20 h-64 w-64 rounded-full bg-sky-400/10 blur-3xl" />
 
-        <div className="relative max-w-3xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-300/80">
-            Herramientas gratuitas y simples
-          </p>
-          <h1 className="mt-5 text-4xl font-bold leading-[1.08] tracking-[-0.035em] text-white sm:text-5xl lg:text-6xl">
-            Calculadoras para emprendedores, negocios e inversiones
-          </h1>
-          <p className="mt-6 max-w-2xl text-base leading-7 text-white/65 sm:text-lg sm:leading-8">
-            Calculá precios, márgenes, rentabilidad, punto de equilibrio e
-            inversiones con herramientas simples y gratuitas.
-          </p>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link
-              href="/calculadoras"
-              className="rounded-full bg-white px-4 py-2.5 text-center text-sm font-semibold !text-black transition hover:bg-zinc-200"
-            >
-              Ver calculadoras
-            </Link>
-            <Link
-              href="/margen"
-              className="rounded-full border border-white/15 bg-white/[0.04] px-4 py-2.5 text-center text-sm font-medium text-white transition hover:border-white/30 hover:bg-white/[0.08]"
-            >
-              Calcular margen
-            </Link>
+        <div className="relative grid items-center gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:gap-12">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300/15 bg-emerald-300/[0.06] px-3 py-1.5 text-[11px] font-semibold text-emerald-100/80">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+              16 calculadoras disponibles gratis
+            </div>
+            <h1 className="mt-5 max-w-3xl text-4xl font-bold leading-[1.05] tracking-[-0.04em] text-white sm:text-5xl lg:text-[56px]">
+              Entendé los números de tu negocio antes de decidir
+            </h1>
+            <p className="mt-5 max-w-2xl text-base leading-7 text-white/62 sm:text-lg sm:leading-8">
+              Calculá precios, costos, margen, punto de equilibrio e inversiones con resultados claros, sin fórmulas ni planillas complicadas.
+            </p>
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+              <Link
+                href="/calculadoras"
+                className="rounded-full bg-white px-5 py-3 text-center text-sm font-bold !text-black transition hover:bg-emerald-100"
+              >
+                Encontrar mi calculadora
+              </Link>
+              <Link
+                href="/markup"
+                className="rounded-full border border-white/15 bg-white/[0.04] px-5 py-3 text-center text-sm font-semibold text-white transition hover:border-white/30 hover:bg-white/[0.08]"
+              >
+                Calcular un precio
+              </Link>
+            </div>
+            <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-xs text-white/38">
+              <span>✓ Sin registro para calcular</span>
+              <span>✓ Pesos y dólares</span>
+              <span>✓ Resultados instantáneos</span>
+            </div>
+            <div className="mt-7 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/28">
+              <span className="h-px w-8 bg-emerald-300/35" />
+              Una herramienta de Nexora
+            </div>
           </div>
-          <div className="mt-8 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/30">
-            <span className="h-px w-8 bg-emerald-300/35" />
-            Originado por Nexora
-          </div>
+          <HomeProfitPreview />
         </div>
+      </section>
+
+      <section className="grid grid-cols-2 divide-x divide-white/[0.07] border-b border-white/[0.07] py-7 sm:grid-cols-4">
+        {[
+          ["16", "calculadoras activas"],
+          ["3", "categorías principales"],
+          ["ARS · USD", "monedas disponibles"],
+          ["24/7", "acceso online"],
+        ].map(([value, label]) => (
+          <div key={label} className="px-3 text-center sm:px-5">
+            <p className="text-lg font-semibold tracking-tight text-white sm:text-xl">{value}</p>
+            <p className="mt-1 text-[11px] text-white/35 sm:text-xs">{label}</p>
+          </div>
+        ))}
       </section>
 
       <section className="py-16 sm:py-20">
         <div className="mb-7 max-w-2xl">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/40">
-            Números más claros
+            Simple de principio a fin
           </p>
           <h2 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">
-            Herramientas para decidir con confianza
+            De una duda a un resultado en tres pasos
           </h2>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {benefits.map((benefit) => (
+        <div className="grid gap-4 md:grid-cols-3">
+          {steps.map((step) => (
             <article
-              key={benefit.title}
-              className="rounded-2xl border border-white/10 bg-zinc-900/50 p-5"
+              key={step.title}
+              className="rounded-2xl border border-white/10 bg-zinc-900/50 p-6"
             >
-              <span className="text-xs font-semibold text-emerald-300/70">
-                {benefit.number}
+              <span className="grid h-9 w-9 place-items-center rounded-full border border-emerald-300/15 bg-emerald-300/[0.06] text-xs font-semibold text-emerald-200/80">
+                {step.number}
               </span>
-              <h3 className="mt-5 font-semibold text-white">{benefit.title}</h3>
-              <p className="mt-2 text-sm leading-6 text-white/55">{benefit.text}</p>
+              <h3 className="mt-5 font-semibold text-white">{step.title}</h3>
+              <p className="mt-2 text-sm leading-6 text-white/55">{step.text}</p>
             </article>
           ))}
         </div>
@@ -152,7 +176,7 @@ export default function Home() {
           {categories.map((category, index) => (
             <Link
               key={category.title}
-              href="/calculadoras"
+              href={category.href}
               className="group flex min-h-60 flex-col rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.055] to-white/[0.02] p-6 transition hover:-translate-y-0.5 hover:border-white/25"
             >
               <span className="text-sm text-white/35">0{index + 1}</span>
@@ -161,7 +185,7 @@ export default function Home() {
               </h3>
               <p className="mt-3 text-sm leading-6 text-white/58">{category.text}</p>
               <span className="mt-auto pt-7 text-sm font-semibold text-white">
-                Ver categoría <span className="transition group-hover:ml-1">→</span>
+                {category.action} <span className="transition group-hover:ml-1">→</span>
               </span>
             </Link>
           ))}
@@ -201,22 +225,33 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="overflow-hidden rounded-3xl border border-emerald-300/15 bg-emerald-300/[0.055] p-6 sm:p-9">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300/75">
-          Cuenta gratuita
-        </p>
-        <h2 className="mt-3 text-2xl font-bold tracking-tight">
-          Guardá escenarios y analizalos con inteligencia artificial
-        </h2>
-        <p className="mt-4 max-w-3xl text-sm leading-7 text-white/62 sm:text-base">
-          Iniciá sesión para conservar tus cálculos, consultarlos desde cualquier
-          dispositivo y recibir un análisis contextual con recomendaciones para
-          tomar decisiones más claras. El plan gratuito incluye un análisis por
-          semana y hasta cinco mensajes de seguimiento por día.
-        </p>
-        <Link href="/precios" className="mt-6 inline-flex rounded-full border border-emerald-200/20 bg-emerald-200/[0.07] px-4 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-200/[0.12]">
-          Comparar Gratis y Pro →
-        </Link>
+      <section className="relative overflow-hidden rounded-3xl border border-emerald-300/15 bg-emerald-300/[0.055] p-6 sm:p-9">
+        <div className="pointer-events-none absolute -right-12 -top-20 h-56 w-56 rounded-full bg-emerald-300/10 blur-3xl" />
+        <div className="relative grid gap-8 lg:grid-cols-[1fr_0.72fr] lg:items-center">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300/75">
+              Más que un resultado
+            </p>
+            <h2 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">
+              Guardá escenarios y entendelos con inteligencia artificial
+            </h2>
+            <p className="mt-4 max-w-3xl text-sm leading-7 text-white/62 sm:text-base">
+              Conservá tus cálculos, compará alternativas y pedile al asistente que explique riesgos, oportunidades y próximos pasos usando los datos de tu escenario.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-2 text-xs text-white/52">
+              <span className="rounded-full border border-white/10 bg-black/15 px-3 py-1.5">Historial de análisis</span>
+              <span className="rounded-full border border-white/10 bg-black/15 px-3 py-1.5">Escenarios guardados</span>
+              <span className="rounded-full border border-white/10 bg-black/15 px-3 py-1.5">Simulaciones con contexto</span>
+            </div>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
+            <p className="text-sm font-semibold text-white">Empezá con una cuenta gratuita</p>
+            <p className="mt-2 text-sm leading-6 text-white/45">Incluye un análisis semanal, cinco mensajes diarios y hasta tres escenarios por día.</p>
+            <Link href="/precios" className="mt-5 flex justify-center rounded-full bg-emerald-200 px-4 py-2.5 text-sm font-bold !text-emerald-950 transition hover:bg-emerald-100">
+              Comparar Gratis y Pro
+            </Link>
+          </div>
+        </div>
       </section>
 
       <section className="mx-auto max-w-4xl py-16 sm:py-20">
@@ -239,6 +274,13 @@ export default function Home() {
             aportes mensuales, rendimiento y retorno de inversión.
           </p>
         </div>
+      </section>
+
+      <section className="rounded-3xl border border-white/10 bg-gradient-to-r from-white/[0.055] to-white/[0.02] px-6 py-9 text-center sm:px-10 sm:py-12">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200/65">Tu próximo cálculo</p>
+        <h2 className="mx-auto mt-3 max-w-2xl text-2xl font-bold tracking-tight sm:text-3xl">Elegí una herramienta y convertí una duda en una decisión más clara</h2>
+        <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-white/48">No necesitás registrarte para usar las calculadoras. Podés crear una cuenta después si querés guardar o analizar el resultado.</p>
+        <Link href="/calculadoras" className="mt-6 inline-flex rounded-full bg-white px-5 py-3 text-sm font-bold !text-zinc-950 transition hover:bg-emerald-100">Ver todas las calculadoras →</Link>
       </section>
     </div>
   );
