@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -136,9 +137,14 @@ export async function POST(request: Request) {
       { role: "user", content: body.mode === "analysis" ? "Realizá ahora el análisis integral de este escenario." : body.message || "Continuá el análisis." },
     ];
     try {
+      const clientRequestId = randomUUID();
       const aiResponse = await fetch("https://api.openai.com/v1/responses", {
         method: "POST",
-        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+          "X-Client-Request-Id": clientRequestId,
+        },
         body: JSON.stringify({
           model: plan === "pro"
             ? process.env.OPENAI_PRO_MODEL || process.env.OPENAI_MODEL || "gpt-5.4-mini"
@@ -147,10 +153,11 @@ export async function POST(request: Request) {
           max_output_tokens: body.mode === "analysis" ? 4500 : 2200,
         }),
       });
+      const providerRequestId = aiResponse.headers.get("x-request-id");
       const data = await aiResponse.json() as OpenAIErrorResponse;
       if (!aiResponse.ok) {
         const released = await releaseQuotaReservation(quota.usage_event_id, user.id);
-        console.error("OpenAI API error", aiResponse.status, data.error?.code, data.error?.message);
+        console.error("OpenAI API error", aiResponse.status, data.error?.code, data.error?.message, { clientRequestId, providerRequestId });
         return NextResponse.json(
           { error: openAIErrorMessage(data, aiResponse.status, released), code: data.error?.code || "AI_PROVIDER_ERROR" },
           { status: aiResponse.status === 429 ? 503 : 502 }
