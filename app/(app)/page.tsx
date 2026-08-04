@@ -117,7 +117,7 @@ export default function Home() {
             </div>
             <div className="mt-7 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/28">
               <span className="h-px w-8 bg-emerald-300/35" />
-              Una herramienta de Nexora
+              Una herramienta de Growtella
             </div>
           </div>
           <HomeProfitPreview />

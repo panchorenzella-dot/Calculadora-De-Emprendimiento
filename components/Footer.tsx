@@ -15,7 +15,7 @@ export default function Footer() {
       <div className="mx-auto flex max-w-6xl flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p>© {new Date().getFullYear()} Calculadora Emprendedora</p>
-          <p className="mt-1 font-medium text-emerald-200/55">Originado por Nexora</p>
+          <p className="mt-1 font-medium text-emerald-200/55">Originado por Growtella</p>
         </div>
         <nav aria-label="Enlaces legales y de ayuda" className="flex flex-wrap gap-x-4 gap-y-3">
           {links.map(([href, label]) => (

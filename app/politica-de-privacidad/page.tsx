@@ -5,7 +5,7 @@ import { LegalPageShell, LegalSection } from "@/components/LegalPageShell";
 
 export const metadata: Metadata = {
   title: "Política de privacidad",
-  description: "Cómo Calculadora Emprendedora y Nexora tratan la información de sus usuarios.",
+  description: "Cómo Calculadora Emprendedora y Growtella tratan la información de sus usuarios.",
 };
 
 export default function PoliticaPage() {
@@ -18,7 +18,7 @@ export default function PoliticaPage() {
     >
       <div className="grid gap-5">
         <LegalSection number="1" title="Responsable y contacto">
-          <p>Calculadora Emprendedora es un servicio digital identificado comercialmente como Nexora. Para consultas sobre privacidad escribí a <a className="text-emerald-300" href="mailto:calculadoraemprendedora@gmail.com">calculadoraemprendedora@gmail.com</a>.</p>
+          <p>Calculadora Emprendedora es un servicio digital identificado comercialmente como Growtella. Para consultas sobre privacidad escribí a <a className="text-emerald-300" href="mailto:calculadoraemprendedora@gmail.com">calculadoraemprendedora@gmail.com</a>.</p>
         </LegalSection>
         <LegalSection number="2" title="Qué información tratamos">
           <p>Si creás una cuenta, tratamos tu email y los datos que decidas completar en tu perfil. Si guardás un escenario, almacenamos su nombre, los valores ingresados y los resultados. También conservamos conversaciones y datos de uso necesarios para aplicar los límites del plan.</p>
@@ -31,7 +31,7 @@ export default function PoliticaPage() {
           <p>No incluyas contraseñas, datos bancarios ni información sensible. Las respuestas son orientativas y no reemplazan asesoramiento profesional.</p>
         </LegalSection>
         <LegalSection number="5" title="Pagos y suscripciones">
-          <p>PayPal procesa los pagos y administra la autorización de las suscripciones. Nexora recibe identificadores, estado, período y eventos necesarios para activar, renovar, suspender, cancelar o reembolsar Pro. No recibimos ni almacenamos el número completo de tu tarjeta ni tus credenciales bancarias.</p>
+          <p>PayPal procesa los pagos y administra la autorización de las suscripciones. Growtella recibe identificadores, estado, período y eventos necesarios para activar, renovar, suspender, cancelar o reembolsar Pro. No recibimos ni almacenamos el número completo de tu tarjeta ni tus credenciales bancarias.</p>
         </LegalSection>
         <LegalSection number="6" title="Proveedores de servicio">
           <p>Utilizamos Supabase para autenticación y datos; OpenAI para respuestas de IA; Vercel para alojamiento; y PayPal para pagos. Cada proveedor trata información para prestar su servicio y aplica sus propias condiciones y medidas de seguridad.</p>
