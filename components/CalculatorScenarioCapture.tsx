@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 
 import SaveScenarioButton from "@/components/SaveScenarioButton";
 import AiAssistant from "@/components/AiAssistant";
+import { buildScenarioResults } from "@/lib/scenarios";
 import type { ScenarioDraft, ScenarioValue } from "@/types/scenario";
 
 const calculators: Record<string, { type: string; name: string }> = {
@@ -43,35 +44,95 @@ function cleanLabel(value: string) {
   return value.replace(/\s+/g, " ").replace(/[:*]$/, "").trim();
 }
 
+function controlLabel(control: HTMLInputElement | HTMLSelectElement, index: number) {
+  const ariaLabel = control.getAttribute("aria-label");
+  if (ariaLabel) return cleanLabel(ariaLabel);
+
+  const wrappingLabel = control.closest("label");
+  if (wrappingLabel) {
+    const labelText = cleanLabel(wrappingLabel.innerText);
+    if (labelText) return labelText;
+  }
+
+  let ancestor: HTMLElement | null = control.parentElement;
+  for (let depth = 0; ancestor && depth < 4; depth += 1) {
+    const directLabel = Array.from(ancestor.children).find((child) => child.tagName === "LABEL") as HTMLElement | undefined;
+    if (directLabel) {
+      const labelText = cleanLabel(directLabel.innerText);
+      if (labelText) return labelText;
+    }
+    ancestor = ancestor.parentElement;
+  }
+
+  const name = cleanLabel(control.name || "");
+  if (name) return name;
+  const placeholder = cleanLabel(control.getAttribute("placeholder") || "");
+  if (placeholder && placeholder !== "0") return placeholder;
+  return `Dato ${index + 1}`;
+}
+
+function captureMetrics(resultContainers: HTMLElement[]) {
+  const metrics: Record<string, ScenarioValue> = {};
+
+  for (const container of resultContainers) {
+    const explicitCards = Array.from(container.querySelectorAll<HTMLElement>("[data-scenario-metric]"));
+    for (const card of explicitCards) {
+      const label = cleanLabel(card.querySelector<HTMLElement>("[data-scenario-label]")?.innerText || "");
+      const value = cleanLabel(card.querySelector<HTMLElement>("[data-scenario-value]")?.innerText || "");
+      if (label && value) metrics[label] = value;
+    }
+
+    const candidates = Array.from(container.querySelectorAll<HTMLElement>("div, article"));
+    for (const candidate of candidates) {
+      if (candidate.matches("[data-scenario-metric]") || candidate.closest("[data-scenario-metric]")) continue;
+      const children = Array.from(candidate.children).filter((child): child is HTMLElement => child instanceof HTMLElement);
+      if (children.length < 2 || children.length > 3) continue;
+
+      const label = cleanLabel(children[0].innerText || "");
+      const value = cleanLabel(children[1].innerText || "");
+      const looksLikeMetric = /[$€£%\d]/.test(value) || /^(rentable|no rentable|positivo|negativo|sí|no)$/i.test(value);
+      if (!label || !value || label.length > 72 || value.length > 160 || !looksLikeMetric || /^resultados?$/i.test(label)) continue;
+      if (!(label in metrics)) metrics[label] = value;
+    }
+  }
+
+  return metrics;
+}
+
 function capture(pathname: string): { draft: ScenarioDraft; hasResults: boolean } | null {
   const calculator = calculators[pathname];
   if (!calculator) return null;
 
   const fields: Record<string, ScenarioValue> = {};
-  const controls = document.querySelectorAll<HTMLInputElement | HTMLSelectElement>(
+  const calculatorRoot = document.querySelector("main main") ?? document.querySelector("main") ?? document.body;
+  const controls = calculatorRoot.querySelectorAll<HTMLInputElement | HTMLSelectElement>(
     "input:not([type='hidden']), select"
   );
 
   controls.forEach((control, index) => {
-    const label = control.closest("label");
-    const labelText = cleanLabel(
-      label?.querySelector("span")?.textContent ||
-        control.getAttribute("aria-label") ||
-        control.getAttribute("placeholder") ||
-        control.name ||
-        `Campo ${index + 1}`
-    );
-    fields[labelText] =
-      control instanceof HTMLInputElement && control.type === "checkbox"
-        ? control.checked
-        : control.value;
+    if (control.closest("[data-save-scenario-anchor]") || control.disabled) return;
+    if (control instanceof HTMLInputElement && control.type === "radio" && !control.checked) return;
+
+    const labelText = controlLabel(control, index);
+    let value: ScenarioValue;
+    if (control instanceof HTMLInputElement && (control.type === "checkbox" || control.type === "radio")) {
+      value = control.type === "checkbox" ? control.checked : cleanLabel(control.closest("label")?.innerText || control.value);
+    } else if (control instanceof HTMLSelectElement) {
+      value = cleanLabel(control.selectedOptions[0]?.text || control.value);
+    } else {
+      value = control.value;
+    }
+    if (value !== "") fields[labelText] = value;
   });
 
   const resultHeadings = Array.from(document.querySelectorAll("h2, h3")).filter(
     (heading) => heading.textContent?.toLowerCase().includes("resultado")
   );
-  const resultBlocks = resultHeadings
-    .map((heading) => cleanLabel(heading.parentElement?.innerText || ""))
+  const resultContainers = resultHeadings
+    .map((heading) => heading.parentElement)
+    .filter((element): element is HTMLElement => element instanceof HTMLElement);
+  const resultBlocks = resultContainers
+    .map((container) => cleanLabel(container.innerText || ""))
     .filter(
       (text) =>
         text.length > 20 &&
@@ -84,6 +145,8 @@ function capture(pathname: string): { draft: ScenarioDraft; hasResults: boolean 
     const normalized = String(value).replace(/[^0-9,.-]/g, "").replace(",", ".");
     return Number(normalized) !== 0 || String(value).length > 3;
   });
+  const metrics = captureMetrics(resultContainers);
+  const fallbackSummary = resultBlocks.join("\n\n").slice(0, 12000);
 
   return {
     hasResults: resultBlocks.length > 0 && hasMeaningfulInput,
@@ -92,9 +155,7 @@ function capture(pathname: string): { draft: ScenarioDraft; hasResults: boolean 
       calculatorName: calculator.name,
       calculatorPath: pathname,
       inputs: { campos: fields },
-      results: {
-        resumen: resultBlocks.join("\n\n").slice(0, 12000),
-      },
+      results: buildScenarioResults(metrics, fallbackSummary),
     },
   };
 }

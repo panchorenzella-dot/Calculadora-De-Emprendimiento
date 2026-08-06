@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import AuthModal from "@/components/AuthModal";
@@ -31,6 +32,7 @@ export default function SaveScenarioButton({ draft, hasResults }: Props) {
   const [title, setTitle] = useState("");
   const [status, setStatus] = useState("");
   const [saving, setSaving] = useState(false);
+  const [savedScenarioId, setSavedScenarioId] = useState<string | null>(null);
 
   async function persist(scenario: ScenarioDraft, customTitle?: string) {
     const supabase = getSupabaseClient();
@@ -62,15 +64,19 @@ export default function SaveScenarioButton({ draft, hasResults }: Props) {
     // Mantiene el guardado anterior durante el breve despliegue previo a la
     // migración 006. Una vez creada la función, todo pasa por la cuota segura.
     if (quotaError?.code === "PGRST202") {
-      const legacy = await supabase.from("saved_scenarios").insert({
-        user_id: userData.user.id,
-        calculator_type: scenario.calculatorType,
-        title: customTitle?.trim() || defaultTitle(scenario),
-        inputs: { ...scenario.inputs, calculator_path: scenario.calculatorPath },
-        results: scenario.results,
-      });
+      const legacy = await supabase
+        .from("saved_scenarios")
+        .insert({
+          user_id: userData.user.id,
+          calculator_type: scenario.calculatorType,
+          title: customTitle?.trim() || defaultTitle(scenario),
+          inputs: { ...scenario.inputs, calculator_path: scenario.calculatorPath },
+          results: scenario.results,
+        })
+        .select("id")
+        .single();
       saveError = legacy.error;
-      if (!legacy.error) quota = { allowed: true, scenario_id: null, used: 0, quota_limit: 3, resets_at: null, plan: "free" };
+      if (!legacy.error) quota = { allowed: true, scenario_id: legacy.data.id, used: 0, quota_limit: 3, resets_at: null, plan: "free" };
     }
 
     if (saveError) {
@@ -88,6 +94,7 @@ export default function SaveScenarioButton({ draft, hasResults }: Props) {
     sessionStorage.removeItem(PENDING_KEY);
     setNameOpen(false);
     setTitle("");
+    setSavedScenarioId(quota.scenario_id);
     setStatus("Escenario guardado correctamente.");
     return true;
   }
@@ -119,6 +126,7 @@ export default function SaveScenarioButton({ draft, hasResults }: Props) {
 
   async function beginSave() {
     setStatus("");
+    setSavedScenarioId(null);
     if (!hasResults || !draft) {
       setStatus("Primero completá la calculadora para guardar un escenario.");
       return;
@@ -179,7 +187,19 @@ export default function SaveScenarioButton({ draft, hasResults }: Props) {
         </form>
       )}
 
-      {status && <p className="mt-4 text-sm text-white/70">{status}</p>}
+      {status && (
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <p className="text-sm text-white/70">{status}</p>
+          {savedScenarioId ? (
+            <Link
+              href={`/perfil/escenarios/${savedScenarioId}`}
+              className="rounded-full bg-emerald-300 px-4 py-2 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-200"
+            >
+              Ver escenario guardado
+            </Link>
+          ) : null}
+        </div>
+      )}
 
       <AuthModal
         open={authOpen}
