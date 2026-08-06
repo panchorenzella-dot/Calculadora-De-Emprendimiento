@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { siteConfig } from "@/lib/site";
+
 const reasons = [
   ["Consultas", "¿No sabés qué calculadora usar? Contanos qué necesitás resolver."],
   ["Pagos y suscripciones", "Te ayudamos con tu plan Pro, una renovación o un pago."],
@@ -21,7 +23,7 @@ export default function ContactoPage() {
             Consultas, pagos, sugerencias o errores: escribinos y te ayudamos.
           </p>
           <a
-            href="mailto:calculadoraemprendedora@gmail.com"
+            href={`mailto:${siteConfig.contactEmail}?subject=Consulta%20desde%20Calculadora%20Emprendedora`}
             className="mt-8 inline-flex rounded-full bg-white px-4 py-2.5 text-sm font-medium !text-black transition hover:bg-zinc-200"
           >
             Enviar un email →
@@ -47,14 +49,14 @@ export default function ContactoPage() {
           <div>
             <p className="text-sm text-emerald-300">Soporte</p>
             <h2 className="mt-2 break-all text-xl font-semibold sm:text-2xl">
-              calculadoraemprendedora@gmail.com
+              {siteConfig.contactEmail}
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-white/55">
               Escribinos por consultas sobre la plataforma, pagos, suscripciones o privacidad.
             </p>
           </div>
           <a
-            href="mailto:calculadoraemprendedora@gmail.com?subject=Consulta%20desde%20Calculadora%20Emprendedora"
+            href={`mailto:${siteConfig.contactEmail}?subject=Consulta%20desde%20Calculadora%20Emprendedora`}
             className="rounded-full border border-white/15 bg-black px-4 py-2 text-center text-sm font-medium text-white/80 hover:bg-zinc-900"
           >
             Escribir ahora

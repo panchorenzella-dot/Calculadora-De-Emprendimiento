@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { LegalPageShell, LegalSection } from "@/components/LegalPageShell";
+import { siteConfig } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Cancelaciones y reembolsos",
@@ -17,7 +18,7 @@ export default function CancelacionesPage() {
     >
       <div className="grid gap-5">
         <LegalSection number="1" title="Cancelar una renovación">
-          <p>Podés cancelar la renovación automática desde la administración de pagos automáticos de PayPal. Si necesitás ayuda, escribinos a <a className="text-emerald-300" href="mailto:calculadoraemprendedora@gmail.com">calculadoraemprendedora@gmail.com</a>.</p>
+          <p>Podés cancelar la renovación automática desde la administración de pagos automáticos de PayPal. Si necesitás ayuda, escribinos a <a className="text-emerald-300" href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a>.</p>
         </LegalSection>
         <LegalSection number="2" title="Efecto de la cancelación">
           <p>La cancelación detiene cobros futuros. Salvo reembolso o exigencia legal diferente, el acceso Pro continúa hasta finalizar el período ya pagado. El período técnico de gracia no constituye una extensión del plazo contratado.</p>
@@ -34,7 +35,7 @@ export default function CancelacionesPage() {
           <p>Para localizar una operación podemos solicitar el nombre, email utilizado y referencia de PayPal. Nunca solicitaremos tu contraseña, número completo de tarjeta, código de seguridad ni credenciales bancarias.</p>
         </LegalSection>
         <LegalSection number="6" title="Canal de atención">
-          <p>Para solicitar la revisión de un cobro o consultar el estado de un reembolso, escribí a <a className="text-emerald-300" href="mailto:calculadoraemprendedora@gmail.com">calculadoraemprendedora@gmail.com</a>.</p>
+          <p>Para solicitar la revisión de un cobro o consultar el estado de un reembolso, escribí a <a className="text-emerald-300" href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a>.</p>
         </LegalSection>
       </div>
     </LegalPageShell>

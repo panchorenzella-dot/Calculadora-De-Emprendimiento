@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { LegalPageShell, LegalSection } from "@/components/LegalPageShell";
+import { siteConfig } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Política de privacidad",
@@ -18,7 +19,7 @@ export default function PoliticaPage() {
     >
       <div className="grid gap-5">
         <LegalSection number="1" title="Responsable y contacto">
-          <p>Calculadora Emprendedora es un servicio digital identificado comercialmente como Growtella. Para consultas sobre privacidad escribí a <a className="text-emerald-300" href="mailto:calculadoraemprendedora@gmail.com">calculadoraemprendedora@gmail.com</a>.</p>
+          <p>Calculadora Emprendedora es un servicio digital identificado comercialmente como Growtella. Para consultas sobre privacidad escribí a <a className="text-emerald-300" href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a>.</p>
         </LegalSection>
         <LegalSection number="2" title="Qué información tratamos">
           <p>Si creás una cuenta, tratamos tu email y los datos que decidas completar en tu perfil. Si guardás un escenario, almacenamos su nombre, los valores ingresados y los resultados. También conservamos conversaciones y datos de uso necesarios para aplicar los límites del plan.</p>

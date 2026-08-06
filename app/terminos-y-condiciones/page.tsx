@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { LegalPageShell, LegalSection } from "@/components/LegalPageShell";
+import { siteConfig } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Términos y condiciones",
@@ -18,7 +19,7 @@ export default function TerminosPage() {
     >
       <div className="grid gap-5">
         <LegalSection number="1" title="Identificación del servicio">
-          <p>Calculadora Emprendedora es un servicio digital operado bajo la denominación comercial Growtella. El canal de atención es <a className="text-emerald-300 hover:text-emerald-200" href="mailto:calculadoraemprendedora@gmail.com">calculadoraemprendedora@gmail.com</a>.</p>
+          <p>Calculadora Emprendedora es un servicio digital operado bajo la denominación comercial Growtella. El canal de atención es <a className="text-emerald-300 hover:text-emerald-200" href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a>.</p>
           <p>La información legal y fiscal aplicable al responsable de la contratación se encontrará en los comprobantes correspondientes o podrá solicitarse por el canal de contacto, conforme la normativa aplicable.</p>
         </LegalSection>
         <LegalSection number="2" title="Aceptación y capacidad">
