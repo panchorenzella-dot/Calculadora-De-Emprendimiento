@@ -284,7 +284,7 @@ export default function ProfilePage() {
   }, [scenarioQuery, scenarios]);
 
   if (loading) return <div className="grid min-h-[65vh] place-items-center text-sm text-white/40">Preparando tu espacio...</div>;
-  if (!session) return <main className="mx-auto min-h-[65vh] max-w-6xl px-4 py-16"><div className="mx-auto max-w-xl text-center"><span className="mx-auto grid h-12 w-12 place-items-center rounded-full border border-emerald-300/20 bg-emerald-300/[0.05] text-emerald-200">✦</span><h1 className="mt-5 text-3xl font-semibold tracking-tight">Ingresá a tu espacio</h1><p className="mt-3 text-sm leading-6 text-white/45">Retomá análisis, administrá escenarios y mantené tus datos organizados.</p></div><AuthModal open returnTo="/perfil" /></main>;
+  if (!session) return <main><AuthModal open returnTo="/perfil" /></main>;
 
   const user = session.user;
   const name = String(user.user_metadata.full_name || user.user_metadata.name || "Emprendedor/a");
