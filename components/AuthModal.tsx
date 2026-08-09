@@ -24,7 +24,7 @@ const passwordRequirements = [
   { label: "Un número", test: (value: string) => /\d/.test(value) },
 ];
 
-const inputClassName = "min-h-12 w-full rounded-xl border border-emerald-200/20 bg-[#020a07] px-4 py-3 text-sm text-emerald-50 outline-none transition hover:border-emerald-200/35 focus:border-emerald-300/65 focus:bg-[#03100b] focus:ring-4 focus:ring-emerald-300/[0.08]";
+const inputClassName = "min-h-12 w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm font-medium text-zinc-950 outline-none transition hover:border-zinc-400 focus:border-green-600 focus:ring-4 focus:ring-green-600/10";
 
 const benefits = [
   {
@@ -333,73 +333,73 @@ export default function AuthModal({
       aria-labelledby={titleId}
       aria-describedby={descriptionId}
       tabIndex={isModal ? -1 : undefined}
-      className="relative w-full max-w-5xl overflow-hidden rounded-[28px] border border-emerald-300/25 bg-[#06110d] shadow-[0_30px_100px_rgba(0,0,0,0.6)] outline-none lg:grid lg:grid-cols-[0.84fr_1.16fr]"
+      className="relative w-full max-w-5xl overflow-hidden rounded-[28px] border border-white/10 bg-[#080908] shadow-[0_30px_100px_rgba(0,0,0,0.62)] outline-none lg:grid lg:grid-cols-[0.84fr_1.16fr]"
     >
-      <aside className="relative hidden min-h-full overflow-hidden border-r border-emerald-300/20 bg-[linear-gradient(145deg,rgba(16,185,129,.23),rgba(4,20,14,.98)_58%,rgba(2,10,7,1))] p-9 lg:flex lg:flex-col">
-        <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-emerald-300/10 blur-3xl" />
+      <aside className="relative hidden min-h-full overflow-hidden border-r border-white/10 bg-[linear-gradient(145deg,rgba(22,163,74,.11),rgba(8,9,8,.98)_52%,#050605)] p-9 lg:flex lg:flex-col">
+        <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-green-600/10 blur-3xl" />
         <div className="relative flex items-center gap-3">
-          <span className="grid h-11 w-11 place-items-center rounded-2xl border border-emerald-200/20 bg-emerald-200/[0.08] font-black text-emerald-100">CE</span>
+          <span className="grid h-11 w-11 place-items-center rounded-2xl border border-white/15 bg-white/[0.05] font-black text-white">CE</span>
           <div>
-            <p className="font-semibold tracking-tight text-white">Calculadora Emprendedora</p>
-            <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.17em] text-emerald-200/45">por Growtella</p>
+            <p className="font-black tracking-tight text-white">Calculadora Emprendedora</p>
+            <p className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.17em] text-green-500/70">por Growtella</p>
           </div>
         </div>
 
         <div className="relative my-auto py-12">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200/55">Tu espacio de trabajo</p>
-          <h2 className="mt-4 max-w-sm text-3xl font-semibold leading-tight tracking-[-0.035em] text-white">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-green-500/75">Tu espacio de trabajo</p>
+          <h2 className="mt-4 max-w-sm text-3xl font-black leading-tight tracking-[-0.035em] text-white">
             Tus decisiones, ordenadas en un solo lugar.
           </h2>
           <div className="mt-8 space-y-5">
             {benefits.map((benefit) => (
               <div key={benefit.title} className="flex gap-3">
-                <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full border border-emerald-200/20 bg-emerald-200/[0.08] text-emerald-200">
+                <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full border border-green-600/40 bg-green-600/10 text-green-500">
                   <CheckIcon />
                 </span>
                 <div>
-                  <p className="text-sm font-semibold text-emerald-50/90">{benefit.title}</p>
-                  <p className="mt-1 text-xs leading-5 text-emerald-50/50">{benefit.description}</p>
+                  <p className="text-sm font-bold text-white/90">{benefit.title}</p>
+                  <p className="mt-1 text-xs font-medium leading-5 text-white/48">{benefit.description}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="relative flex items-center gap-2 text-xs text-emerald-50/50">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+        <div className="relative flex items-center gap-2 text-xs font-semibold text-white/45">
+          <span className="h-1.5 w-1.5 rounded-full bg-green-600" />
           Gratis para empezar · Sin tarjeta
         </div>
       </aside>
 
-      <section className="relative bg-[radial-gradient(circle_at_90%_0%,rgba(110,231,183,.13),transparent_23rem),linear-gradient(180deg,#07150f,#05100c)] px-5 py-6 sm:px-9 sm:py-8 lg:px-12 lg:py-10">
+      <section className="relative bg-white px-5 py-6 text-zinc-950 sm:px-9 sm:py-8 lg:px-12 lg:py-10">
         {onClose && (
           <button
             type="button"
             onClick={onClose}
             aria-label="Cerrar acceso"
-            className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full border border-emerald-200/15 text-xl leading-none text-emerald-50/50 transition hover:border-emerald-200/35 hover:bg-emerald-200/[0.08] hover:text-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/60 sm:right-6 sm:top-6"
+            className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full border border-zinc-200 text-xl leading-none text-zinc-500 transition hover:border-zinc-300 hover:bg-zinc-100 hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600/40 sm:right-6 sm:top-6"
           >
             ×
           </button>
         )}
 
         <div className={onClose ? "pr-11" : ""}>
-          <div className="flex items-center gap-2 text-xs font-semibold text-emerald-200/65 lg:hidden">
-            <span className="grid h-8 w-8 place-items-center rounded-xl border border-emerald-200/15 bg-emerald-200/[0.07] text-[10px] font-black text-emerald-100">CE</span>
+          <div className="flex items-center gap-2 text-xs font-bold text-zinc-700 lg:hidden">
+            <span className="grid h-8 w-8 place-items-center rounded-xl bg-zinc-950 text-[10px] font-black text-white">CE</span>
             Calculadora Emprendedora
           </div>
-          <p className="mt-6 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-200/55 lg:mt-0">Cuenta Growtella</p>
-          <h1 id={titleId} className="mt-2 text-3xl font-semibold tracking-[-0.035em] text-white sm:text-[2rem]">{title}</h1>
-          <p id={descriptionId} className="mt-3 max-w-lg text-sm leading-6 text-emerald-50/55">{description}</p>
+          <p className="mt-6 text-xs font-black uppercase tracking-[0.18em] text-green-700 lg:mt-0">Cuenta Growtella</p>
+          <h1 id={titleId} className="mt-2 text-3xl font-black tracking-[-0.035em] text-zinc-950 sm:text-[2rem]">{title}</h1>
+          <p id={descriptionId} className="mt-3 max-w-lg text-sm font-medium leading-6 text-zinc-600">{description}</p>
         </div>
 
         {mode !== "reset" && mode !== "verify" && (
-          <div className="mt-7 grid grid-cols-2 rounded-xl border border-emerald-200/20 bg-[#020906] p-1" aria-label="Elegir tipo de acceso">
+          <div className="mt-7 grid grid-cols-2 rounded-xl border border-zinc-200 bg-zinc-100 p-1" aria-label="Elegir tipo de acceso">
             <button
               type="button"
               onClick={() => changeMode("login")}
               aria-pressed={mode === "login"}
-              className={`rounded-lg px-3 py-2.5 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/60 ${mode === "login" ? "bg-emerald-300 text-[#03261b] shadow-sm" : "text-emerald-50/55 hover:bg-emerald-200/[0.06] hover:text-emerald-50"}`}
+              className={`rounded-lg px-3 py-2.5 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600/40 ${mode === "login" ? "bg-white text-zinc-950 shadow-sm" : "text-zinc-500 hover:text-zinc-950"}`}
             >
               Iniciar sesión
             </button>
@@ -407,7 +407,7 @@ export default function AuthModal({
               type="button"
               onClick={() => changeMode("signup")}
               aria-pressed={mode === "signup"}
-              className={`rounded-lg px-3 py-2.5 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/60 ${mode === "signup" ? "bg-emerald-300 text-[#03261b] shadow-sm" : "text-emerald-50/55 hover:bg-emerald-200/[0.06] hover:text-emerald-50"}`}
+              className={`rounded-lg px-3 py-2.5 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600/40 ${mode === "signup" ? "bg-white text-zinc-950 shadow-sm" : "text-zinc-500 hover:text-zinc-950"}`}
             >
               Crear cuenta
             </button>
@@ -420,7 +420,7 @@ export default function AuthModal({
               type="button"
               onClick={signInWithGoogle}
               disabled={busy}
-              className="mt-5 flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-emerald-100 bg-white px-4 py-3 text-sm font-semibold text-[#073c2b] shadow-sm transition hover:bg-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#06110d] disabled:cursor-wait disabled:opacity-60"
+              className="mt-5 flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm font-bold text-zinc-950 shadow-sm transition hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-wait disabled:opacity-60"
             >
               {loading === "google" ? (
                 <span className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-400 border-t-zinc-900" aria-hidden="true" />
@@ -429,36 +429,36 @@ export default function AuthModal({
               )}
               {loading === "google" ? "Abriendo Google..." : mode === "signup" ? "Registrarme con Google" : "Continuar con Google"}
             </button>
-            <p className="mt-2 text-center text-[11px] text-emerald-50/45">La opción más rápida · No necesitás otra contraseña</p>
+            <p className="mt-2 text-center text-[11px] font-semibold text-zinc-500">La opción más rápida · No necesitás otra contraseña</p>
 
-            <div className="my-5 flex items-center gap-3 text-[11px] font-medium uppercase tracking-[0.12em] text-emerald-50/35">
-              <span className="h-px flex-1 bg-emerald-200/15" />
+            <div className="my-5 flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.12em] text-zinc-400">
+              <span className="h-px flex-1 bg-zinc-200" />
               o usar email
-              <span className="h-px flex-1 bg-emerald-200/15" />
+              <span className="h-px flex-1 bg-zinc-200" />
             </div>
           </>
         )}
 
         {mode === "verify" && (
-          <div className="mt-7 rounded-2xl border border-emerald-300/25 bg-emerald-300/[0.07] p-5">
-            <div className="grid h-11 w-11 place-items-center rounded-full bg-emerald-300 text-xl text-[#043222]" aria-hidden="true">✓</div>
-            <p className="mt-4 text-sm font-semibold text-emerald-50">Enlace de verificación enviado</p>
-            <p className="mt-2 break-words text-sm leading-6 text-emerald-50/60">Mandamos el email a <strong className="text-emerald-100">{verificationEmail}</strong>. Abrí el enlace para activar la cuenta y después vas a poder ingresar.</p>
-            <p className="mt-3 text-xs leading-5 text-emerald-50/40">Si no aparece, revisá Spam o Correo no deseado. El enlace puede tardar unos minutos.</p>
+          <div className="mt-7 rounded-2xl border border-green-200 bg-green-50 p-5">
+            <div className="grid h-11 w-11 place-items-center rounded-full bg-green-700 text-xl font-black text-white" aria-hidden="true">✓</div>
+            <p className="mt-4 text-sm font-black text-zinc-950">Enlace de verificación enviado</p>
+            <p className="mt-2 break-words text-sm font-medium leading-6 text-zinc-600">Mandamos el email a <strong className="font-black text-green-800">{verificationEmail}</strong>. Abrí el enlace para activar la cuenta y después vas a poder ingresar.</p>
+            <p className="mt-3 text-xs font-semibold leading-5 text-zinc-500">Si no aparece, revisá Spam o Correo no deseado. El enlace puede tardar unos minutos.</p>
             {feedback && (
-              <p role={feedback.type === "error" ? "alert" : "status"} className={`mt-4 rounded-xl border px-4 py-3 text-sm ${feedback.type === "error" ? "border-red-300/25 bg-red-400/[0.08] text-red-100" : "border-emerald-200/25 bg-emerald-200/[0.08] text-emerald-50"}`}>{feedback.text}</p>
+              <p role={feedback.type === "error" ? "alert" : "status"} className={`mt-4 rounded-xl border px-4 py-3 text-sm font-semibold ${feedback.type === "error" ? "border-red-200 bg-red-50 text-red-800" : "border-green-200 bg-white text-green-800"}`}>{feedback.text}</p>
             )}
-            <button type="button" disabled={busy} onClick={resendVerification} className="mt-5 min-h-11 w-full rounded-xl border border-emerald-200/25 px-4 py-2.5 text-sm font-bold text-emerald-100 transition hover:bg-emerald-200/[0.08] disabled:cursor-wait disabled:opacity-50">
+            <button type="button" disabled={busy} onClick={resendVerification} className="mt-5 min-h-11 w-full rounded-xl border border-green-700 px-4 py-2.5 text-sm font-black text-green-800 transition hover:bg-green-100 disabled:cursor-wait disabled:opacity-50">
               {loading === "resend" ? "Reenviando..." : "Reenviar email"}
             </button>
-            <button type="button" onClick={() => changeMode("signup")} className="mt-3 w-full text-center text-xs font-semibold text-emerald-100/60 hover:text-emerald-50">Usar otro email</button>
+            <button type="button" onClick={() => changeMode("signup")} className="mt-3 w-full text-center text-xs font-bold text-zinc-500 hover:text-zinc-950">Usar otro email</button>
           </div>
         )}
 
         {mode !== "verify" && <form onSubmit={mode === "reset" ? requestPasswordReset : submitEmail} className="grid gap-4" noValidate>
           {mode === "signup" && (
             <label className="grid gap-2">
-              <span className="text-xs font-semibold text-emerald-50/70">Nombre</span>
+              <span className="text-xs font-bold text-zinc-800">Nombre</span>
               <input
                 type="text"
                 autoComplete="name"
@@ -471,7 +471,7 @@ export default function AuthModal({
           )}
 
           <label className="grid gap-2">
-            <span className="text-xs font-semibold text-emerald-50/70">Email</span>
+            <span className="text-xs font-bold text-zinc-800">Email</span>
             <input
               type="email"
               inputMode="email"
@@ -485,10 +485,10 @@ export default function AuthModal({
 
           {mode !== "reset" && (
             <label className="grid gap-2">
-              <span className="flex items-center justify-between gap-3 text-xs font-semibold text-emerald-50/70">
+              <span className="flex items-center justify-between gap-3 text-xs font-bold text-zinc-800">
                 Contraseña
                 {mode === "login" && (
-                  <button type="button" onClick={() => changeMode("reset")} className="font-medium text-emerald-200/65 transition hover:text-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/60">
+                  <button type="button" onClick={() => changeMode("reset")} className="font-bold text-green-700 transition hover:text-green-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600/40">
                     ¿La olvidaste?
                   </button>
                 )}
@@ -508,7 +508,7 @@ export default function AuthModal({
                   type="button"
                   onClick={() => setShowPassword((current) => !current)}
                   aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-                  className="absolute inset-y-1 right-1 grid w-10 place-items-center rounded-lg text-emerald-50/40 transition hover:bg-emerald-200/[0.08] hover:text-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/60"
+                  className="absolute inset-y-1 right-1 grid w-10 place-items-center rounded-lg text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600/40"
                 >
                   <EyeIcon visible={showPassword} />
                 </button>
@@ -517,7 +517,7 @@ export default function AuthModal({
                 <span id={`${titleId}-password-rules`} className="grid grid-cols-1 gap-1.5 pt-1 sm:grid-cols-2">
                   {passwordRequirements.map((requirement) => {
                     const met = requirement.test(password);
-                    return <span key={requirement.label} className={`flex items-center gap-2 text-[11px] ${met ? "text-emerald-200" : "text-emerald-50/45"}`}><span className={`grid h-4 w-4 place-items-center rounded-full border text-[9px] ${met ? "border-emerald-300 bg-emerald-300 text-[#043222]" : "border-emerald-200/25"}`}>{met ? "✓" : ""}</span>{requirement.label}</span>;
+                    return <span key={requirement.label} className={`flex items-center gap-2 text-[11px] font-semibold ${met ? "text-green-700" : "text-zinc-500"}`}><span className={`grid h-4 w-4 place-items-center rounded-full border text-[9px] ${met ? "border-green-700 bg-green-700 text-white" : "border-zinc-300"}`}>{met ? "✓" : ""}</span>{requirement.label}</span>;
                   })}
                 </span>
               )}
@@ -526,7 +526,7 @@ export default function AuthModal({
 
           {mode === "signup" && (
             <label className="grid gap-2">
-              <span className="text-xs font-semibold text-emerald-50/70">Confirmar contraseña</span>
+              <span className="text-xs font-bold text-zinc-800">Confirmar contraseña</span>
               <input
                 type={showPassword ? "text" : "password"}
                 autoComplete="new-password"
@@ -543,12 +543,12 @@ export default function AuthModal({
             <div
               role={feedback.type === "error" ? "alert" : "status"}
               aria-live="polite"
-              className={`rounded-xl border px-4 py-3 text-sm leading-5 ${
+              className={`rounded-xl border px-4 py-3 text-sm font-semibold leading-5 ${
                 feedback.type === "error"
-                  ? "border-red-400/20 bg-red-500/[0.08] text-red-100/80"
+                  ? "border-red-200 bg-red-50 text-red-800"
                   : feedback.type === "success"
-                    ? "border-emerald-300/20 bg-emerald-300/[0.07] text-emerald-100/80"
-                    : "border-sky-300/15 bg-sky-300/[0.06] text-sky-100/75"
+                    ? "border-green-200 bg-green-50 text-green-800"
+                    : "border-blue-200 bg-blue-50 text-blue-800"
               }`}
             >
               {feedback.text}
@@ -558,7 +558,7 @@ export default function AuthModal({
           <button
             type="submit"
             disabled={busy}
-            className="mt-1 flex min-h-12 items-center justify-center rounded-xl bg-emerald-300 px-4 py-3 text-sm font-black text-[#052e21] shadow-[0_10px_30px_rgba(110,231,183,.14)] transition hover:bg-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0c0f0e] disabled:cursor-wait disabled:opacity-55"
+            className="mt-1 flex min-h-12 items-center justify-center rounded-xl bg-green-700 px-4 py-3 text-sm font-black text-white shadow-[0_10px_26px_rgba(21,128,61,.18)] transition hover:bg-green-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-wait disabled:opacity-55"
           >
             {loading === "email" || loading === "reset"
               ? "Procesando..."
@@ -568,16 +568,16 @@ export default function AuthModal({
                   ? "Crear mi cuenta gratis"
                   : "Enviar enlace de recuperación"}
           </button>
-          {mode === "signup" && <p className="text-center text-[11px] leading-5 text-emerald-100/55">Te enviaremos un email para verificar tu dirección antes de activar la cuenta.</p>}
+          {mode === "signup" && <p className="text-center text-[11px] font-semibold leading-5 text-zinc-500">Te enviaremos un email para verificar tu dirección antes de activar la cuenta.</p>}
         </form>}
 
         {mode === "reset" ? (
-          <button type="button" onClick={() => changeMode("login")} className="mt-5 w-full text-center text-sm font-semibold text-emerald-100/60 transition hover:text-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/60">
+          <button type="button" onClick={() => changeMode("login")} className="mt-5 w-full text-center text-sm font-bold text-green-700 transition hover:text-green-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600/40">
             ← Volver a iniciar sesión
           </button>
         ) : mode !== "verify" ? (
-          <p className="mt-5 text-center text-[11px] leading-5 text-emerald-50/38">
-            Al continuar aceptás los <Link href="/terminos-y-condiciones" className="underline decoration-emerald-100/25 underline-offset-2 hover:text-emerald-50">Términos</Link> y la <Link href="/politica-de-privacidad" className="underline decoration-emerald-100/25 underline-offset-2 hover:text-emerald-50">Política de privacidad</Link>.
+          <p className="mt-5 text-center text-[11px] font-medium leading-5 text-zinc-500">
+            Al continuar aceptás los <Link href="/terminos-y-condiciones" className="font-bold underline decoration-zinc-300 underline-offset-2 hover:text-zinc-950">Términos</Link> y la <Link href="/politica-de-privacidad" className="font-bold underline decoration-zinc-300 underline-offset-2 hover:text-zinc-950">Política de privacidad</Link>.
           </p>
         ) : null}
       </section>
