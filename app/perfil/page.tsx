@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   description: "Consultá tus escenarios guardados en Calculadora Emprendedora.",
 };
 
-export default function Page() {
-  return <ProfilePage />;
+export default async function Page({ searchParams }: { searchParams: Promise<{ modo?: string }> }) {
+  const { modo } = await searchParams;
+  return <ProfilePage initialAuthMode={modo === "registro" ? "signup" : "login"} />;
 }

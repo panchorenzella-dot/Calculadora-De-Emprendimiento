@@ -10,11 +10,21 @@ type Props = {
   onClose?: () => void;
   onAuthenticated?: () => void | Promise<void>;
   returnTo?: string;
+  initialMode?: "login" | "signup";
 };
 
-type AuthMode = "login" | "signup" | "reset";
-type LoadingAction = "email" | "google" | "reset" | null;
+type AuthMode = "login" | "signup" | "reset" | "verify";
+type LoadingAction = "email" | "google" | "reset" | "resend" | null;
 type Feedback = { type: "error" | "success" | "info"; text: string } | null;
+
+const passwordRequirements = [
+  { label: "8 caracteres como mínimo", test: (value: string) => value.length >= 8 },
+  { label: "Una letra mayúscula", test: (value: string) => /[A-ZÁÉÍÓÚÜÑ]/.test(value) },
+  { label: "Una letra minúscula", test: (value: string) => /[a-záéíóúüñ]/.test(value) },
+  { label: "Un número", test: (value: string) => /\d/.test(value) },
+];
+
+const inputClassName = "min-h-12 w-full rounded-xl border border-emerald-200/20 bg-[#020a07] px-4 py-3 text-sm text-emerald-50 outline-none transition hover:border-emerald-200/35 focus:border-emerald-300/65 focus:bg-[#03100b] focus:ring-4 focus:ring-emerald-300/[0.08]";
 
 const benefits = [
   {
@@ -48,7 +58,7 @@ function translateAuthError(message: string) {
     return "Ese email ya tiene una cuenta. Probá iniciar sesión.";
   }
   if (normalized.includes("password should be")) {
-    return "La contraseña debe tener al menos 8 caracteres.";
+    return "La contraseña no cumple los requisitos de seguridad.";
   }
   if (normalized.includes("rate limit") || normalized.includes("too many requests")) {
     return "Hiciste varios intentos seguidos. Esperá unos minutos y volvé a probar.";
@@ -97,20 +107,23 @@ export default function AuthModal({
   onClose,
   onAuthenticated,
   returnTo = "/perfil",
+  initialMode = "login",
 }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [mode, setMode] = useState<AuthMode>("login");
+  const [mode, setMode] = useState<AuthMode>(initialMode);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState<LoadingAction>(null);
   const [feedback, setFeedback] = useState<Feedback>(null);
+  const [verificationEmail, setVerificationEmail] = useState("");
   const titleId = useId();
   const descriptionId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const isModal = Boolean(onClose);
   const busy = loading !== null;
+  const passwordIsValid = passwordRequirements.every((requirement) => requirement.test(password));
 
   useEffect(() => {
     if (!open || !isModal) return;
@@ -138,6 +151,7 @@ export default function AuthModal({
     setConfirmPassword("");
     setShowPassword(false);
     setFeedback(null);
+    if (nextMode !== "verify") setVerificationEmail("");
   }
 
   function getRedirectUrl(path = returnTo) {
@@ -154,13 +168,22 @@ export default function AuthModal({
 
     const cleanEmail = email.trim().toLowerCase();
 
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      setFeedback({ type: "error", text: "Ingresá un email válido." });
+      return;
+    }
+    if (!password) {
+      setFeedback({ type: "error", text: "Ingresá tu contraseña." });
+      return;
+    }
+
     if (mode === "signup") {
       if (fullName.trim().length < 2) {
         setFeedback({ type: "error", text: "Ingresá tu nombre para crear la cuenta." });
         return;
       }
-      if (password.length < 8) {
-        setFeedback({ type: "error", text: "Elegí una contraseña de al menos 8 caracteres." });
+      if (!passwordIsValid) {
+        setFeedback({ type: "error", text: "La contraseña todavía no cumple todos los requisitos." });
         return;
       }
       if (password !== confirmPassword) {
@@ -191,15 +214,35 @@ export default function AuthModal({
     }
 
     if (mode === "signup" && !response.data.session) {
-      setFeedback({
-        type: "success",
-        text: `Te enviamos un enlace a ${cleanEmail}. Abrilo para confirmar tu cuenta.`,
-      });
+      setVerificationEmail(cleanEmail);
+      setMode("verify");
+      setFeedback(null);
       return;
     }
 
     setFeedback({ type: "success", text: "Listo, ya ingresaste a tu cuenta." });
     await onAuthenticated?.();
+  }
+
+  async function resendVerification() {
+    const supabase = getSupabaseClient();
+    if (!supabase || !verificationEmail) return;
+
+    setLoading("resend");
+    setFeedback(null);
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: verificationEmail,
+      options: { emailRedirectTo: getRedirectUrl() },
+    });
+    setLoading(null);
+
+    if (error) {
+      setFeedback({ type: "error", text: translateAuthError(error.message) });
+      return;
+    }
+
+    setFeedback({ type: "success", text: "Listo. Te enviamos un enlace nuevo." });
   }
 
   async function requestPasswordReset(event: React.FormEvent) {
@@ -213,6 +256,11 @@ export default function AuthModal({
     setLoading("reset");
     setFeedback(null);
     const cleanEmail = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      setLoading(null);
+      setFeedback({ type: "error", text: "Ingresá un email válido." });
+      return;
+    }
     const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
       redirectTo: getRedirectUrl("/restablecer-contrasena"),
     });
@@ -266,12 +314,16 @@ export default function AuthModal({
     ? "Volvé a tu espacio"
     : mode === "signup"
       ? "Creá tu cuenta gratis"
-      : "Recuperá tu acceso";
+      : mode === "verify"
+        ? "Revisá tu email"
+        : "Recuperá tu acceso";
   const description = mode === "login"
     ? "Accedé a tus escenarios, análisis y herramientas desde cualquier dispositivo."
     : mode === "signup"
       ? "Empezá gratis y conservá todo el trabajo que hagas en la calculadora."
-      : "Ingresá tu email y te enviaremos un enlace seguro para elegir una contraseña nueva.";
+      : mode === "verify"
+        ? "Te enviamos un enlace de confirmación. Tu cuenta se activa cuando verificás tu dirección."
+        : "Ingresá tu email y te enviaremos un enlace seguro para elegir una contraseña nueva.";
 
   const card = (
     <div
@@ -281,9 +333,9 @@ export default function AuthModal({
       aria-labelledby={titleId}
       aria-describedby={descriptionId}
       tabIndex={isModal ? -1 : undefined}
-      className="relative w-full max-w-5xl overflow-hidden rounded-[28px] border border-emerald-300/15 bg-[#0c0f0e] shadow-[0_30px_100px_rgba(0,0,0,0.55)] outline-none lg:grid lg:grid-cols-[0.84fr_1.16fr]"
+      className="relative w-full max-w-5xl overflow-hidden rounded-[28px] border border-emerald-300/25 bg-[#06110d] shadow-[0_30px_100px_rgba(0,0,0,0.6)] outline-none lg:grid lg:grid-cols-[0.84fr_1.16fr]"
     >
-      <aside className="relative hidden min-h-full overflow-hidden border-r border-emerald-300/10 bg-[linear-gradient(145deg,rgba(16,185,129,.16),rgba(8,13,11,.96)_58%,rgba(8,9,10,1))] p-9 lg:flex lg:flex-col">
+      <aside className="relative hidden min-h-full overflow-hidden border-r border-emerald-300/20 bg-[linear-gradient(145deg,rgba(16,185,129,.23),rgba(4,20,14,.98)_58%,rgba(2,10,7,1))] p-9 lg:flex lg:flex-col">
         <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-emerald-300/10 blur-3xl" />
         <div className="relative flex items-center gap-3">
           <span className="grid h-11 w-11 place-items-center rounded-2xl border border-emerald-200/20 bg-emerald-200/[0.08] font-black text-emerald-100">CE</span>
@@ -305,27 +357,27 @@ export default function AuthModal({
                   <CheckIcon />
                 </span>
                 <div>
-                  <p className="text-sm font-semibold text-white/85">{benefit.title}</p>
-                  <p className="mt-1 text-xs leading-5 text-white/40">{benefit.description}</p>
+                  <p className="text-sm font-semibold text-emerald-50/90">{benefit.title}</p>
+                  <p className="mt-1 text-xs leading-5 text-emerald-50/50">{benefit.description}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="relative flex items-center gap-2 text-xs text-white/35">
+        <div className="relative flex items-center gap-2 text-xs text-emerald-50/50">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
           Gratis para empezar · Sin tarjeta
         </div>
       </aside>
 
-      <section className="relative bg-[radial-gradient(circle_at_90%_0%,rgba(110,231,183,.07),transparent_22rem)] px-5 py-6 sm:px-9 sm:py-8 lg:px-12 lg:py-10">
+      <section className="relative bg-[radial-gradient(circle_at_90%_0%,rgba(110,231,183,.13),transparent_23rem),linear-gradient(180deg,#07150f,#05100c)] px-5 py-6 sm:px-9 sm:py-8 lg:px-12 lg:py-10">
         {onClose && (
           <button
             type="button"
             onClick={onClose}
             aria-label="Cerrar acceso"
-            className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full border border-white/[0.07] text-xl leading-none text-white/40 transition hover:border-white/15 hover:bg-white/[0.05] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/60 sm:right-6 sm:top-6"
+            className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full border border-emerald-200/15 text-xl leading-none text-emerald-50/50 transition hover:border-emerald-200/35 hover:bg-emerald-200/[0.08] hover:text-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/60 sm:right-6 sm:top-6"
           >
             ×
           </button>
@@ -338,16 +390,16 @@ export default function AuthModal({
           </div>
           <p className="mt-6 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-200/55 lg:mt-0">Cuenta Growtella</p>
           <h1 id={titleId} className="mt-2 text-3xl font-semibold tracking-[-0.035em] text-white sm:text-[2rem]">{title}</h1>
-          <p id={descriptionId} className="mt-3 max-w-lg text-sm leading-6 text-white/45">{description}</p>
+          <p id={descriptionId} className="mt-3 max-w-lg text-sm leading-6 text-emerald-50/55">{description}</p>
         </div>
 
-        {mode !== "reset" && (
-          <div className="mt-7 grid grid-cols-2 rounded-xl border border-white/[0.07] bg-black/25 p-1" aria-label="Elegir tipo de acceso">
+        {mode !== "reset" && mode !== "verify" && (
+          <div className="mt-7 grid grid-cols-2 rounded-xl border border-emerald-200/20 bg-[#020906] p-1" aria-label="Elegir tipo de acceso">
             <button
               type="button"
               onClick={() => changeMode("login")}
               aria-pressed={mode === "login"}
-              className={`rounded-lg px-3 py-2.5 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/60 ${mode === "login" ? "bg-white/[0.09] text-white shadow-sm" : "text-white/38 hover:text-white/70"}`}
+              className={`rounded-lg px-3 py-2.5 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/60 ${mode === "login" ? "bg-emerald-300 text-[#03261b] shadow-sm" : "text-emerald-50/55 hover:bg-emerald-200/[0.06] hover:text-emerald-50"}`}
             >
               Iniciar sesión
             </button>
@@ -355,20 +407,20 @@ export default function AuthModal({
               type="button"
               onClick={() => changeMode("signup")}
               aria-pressed={mode === "signup"}
-              className={`rounded-lg px-3 py-2.5 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/60 ${mode === "signup" ? "bg-white/[0.09] text-white shadow-sm" : "text-white/38 hover:text-white/70"}`}
+              className={`rounded-lg px-3 py-2.5 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/60 ${mode === "signup" ? "bg-emerald-300 text-[#03261b] shadow-sm" : "text-emerald-50/55 hover:bg-emerald-200/[0.06] hover:text-emerald-50"}`}
             >
               Crear cuenta
             </button>
           </div>
         )}
 
-        {mode !== "reset" && (
+        {mode !== "reset" && mode !== "verify" && (
           <>
             <button
               type="button"
               onClick={signInWithGoogle}
               disabled={busy}
-              className="mt-5 flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-zinc-900 shadow-sm transition hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0c0f0e] disabled:cursor-wait disabled:opacity-60"
+              className="mt-5 flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-emerald-100 bg-white px-4 py-3 text-sm font-semibold text-[#073c2b] shadow-sm transition hover:bg-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#06110d] disabled:cursor-wait disabled:opacity-60"
             >
               {loading === "google" ? (
                 <span className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-400 border-t-zinc-900" aria-hidden="true" />
@@ -377,34 +429,49 @@ export default function AuthModal({
               )}
               {loading === "google" ? "Abriendo Google..." : mode === "signup" ? "Registrarme con Google" : "Continuar con Google"}
             </button>
-            <p className="mt-2 text-center text-[11px] text-white/30">La opción más rápida · No necesitás otra contraseña</p>
+            <p className="mt-2 text-center text-[11px] text-emerald-50/45">La opción más rápida · No necesitás otra contraseña</p>
 
-            <div className="my-5 flex items-center gap-3 text-[11px] font-medium uppercase tracking-[0.12em] text-white/25">
-              <span className="h-px flex-1 bg-white/[0.08]" />
+            <div className="my-5 flex items-center gap-3 text-[11px] font-medium uppercase tracking-[0.12em] text-emerald-50/35">
+              <span className="h-px flex-1 bg-emerald-200/15" />
               o usar email
-              <span className="h-px flex-1 bg-white/[0.08]" />
+              <span className="h-px flex-1 bg-emerald-200/15" />
             </div>
           </>
         )}
 
-        <form onSubmit={mode === "reset" ? requestPasswordReset : submitEmail} className="grid gap-4" noValidate>
+        {mode === "verify" && (
+          <div className="mt-7 rounded-2xl border border-emerald-300/25 bg-emerald-300/[0.07] p-5">
+            <div className="grid h-11 w-11 place-items-center rounded-full bg-emerald-300 text-xl text-[#043222]" aria-hidden="true">✓</div>
+            <p className="mt-4 text-sm font-semibold text-emerald-50">Enlace de verificación enviado</p>
+            <p className="mt-2 break-words text-sm leading-6 text-emerald-50/60">Mandamos el email a <strong className="text-emerald-100">{verificationEmail}</strong>. Abrí el enlace para activar la cuenta y después vas a poder ingresar.</p>
+            <p className="mt-3 text-xs leading-5 text-emerald-50/40">Si no aparece, revisá Spam o Correo no deseado. El enlace puede tardar unos minutos.</p>
+            {feedback && (
+              <p role={feedback.type === "error" ? "alert" : "status"} className={`mt-4 rounded-xl border px-4 py-3 text-sm ${feedback.type === "error" ? "border-red-300/25 bg-red-400/[0.08] text-red-100" : "border-emerald-200/25 bg-emerald-200/[0.08] text-emerald-50"}`}>{feedback.text}</p>
+            )}
+            <button type="button" disabled={busy} onClick={resendVerification} className="mt-5 min-h-11 w-full rounded-xl border border-emerald-200/25 px-4 py-2.5 text-sm font-bold text-emerald-100 transition hover:bg-emerald-200/[0.08] disabled:cursor-wait disabled:opacity-50">
+              {loading === "resend" ? "Reenviando..." : "Reenviar email"}
+            </button>
+            <button type="button" onClick={() => changeMode("signup")} className="mt-3 w-full text-center text-xs font-semibold text-emerald-100/60 hover:text-emerald-50">Usar otro email</button>
+          </div>
+        )}
+
+        {mode !== "verify" && <form onSubmit={mode === "reset" ? requestPasswordReset : submitEmail} className="grid gap-4" noValidate>
           {mode === "signup" && (
             <label className="grid gap-2">
-              <span className="text-xs font-semibold text-white/60">Nombre</span>
+              <span className="text-xs font-semibold text-emerald-50/70">Nombre</span>
               <input
                 type="text"
                 autoComplete="name"
                 required
                 value={fullName}
                 onChange={(event) => setFullName(event.target.value)}
-                placeholder="Cómo querés que te llamemos"
-                className="min-h-12 rounded-xl border border-white/[0.09] bg-white/[0.035] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/23 hover:border-white/15 focus:border-emerald-300/45 focus:bg-white/[0.045] focus:ring-4 focus:ring-emerald-300/[0.06]"
+                className={inputClassName}
               />
             </label>
           )}
 
           <label className="grid gap-2">
-            <span className="text-xs font-semibold text-white/60">Email</span>
+            <span className="text-xs font-semibold text-emerald-50/70">Email</span>
             <input
               type="email"
               inputMode="email"
@@ -412,14 +479,13 @@ export default function AuthModal({
               required
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              placeholder="nombre@ejemplo.com"
-              className="min-h-12 rounded-xl border border-white/[0.09] bg-white/[0.035] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/23 hover:border-white/15 focus:border-emerald-300/45 focus:bg-white/[0.045] focus:ring-4 focus:ring-emerald-300/[0.06]"
+              className={inputClassName}
             />
           </label>
 
           {mode !== "reset" && (
             <label className="grid gap-2">
-              <span className="flex items-center justify-between gap-3 text-xs font-semibold text-white/60">
+              <span className="flex items-center justify-between gap-3 text-xs font-semibold text-emerald-50/70">
                 Contraseña
                 {mode === "login" && (
                   <button type="button" onClick={() => changeMode("reset")} className="font-medium text-emerald-200/65 transition hover:text-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/60">
@@ -435,24 +501,32 @@ export default function AuthModal({
                   minLength={mode === "signup" ? 8 : 6}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
-                  placeholder={mode === "signup" ? "Mínimo 8 caracteres" : "Tu contraseña"}
-                  className="min-h-12 w-full rounded-xl border border-white/[0.09] bg-white/[0.035] px-4 py-3 pr-12 text-sm text-white outline-none transition placeholder:text-white/23 hover:border-white/15 focus:border-emerald-300/45 focus:bg-white/[0.045] focus:ring-4 focus:ring-emerald-300/[0.06]"
+                  aria-describedby={mode === "signup" ? `${titleId}-password-rules` : undefined}
+                  className={`${inputClassName} pr-12`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((current) => !current)}
                   aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-                  className="absolute inset-y-1 right-1 grid w-10 place-items-center rounded-lg text-white/30 transition hover:bg-white/[0.05] hover:text-white/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/60"
+                  className="absolute inset-y-1 right-1 grid w-10 place-items-center rounded-lg text-emerald-50/40 transition hover:bg-emerald-200/[0.08] hover:text-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/60"
                 >
                   <EyeIcon visible={showPassword} />
                 </button>
               </span>
+              {mode === "signup" && (
+                <span id={`${titleId}-password-rules`} className="grid grid-cols-1 gap-1.5 pt-1 sm:grid-cols-2">
+                  {passwordRequirements.map((requirement) => {
+                    const met = requirement.test(password);
+                    return <span key={requirement.label} className={`flex items-center gap-2 text-[11px] ${met ? "text-emerald-200" : "text-emerald-50/45"}`}><span className={`grid h-4 w-4 place-items-center rounded-full border text-[9px] ${met ? "border-emerald-300 bg-emerald-300 text-[#043222]" : "border-emerald-200/25"}`}>{met ? "✓" : ""}</span>{requirement.label}</span>;
+                  })}
+                </span>
+              )}
             </label>
           )}
 
           {mode === "signup" && (
             <label className="grid gap-2">
-              <span className="text-xs font-semibold text-white/60">Confirmar contraseña</span>
+              <span className="text-xs font-semibold text-emerald-50/70">Confirmar contraseña</span>
               <input
                 type={showPassword ? "text" : "password"}
                 autoComplete="new-password"
@@ -460,8 +534,7 @@ export default function AuthModal({
                 minLength={8}
                 value={confirmPassword}
                 onChange={(event) => setConfirmPassword(event.target.value)}
-                placeholder="Repetí la contraseña"
-                className="min-h-12 rounded-xl border border-white/[0.09] bg-white/[0.035] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/23 hover:border-white/15 focus:border-emerald-300/45 focus:bg-white/[0.045] focus:ring-4 focus:ring-emerald-300/[0.06]"
+                className={inputClassName}
               />
             </label>
           )}
@@ -495,17 +568,18 @@ export default function AuthModal({
                   ? "Crear mi cuenta gratis"
                   : "Enviar enlace de recuperación"}
           </button>
-        </form>
+          {mode === "signup" && <p className="text-center text-[11px] leading-5 text-emerald-100/55">Te enviaremos un email para verificar tu dirección antes de activar la cuenta.</p>}
+        </form>}
 
         {mode === "reset" ? (
-          <button type="button" onClick={() => changeMode("login")} className="mt-5 w-full text-center text-sm font-semibold text-white/45 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/60">
+          <button type="button" onClick={() => changeMode("login")} className="mt-5 w-full text-center text-sm font-semibold text-emerald-100/60 transition hover:text-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/60">
             ← Volver a iniciar sesión
           </button>
-        ) : (
-          <p className="mt-5 text-center text-[11px] leading-5 text-white/28">
-            Al continuar aceptás los <Link href="/terminos-y-condiciones" className="underline decoration-white/20 underline-offset-2 hover:text-white/55">Términos</Link> y la <Link href="/politica-de-privacidad" className="underline decoration-white/20 underline-offset-2 hover:text-white/55">Política de privacidad</Link>.
+        ) : mode !== "verify" ? (
+          <p className="mt-5 text-center text-[11px] leading-5 text-emerald-50/38">
+            Al continuar aceptás los <Link href="/terminos-y-condiciones" className="underline decoration-emerald-100/25 underline-offset-2 hover:text-emerald-50">Términos</Link> y la <Link href="/politica-de-privacidad" className="underline decoration-emerald-100/25 underline-offset-2 hover:text-emerald-50">Política de privacidad</Link>.
           </p>
-        )}
+        ) : null}
       </section>
     </div>
   );

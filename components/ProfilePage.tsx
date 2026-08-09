@@ -118,7 +118,7 @@ function StatCard({ label, value, detail, accent = false, onClick }: { label: st
   return onClick ? <button type="button" onClick={onClick} className={className}>{content}</button> : <div className={className}>{content}</div>;
 }
 
-export default function ProfilePage() {
+export default function ProfilePage({ initialAuthMode = "login" }: { initialAuthMode?: "login" | "signup" }) {
   const configured = Boolean(getSupabaseClient());
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(configured);
@@ -284,7 +284,7 @@ export default function ProfilePage() {
   }, [scenarioQuery, scenarios]);
 
   if (loading) return <div className="grid min-h-[65vh] place-items-center text-sm text-white/40">Preparando tu espacio...</div>;
-  if (!session) return <main><AuthModal open returnTo="/perfil" /></main>;
+  if (!session) return <main><AuthModal open returnTo="/perfil" initialMode={initialAuthMode} /></main>;
 
   const user = session.user;
   const name = String(user.user_metadata.full_name || user.user_metadata.name || "Emprendedor/a");
