@@ -371,35 +371,35 @@ export default function AuthModal({
         </div>
       </aside>
 
-      <section className="relative bg-white px-5 py-6 text-zinc-950 sm:px-9 sm:py-8 lg:px-12 lg:py-10">
+      <section className="relative bg-[#090a09] px-5 py-6 text-white sm:px-9 sm:py-8 lg:px-12 lg:py-10">
         {onClose && (
           <button
             type="button"
             onClick={onClose}
             aria-label="Cerrar acceso"
-            className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full border border-zinc-200 text-xl leading-none text-zinc-500 transition hover:border-zinc-300 hover:bg-zinc-100 hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600/40 sm:right-6 sm:top-6"
+            className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full border border-white/10 text-xl leading-none text-white/45 transition hover:border-white/20 hover:bg-white/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600/50 sm:right-6 sm:top-6"
           >
             ×
           </button>
         )}
 
         <div className={onClose ? "pr-11" : ""}>
-          <div className="flex items-center gap-2 text-xs font-bold text-zinc-700 lg:hidden">
-            <span className="grid h-8 w-8 place-items-center rounded-xl bg-zinc-950 text-[10px] font-black text-white">CE</span>
+          <div className="flex items-center gap-2 text-xs font-bold text-white/75 lg:hidden">
+            <span className="grid h-8 w-8 place-items-center rounded-xl border border-white/15 bg-white/[0.05] text-[10px] font-black text-white">CE</span>
             Calculadora Emprendedora
           </div>
-          <p className="mt-6 text-xs font-black uppercase tracking-[0.18em] text-green-700 lg:mt-0">Cuenta Growtella</p>
-          <h1 id={titleId} className="mt-2 text-3xl font-black tracking-[-0.035em] text-zinc-950 sm:text-[2rem]">{title}</h1>
-          <p id={descriptionId} className="mt-3 max-w-lg text-sm font-medium leading-6 text-zinc-600">{description}</p>
+          <p className="mt-6 text-xs font-black uppercase tracking-[0.18em] text-green-500 lg:mt-0">Cuenta Growtella</p>
+          <h1 id={titleId} className="mt-2 text-3xl font-black tracking-[-0.035em] text-white sm:text-[2rem]">{title}</h1>
+          <p id={descriptionId} className="mt-3 max-w-lg text-sm font-medium leading-6 text-white/55">{description}</p>
         </div>
 
         {mode !== "reset" && mode !== "verify" && (
-          <div className="mt-7 grid grid-cols-2 rounded-xl border border-zinc-200 bg-zinc-100 p-1" aria-label="Elegir tipo de acceso">
+          <div className="mt-7 grid grid-cols-2 rounded-xl border border-white/10 bg-white/[0.06] p-1" aria-label="Elegir tipo de acceso">
             <button
               type="button"
               onClick={() => changeMode("login")}
               aria-pressed={mode === "login"}
-              className={`rounded-lg px-3 py-2.5 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600/40 ${mode === "login" ? "bg-zinc-950 text-white shadow-sm" : "text-zinc-500 hover:text-zinc-950"}`}
+              className={`rounded-lg px-3 py-2.5 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600/50 ${mode === "login" ? "bg-black text-white shadow-sm" : "text-white/45 hover:text-white"}`}
             >
               Iniciar sesión
             </button>
@@ -407,7 +407,7 @@ export default function AuthModal({
               type="button"
               onClick={() => changeMode("signup")}
               aria-pressed={mode === "signup"}
-              className={`rounded-lg px-3 py-2.5 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600/40 ${mode === "signup" ? "bg-zinc-950 text-white shadow-sm" : "text-zinc-500 hover:text-zinc-950"}`}
+              className={`rounded-lg px-3 py-2.5 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600/50 ${mode === "signup" ? "bg-black text-white shadow-sm" : "text-white/45 hover:text-white"}`}
             >
               Crear cuenta
             </button>
@@ -420,7 +420,7 @@ export default function AuthModal({
               type="button"
               onClick={signInWithGoogle}
               disabled={busy}
-              className="mt-5 flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm font-bold text-zinc-950 shadow-sm transition hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-wait disabled:opacity-60"
+              className="mt-5 flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm font-bold text-zinc-950 shadow-sm transition hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#090a09] disabled:cursor-wait disabled:opacity-60"
             >
               {loading === "google" ? (
                 <span className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-400 border-t-zinc-900" aria-hidden="true" />
@@ -429,36 +429,36 @@ export default function AuthModal({
               )}
               {loading === "google" ? "Abriendo Google..." : mode === "signup" ? "Registrarme con Google" : "Continuar con Google"}
             </button>
-            <p className="mt-2 text-center text-[11px] font-semibold text-zinc-500">La opción más rápida · No necesitás otra contraseña</p>
+            <p className="mt-2 text-center text-[11px] font-semibold text-white/38">La opción más rápida · No necesitás otra contraseña</p>
 
-            <div className="my-5 flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.12em] text-zinc-400">
-              <span className="h-px flex-1 bg-zinc-200" />
+            <div className="my-5 flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.12em] text-white/30">
+              <span className="h-px flex-1 bg-white/10" />
               o usar email
-              <span className="h-px flex-1 bg-zinc-200" />
+              <span className="h-px flex-1 bg-white/10" />
             </div>
           </>
         )}
 
         {mode === "verify" && (
-          <div className="mt-7 rounded-2xl border border-green-200 bg-green-50 p-5">
+          <div className="mt-7 rounded-2xl border border-green-600/30 bg-green-600/[0.08] p-5">
             <div className="grid h-11 w-11 place-items-center rounded-full bg-green-700 text-xl font-black text-white" aria-hidden="true">✓</div>
-            <p className="mt-4 text-sm font-black text-zinc-950">Enlace de verificación enviado</p>
-            <p className="mt-2 break-words text-sm font-medium leading-6 text-zinc-600">Mandamos el email a <strong className="font-black text-green-800">{verificationEmail}</strong>. Abrí el enlace para activar la cuenta y después vas a poder ingresar.</p>
-            <p className="mt-3 text-xs font-semibold leading-5 text-zinc-500">Si no aparece, revisá Spam o Correo no deseado. El enlace puede tardar unos minutos.</p>
+            <p className="mt-4 text-sm font-black text-white">Enlace de verificación enviado</p>
+            <p className="mt-2 break-words text-sm font-medium leading-6 text-white/60">Mandamos el email a <strong className="font-black text-green-400">{verificationEmail}</strong>. Abrí el enlace para activar la cuenta y después vas a poder ingresar.</p>
+            <p className="mt-3 text-xs font-semibold leading-5 text-white/40">Si no aparece, revisá Spam o Correo no deseado. El enlace puede tardar unos minutos.</p>
             {feedback && (
               <p role={feedback.type === "error" ? "alert" : "status"} className={`mt-4 rounded-xl border px-4 py-3 text-sm font-semibold ${feedback.type === "error" ? "border-red-200 bg-red-50 text-red-800" : "border-green-200 bg-white text-green-800"}`}>{feedback.text}</p>
             )}
-            <button type="button" disabled={busy} onClick={resendVerification} className="mt-5 min-h-11 w-full rounded-xl border border-green-700 px-4 py-2.5 text-sm font-black text-green-800 transition hover:bg-green-100 disabled:cursor-wait disabled:opacity-50">
+            <button type="button" disabled={busy} onClick={resendVerification} className="mt-5 min-h-11 w-full rounded-xl border border-green-600/50 px-4 py-2.5 text-sm font-black text-green-400 transition hover:bg-green-600/10 disabled:cursor-wait disabled:opacity-50">
               {loading === "resend" ? "Reenviando..." : "Reenviar email"}
             </button>
-            <button type="button" onClick={() => changeMode("signup")} className="mt-3 w-full text-center text-xs font-bold text-zinc-500 hover:text-zinc-950">Usar otro email</button>
+            <button type="button" onClick={() => changeMode("signup")} className="mt-3 w-full text-center text-xs font-bold text-white/45 hover:text-white">Usar otro email</button>
           </div>
         )}
 
         {mode !== "verify" && <form onSubmit={mode === "reset" ? requestPasswordReset : submitEmail} className="grid gap-4" noValidate>
           {mode === "signup" && (
             <label className="grid gap-2">
-              <span className="text-xs font-bold text-zinc-800">Nombre</span>
+              <span className="text-xs font-bold text-white/75">Nombre</span>
               <input
                 type="text"
                 autoComplete="name"
@@ -471,7 +471,7 @@ export default function AuthModal({
           )}
 
           <label className="grid gap-2">
-            <span className="text-xs font-bold text-zinc-800">Email</span>
+            <span className="text-xs font-bold text-white/75">Email</span>
             <input
               type="email"
               inputMode="email"
@@ -485,10 +485,10 @@ export default function AuthModal({
 
           {mode !== "reset" && (
             <label className="grid gap-2">
-              <span className="flex items-center justify-between gap-3 text-xs font-bold text-zinc-800">
+              <span className="flex items-center justify-between gap-3 text-xs font-bold text-white/75">
                 Contraseña
                 {mode === "login" && (
-                  <button type="button" onClick={() => changeMode("reset")} className="font-bold text-green-700 transition hover:text-green-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600/40">
+                  <button type="button" onClick={() => changeMode("reset")} className="font-bold text-green-500 transition hover:text-green-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600/50">
                     ¿La olvidaste?
                   </button>
                 )}
@@ -517,7 +517,7 @@ export default function AuthModal({
                 <span id={`${titleId}-password-rules`} className="grid grid-cols-1 gap-1.5 pt-1 sm:grid-cols-2">
                   {passwordRequirements.map((requirement) => {
                     const met = requirement.test(password);
-                    return <span key={requirement.label} className={`flex items-center gap-2 text-[11px] font-semibold ${met ? "text-green-700" : "text-zinc-500"}`}><span className={`grid h-4 w-4 place-items-center rounded-full border text-[9px] ${met ? "border-green-700 bg-green-700 text-white" : "border-zinc-300"}`}>{met ? "✓" : ""}</span>{requirement.label}</span>;
+                    return <span key={requirement.label} className={`flex items-center gap-2 text-[11px] font-semibold ${met ? "text-green-500" : "text-white/40"}`}><span className={`grid h-4 w-4 place-items-center rounded-full border text-[9px] ${met ? "border-green-600 bg-green-600 text-white" : "border-white/20"}`}>{met ? "✓" : ""}</span>{requirement.label}</span>;
                   })}
                 </span>
               )}
@@ -526,7 +526,7 @@ export default function AuthModal({
 
           {mode === "signup" && (
             <label className="grid gap-2">
-              <span className="text-xs font-bold text-zinc-800">Confirmar contraseña</span>
+              <span className="text-xs font-bold text-white/75">Confirmar contraseña</span>
               <input
                 type={showPassword ? "text" : "password"}
                 autoComplete="new-password"
@@ -558,7 +558,7 @@ export default function AuthModal({
           <button
             type="submit"
             disabled={busy}
-            className="mt-1 flex min-h-12 items-center justify-center rounded-xl bg-green-700 px-4 py-3 text-sm font-black text-white shadow-[0_10px_26px_rgba(21,128,61,.18)] transition hover:bg-green-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-wait disabled:opacity-55"
+            className="mt-1 flex min-h-12 items-center justify-center rounded-xl bg-green-700 px-4 py-3 text-sm font-black text-white shadow-[0_10px_26px_rgba(21,128,61,.18)] transition hover:bg-green-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600 focus-visible:ring-offset-2 focus-visible:ring-offset-[#090a09] disabled:cursor-wait disabled:opacity-55"
           >
             {loading === "email" || loading === "reset"
               ? "Procesando..."
@@ -568,16 +568,16 @@ export default function AuthModal({
                   ? "Crear mi cuenta gratis"
                   : "Enviar enlace de recuperación"}
           </button>
-          {mode === "signup" && <p className="text-center text-[11px] font-semibold leading-5 text-zinc-500">Te enviaremos un email para verificar tu dirección antes de activar la cuenta.</p>}
+          {mode === "signup" && <p className="text-center text-[11px] font-semibold leading-5 text-white/40">Te enviaremos un email para verificar tu dirección antes de activar la cuenta.</p>}
         </form>}
 
         {mode === "reset" ? (
-          <button type="button" onClick={() => changeMode("login")} className="mt-5 w-full text-center text-sm font-bold text-green-700 transition hover:text-green-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600/40">
+          <button type="button" onClick={() => changeMode("login")} className="mt-5 w-full text-center text-sm font-bold text-green-500 transition hover:text-green-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600/50">
             ← Volver a iniciar sesión
           </button>
         ) : mode !== "verify" ? (
-          <p className="mt-5 text-center text-[11px] font-medium leading-5 text-zinc-500">
-            Al continuar aceptás los <Link href="/terminos-y-condiciones" className="font-bold underline decoration-zinc-300 underline-offset-2 hover:text-zinc-950">Términos</Link> y la <Link href="/politica-de-privacidad" className="font-bold underline decoration-zinc-300 underline-offset-2 hover:text-zinc-950">Política de privacidad</Link>.
+          <p className="mt-5 text-center text-[11px] font-medium leading-5 text-white/35">
+            Al continuar aceptás los <Link href="/terminos-y-condiciones" className="font-bold underline decoration-white/20 underline-offset-2 hover:text-white">Términos</Link> y la <Link href="/politica-de-privacidad" className="font-bold underline decoration-white/20 underline-offset-2 hover:text-white">Política de privacidad</Link>.
           </p>
         ) : null}
       </section>
