@@ -24,7 +24,7 @@ const passwordRequirements = [
   { label: "Un número", test: (value: string) => /\d/.test(value) },
 ];
 
-const inputClassName = "min-h-12 w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm font-medium text-zinc-950 outline-none transition hover:border-zinc-400 focus:border-green-600 focus:ring-4 focus:ring-green-600/10";
+const inputClassName = "min-h-12 w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-sm font-semibold text-white outline-none transition hover:border-zinc-700 focus:border-green-600 focus:ring-4 focus:ring-green-600/10";
 
 const benefits = [
   {
@@ -399,7 +399,7 @@ export default function AuthModal({
               type="button"
               onClick={() => changeMode("login")}
               aria-pressed={mode === "login"}
-              className={`rounded-lg px-3 py-2.5 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600/40 ${mode === "login" ? "bg-white text-zinc-950 shadow-sm" : "text-zinc-500 hover:text-zinc-950"}`}
+              className={`rounded-lg px-3 py-2.5 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600/40 ${mode === "login" ? "bg-zinc-950 text-white shadow-sm" : "text-zinc-500 hover:text-zinc-950"}`}
             >
               Iniciar sesión
             </button>
@@ -407,7 +407,7 @@ export default function AuthModal({
               type="button"
               onClick={() => changeMode("signup")}
               aria-pressed={mode === "signup"}
-              className={`rounded-lg px-3 py-2.5 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600/40 ${mode === "signup" ? "bg-white text-zinc-950 shadow-sm" : "text-zinc-500 hover:text-zinc-950"}`}
+              className={`rounded-lg px-3 py-2.5 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600/40 ${mode === "signup" ? "bg-zinc-950 text-white shadow-sm" : "text-zinc-500 hover:text-zinc-950"}`}
             >
               Crear cuenta
             </button>
@@ -508,7 +508,7 @@ export default function AuthModal({
                   type="button"
                   onClick={() => setShowPassword((current) => !current)}
                   aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-                  className="absolute inset-y-1 right-1 grid w-10 place-items-center rounded-lg text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600/40"
+                  className="absolute inset-y-1 right-1 grid w-10 place-items-center rounded-lg text-zinc-400 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600/40"
                 >
                   <EyeIcon visible={showPassword} />
                 </button>

@@ -12,7 +12,7 @@ const passwordRequirements = [
   { label: "Un número", test: (value: string) => /\d/.test(value) },
 ];
 
-const inputClassName = "min-h-12 w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm font-medium text-zinc-950 outline-none transition hover:border-zinc-400 focus:border-green-600 focus:ring-4 focus:ring-green-600/10";
+const inputClassName = "min-h-12 w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-sm font-semibold text-white outline-none transition hover:border-zinc-700 focus:border-green-600 focus:ring-4 focus:ring-green-600/10";
 
 export default function PasswordRecoveryPage() {
   const configured = Boolean(getSupabaseClient());
@@ -91,7 +91,7 @@ export default function PasswordRecoveryPage() {
               Nueva contraseña
               <span className="relative">
                 <input type={showPassword ? "text" : "password"} autoComplete="new-password" minLength={8} required value={password} onChange={(event) => setPassword(event.target.value)} aria-describedby="recovery-password-rules" className={`${inputClassName} pr-12`} />
-                <button type="button" onClick={() => setShowPassword((current) => !current)} className="absolute inset-y-1 right-1 rounded-lg px-3 text-xs font-bold text-zinc-400 hover:bg-zinc-100 hover:text-zinc-800" aria-label={showPassword ? "Ocultar contraseñas" : "Mostrar contraseñas"}>{showPassword ? "Ocultar" : "Ver"}</button>
+                <button type="button" onClick={() => setShowPassword((current) => !current)} className="absolute inset-y-1 right-1 rounded-lg px-3 text-xs font-bold text-zinc-400 hover:bg-white/10 hover:text-white" aria-label={showPassword ? "Ocultar contraseñas" : "Mostrar contraseñas"}>{showPassword ? "Ocultar" : "Ver"}</button>
               </span>
               <span id="recovery-password-rules" className="grid grid-cols-1 gap-1.5 pt-1 sm:grid-cols-2">
                 {passwordRequirements.map((requirement) => {
