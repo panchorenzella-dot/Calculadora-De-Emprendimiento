@@ -31,7 +31,9 @@ button,
 input,
 select,
 textarea {
-  font: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
 }
 
 button {
@@ -71,6 +73,11 @@ textarea {
   accent-color: #6ee7b7;
 }
 
+.calculator-theme button,
+.calculator-theme a[class*="rounded"] {
+  font-weight: 700;
+}
+
 .calculator-theme section[class*="border-zinc-800"],
 .calculator-theme div[class*="border-zinc-800"][class*="bg-zinc-950"] {
   border-color: rgba(110, 231, 183, 0.13);
@@ -80,4 +87,122 @@ textarea {
 .calculator-theme section[class*="border-white/10"],
 .calculator-theme div[class*="border-white/10"][class*="bg-white/5"] {
   border-color: rgba(110, 231, 183, 0.12);
+}
+
+.profile-shell,
+.ai-surface,
+.pricing-surface {
+  color: #fff;
+  font-weight: 500;
+}
+
+.profile-shell {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+.profile-shell button,
+.profile-shell a,
+.ai-surface button,
+.ai-surface a,
+.pricing-surface button,
+.pricing-surface a {
+  font-weight: 700;
+}
+
+.profile-shell h1,
+.profile-shell h2,
+.profile-shell h3,
+.ai-surface h1,
+.ai-surface h2,
+.ai-surface h3,
+.pricing-surface h1,
+.pricing-surface h2,
+.pricing-surface h3 {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  font-weight: 700;
+}
+
+.profile-shell section,
+.profile-shell header,
+.profile-shell article,
+.profile-shell form,
+.profile-shell dl,
+.profile-shell div {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.profile-shell [class*="text-white/25"],
+.profile-shell [class*="text-white/28"],
+.profile-shell [class*="text-white/30"],
+.profile-shell [class*="text-white/32"],
+.profile-shell [class*="text-white/35"],
+.profile-shell [class*="text-white/38"],
+.profile-shell [class*="text-white/40"],
+.ai-surface [class*="text-white/20"],
+.ai-surface [class*="text-white/25"],
+.ai-surface [class*="text-white/30"],
+.ai-surface [class*="text-white/35"],
+.ai-surface [class*="text-white/40"],
+.pricing-surface [class*="text-white/28"],
+.pricing-surface [class*="text-white/35"],
+.pricing-surface [class*="text-white/38"],
+.pricing-surface [class*="text-white/40"],
+.pricing-surface [class*="text-white/42"],
+.pricing-surface [class*="text-white/45"] {
+  color: rgba(255, 255, 255, 0.62) !important;
+}
+
+.profile-shell [class*="bg-white/[0.02"],
+.profile-shell [class*="bg-white/[0.03"],
+.ai-surface [class*="bg-white/[0.03"],
+.ai-surface [class*="bg-white/[0.04"],
+.ai-surface [class*="bg-white/[0.05"] {
+  background-color: rgba(5, 12, 8, 0.88) !important;
+}
+
+.profile-shell [class*="border-white/[0.0"],
+.ai-surface [class*="border-white/[0.0"] {
+  border-color: rgba(110, 231, 183, 0.15) !important;
+}
+
+.profile-shell .profile-primary-action,
+.profile-shell a[class*="bg-white"],
+.profile-shell button[class*="bg-white"] {
+  background: #ffffff;
+  color: #09090b !important;
+  font-weight: 800;
+}
+
+.ai-surface [class*="bg-[#151719]"],
+.ai-surface [class*="bg-[#191a1c]"],
+.ai-surface [class*="bg-[#0b0c0e]"],
+.ai-surface [class*="bg-[#0c0d0f]"] {
+  background-color: #07100a !important;
+}
+
+.ai-surface p,
+.ai-surface textarea {
+  font-weight: 500;
+}
+
+.pricing-surface button,
+.pricing-surface a[class*="rounded-full"] {
+  font-weight: 800;
+}
+
+@media (max-width: 639px) {
+  .profile-shell .profile-mobile-nav {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    overflow: visible;
+  }
+
+  .profile-shell .profile-mobile-nav > * {
+    min-width: 0;
+    justify-content: center;
+    padding-inline: 0.5rem;
+  }
 }

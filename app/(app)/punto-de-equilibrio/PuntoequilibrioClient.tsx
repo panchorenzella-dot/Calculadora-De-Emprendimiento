@@ -1,20 +1,34 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { type FormEvent, useMemo, useState } from "react";
 import Card from "@/components/Card";
 import MoneyInput, { Currency } from "@/components/MoneyInput";
 import { fmtMoney, fmtNum } from "@/lib/format";
 import { onlyDigits, parseDigitsToNumber } from "@/lib/numberInput";
 
+type Results = {
+  CF: number;
+  PV: number;
+  CV: number;
+  ventas: number;
+  margenContribucionUnit: number;
+  margenContribucionPct: number;
+  unidadesEquilibrio: number;
+  facturacionEquilibrio: number;
+  gananciaEstimada: number;
+  rentable: boolean;
+};
+
 export default function PuntoEquilibrioPage() {
   const [currency, setCurrency] = useState<Currency>("ARS");
 
-  const [costosFijos, setCostosFijos] = useState("0");
-  const [precioVenta, setPrecioVenta] = useState("0");
-  const [costoVariable, setCostoVariable] = useState("0");
-  const [ventasEstimadas, setVentasEstimadas] = useState("0");
+  const [costosFijos, setCostosFijos] = useState("");
+  const [precioVenta, setPrecioVenta] = useState("");
+  const [costoVariable, setCostoVariable] = useState("");
+  const [ventasEstimadas, setVentasEstimadas] = useState("");
+  const [calc, setCalc] = useState<Results | null>(null);
 
-  const calc = useMemo(() => {
+  const draftCalc = useMemo<Results>(() => {
     const CF = parseDigitsToNumber(costosFijos);
     const PV = parseDigitsToNumber(precioVenta);
     const CV = parseDigitsToNumber(costoVariable);
@@ -49,6 +63,11 @@ export default function PuntoEquilibrioPage() {
     };
   }, [costosFijos, precioVenta, costoVariable, ventasEstimadas]);
 
+  function handleCalculate(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setCalc(draftCalc);
+  }
+
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
       <section className="mx-auto max-w-6xl px-4 py-10">
@@ -63,7 +82,7 @@ export default function PuntoEquilibrioPage() {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+          <form onSubmit={handleCalculate} className="rounded-2xl border border-white/10 bg-white/5 p-5">
             <div className="mb-5 flex flex-wrap gap-2">
               <button
                 type="button"
@@ -121,22 +140,27 @@ export default function PuntoEquilibrioPage() {
                 </span>
                 <input
                   inputMode="numeric"
-                  value={
-                    ventasEstimadas === "0"
-                      ? ""
-                      : fmtNum(parseDigitsToNumber(ventasEstimadas))
-                  }
+                  value={ventasEstimadas ? fmtNum(parseDigitsToNumber(ventasEstimadas)) : ""}
                   onChange={(e) =>
-                    setVentasEstimadas(onlyDigits(e.target.value) || "0")
+                    setVentasEstimadas(onlyDigits(e.target.value))
                   }
+                  onFocus={(e) => e.currentTarget.select()}
                   placeholder="0"
-                  className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none placeholder:text-white/30"
+                  className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 font-semibold text-white outline-none placeholder:text-white/35"
                 />
               </label>
             </div>
-          </div>
+            <button type="submit" className="mt-5 w-full rounded-full bg-white px-4 py-3 text-sm font-black text-zinc-950 transition hover:bg-zinc-200">
+              Calcular
+            </button>
+          </form>
 
           <div className="grid gap-4 self-start">
+            {!calc ? (
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-5 text-sm font-medium text-white/60">
+                Cargá tus datos y tocá <strong>Calcular</strong>.
+              </div>
+            ) : <>
             <Card
               title="Punto de equilibrio (unidades)"
               value={
@@ -176,6 +200,7 @@ export default function PuntoEquilibrioPage() {
                   : "Completá unidades estimadas para ver este dato"
               }
             />
+            </>}
           </div>
         </div>
 

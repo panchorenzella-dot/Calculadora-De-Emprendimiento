@@ -1,21 +1,29 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { type FormEvent, useMemo, useState } from "react";
 
 import Card from "@/components/Card";
 import MoneyInput, { Currency } from "@/components/MoneyInput";
 import { fmtMoney } from "@/lib/format";
 import { parseDigitsToNumber } from "@/lib/numberInput";
 
+type Results = {
+  gananciaNeta: number;
+  roi: number;
+  retornoBruto: number;
+  margenSobreRetorno: number;
+};
+
 export default function Page() {
   const [currency] = useState<Currency>("ARS");
 
-  const [inversionInicial, setInversionInicial] = useState("0");
-  const [ingresosGenerados, setIngresosGenerados] = useState("0");
-  const [costosTotales, setCostosTotales] = useState("0");
-  const [valorFinal, setValorFinal] = useState("0");
+  const [inversionInicial, setInversionInicial] = useState("");
+  const [ingresosGenerados, setIngresosGenerados] = useState("");
+  const [costosTotales, setCostosTotales] = useState("");
+  const [valorFinal, setValorFinal] = useState("");
+  const [calc, setCalc] = useState<Results | null>(null);
 
-  const calc = useMemo(() => {
+  const draftCalc = useMemo<Results>(() => {
     const inversion = parseDigitsToNumber(inversionInicial);
     const ingresos = parseDigitsToNumber(ingresosGenerados);
     const costos = parseDigitsToNumber(costosTotales);
@@ -36,6 +44,11 @@ export default function Page() {
     };
   }, [inversionInicial, ingresosGenerados, costosTotales, valorFinal]);
 
+  function handleCalculate(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setCalc(draftCalc);
+  }
+
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
       <h1 className="text-4xl font-bold tracking-tight">
@@ -48,7 +61,7 @@ export default function Page() {
       </p>
 
       <div className="mt-10 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+        <form onSubmit={handleCalculate} className="rounded-2xl border border-white/10 bg-white/5 p-6">
           <h2 className="text-xl font-semibold">Datos</h2>
 
           <div className="mt-6 grid gap-5">
@@ -80,11 +93,17 @@ export default function Page() {
               currency={currency}
             />
           </div>
-        </div>
+          <button type="submit" className="mt-6 w-full rounded-full bg-white px-4 py-3 text-sm font-black text-zinc-950 transition hover:bg-zinc-200">
+            Calcular
+          </button>
+        </form>
 
         <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
           <h2 className="text-xl font-semibold">Resultados</h2>
 
+          {!calc ? (
+            <p className="mt-4 text-sm font-medium text-white/60">Cargá tus datos y tocá <strong>Calcular</strong>.</p>
+          ) : (
           <div className="mt-6 grid gap-4">
             <Card
               title="Ganancia neta"
@@ -106,6 +125,7 @@ export default function Page() {
               value={`${calc.margenSobreRetorno.toFixed(2)} %`}
             />
           </div>
+          )}
         </div>
       </div>
 

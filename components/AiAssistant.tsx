@@ -272,7 +272,7 @@ export default function AiAssistant({ draft, hasResults, initialConversationId, 
   const contextFields = draft ? Object.entries(draft.inputs.campos && typeof draft.inputs.campos === "object" && !Array.isArray(draft.inputs.campos) ? draft.inputs.campos : draft.inputs) : [];
 
   return <>
-    {!standalone && <section className="mx-auto mt-8 max-w-5xl border-y border-white/[0.07] py-6">
+    {!standalone && <section className="ai-surface mx-auto mt-8 max-w-5xl border-y border-emerald-300/15 py-6">
       <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="max-w-2xl">
           <div className="flex items-center gap-3"><span className="grid h-9 w-9 place-items-center rounded-full border border-emerald-300/20 bg-emerald-300/[0.06] text-emerald-200"><SparkIcon className="h-4 w-4"/></span><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/45">Asistente inteligente</p><p className="mt-0.5 text-sm text-emerald-200/70">Análisis contextual de tu cálculo</p></div></div>
@@ -286,7 +286,7 @@ export default function AiAssistant({ draft, hasResults, initialConversationId, 
       {!open && notice && <p className="mt-5 rounded-xl border border-emerald-300/15 bg-emerald-300/[0.06] p-3 text-sm text-emerald-100/75">{notice}</p>}
     </section>}
 
-    {open && <div role="dialog" aria-modal="true" aria-label="Chat de análisis con IA" className="fixed inset-0 z-[120] flex bg-[#08090a] text-white">
+    {open && <div role="dialog" aria-modal="true" aria-label="Chat de análisis con IA" className="ai-surface fixed inset-0 z-[120] flex bg-[#050806] text-white">
       <aside className="hidden w-[286px] shrink-0 flex-col border-r border-white/[0.07] bg-[#0b0c0e] p-4 lg:flex">
         <div className="flex items-center gap-3 px-2 py-2"><span className="grid h-9 w-9 place-items-center rounded-full border border-emerald-300/20 bg-emerald-300/[0.07] text-emerald-200"><SparkIcon className="h-4 w-4"/></span><div><p className="text-base font-semibold">Asistente IA</p><p className="text-xs text-white/35">Calculadora Emprendedora</p></div></div>
         <button onClick={newConversation} className="mt-5 flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-2 text-sm font-medium text-white/70 transition hover:bg-white/[0.07] hover:text-white"><span className="text-base font-light">＋</span> Nuevo análisis</button>

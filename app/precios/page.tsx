@@ -55,7 +55,7 @@ export default function PricingPage() {
   );
 
   return (
-    <div className="relative isolate overflow-hidden bg-[#080a09] text-white">
+    <div className="pricing-surface relative isolate overflow-hidden bg-[#050805] text-white">
       <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[720px] bg-[radial-gradient(circle_at_50%_-10%,rgba(52,211,153,0.18),transparent_48%)]" />
       <div className="pointer-events-none absolute left-[-12rem] top-[28rem] -z-10 h-96 w-96 rounded-full bg-emerald-500/[0.06] blur-3xl" />
 

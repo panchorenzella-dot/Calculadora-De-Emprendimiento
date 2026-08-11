@@ -104,7 +104,7 @@ export default function PricingSelector({ paypalReady, paypalMode }: Props) {
         type="button"
         disabled={!paypalReady || loading}
         onClick={startPayPalCheckout}
-        className="mt-5 w-full rounded-full bg-emerald-300 px-4 py-3 text-center text-sm font-bold text-emerald-950 transition hover:bg-emerald-200 disabled:cursor-not-allowed disabled:bg-emerald-300/45 disabled:text-emerald-950/60"
+        className="mt-5 w-full rounded-full bg-emerald-300 px-4 py-3 text-center text-sm font-black text-emerald-950 transition hover:bg-emerald-200 disabled:cursor-not-allowed disabled:bg-emerald-300/45 disabled:text-emerald-950/60"
       >
         {loading ? "Abriendo PayPal..." : !paypalReady ? "Configurando PayPal..." : paypalMode === "sandbox" ? "Probar con PayPal Sandbox" : "Continuar con PayPal"}
       </button>

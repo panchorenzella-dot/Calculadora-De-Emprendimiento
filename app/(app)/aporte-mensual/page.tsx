@@ -21,8 +21,21 @@ type Results = {
 };
 
 function parseInput(value: string) {
-  const parsed = Number(value.replace(",", "."));
+  const parsed = Number(value.replace(/\./g, "").replace(",", "."));
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function formatInputValue(value: string) {
+  const cleanedValue = value.replace(/[^0-9,]/g, "");
+  const hasDecimalComma = cleanedValue.includes(",");
+  const [integerPartRaw, decimalPartRaw = ""] = cleanedValue.split(",");
+  const integerPart = integerPartRaw.replace(/\D/g, "");
+  const formattedInteger = integerPart
+    ? new Intl.NumberFormat("es-AR").format(Number(integerPart))
+    : "";
+
+  if (!hasDecimalComma) return formattedInteger;
+  return `${formattedInteger},${decimalPartRaw.replace(/\D/g, "").slice(0, 2)}`;
 }
 
 function formatMoney(value: number, currency: Currency) {
@@ -202,13 +215,14 @@ function InputField({
         )}
 
         <input
-          type="number"
-          min="0"
+          type="text"
+          aria-label={label}
           inputMode="decimal"
           value={value}
-          onChange={(event) => onChange(event.target.value)}
+          onChange={(event) => onChange(formatInputValue(event.target.value))}
+          onFocus={(event) => event.currentTarget.select()}
           placeholder="0"
-          className={`w-full appearance-none rounded-2xl border border-zinc-800 bg-zinc-950 py-3 text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-emerald-300/50 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
+          className={`w-full appearance-none rounded-2xl border border-zinc-800 bg-zinc-950 py-3 font-semibold text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-emerald-300/50 ${
             prefix ? "pl-9" : "pl-4"
           } ${suffix ? "pr-14" : "pr-4"}`}
         />

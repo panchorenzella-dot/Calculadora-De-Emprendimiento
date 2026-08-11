@@ -19,17 +19,17 @@ import type { CalcResponse, IvaModo, ModoCosto } from "@/types/calc";
 export default function Page() {
   const [currency, setCurrency] = useState<Currency>("ARS");
 
-  const [unidadesDia, setUnidadesDia] = useState<string>("0");
-  const [diasAbiertosMes, setDiasAbiertosMes] = useState<string>("0");
+  const [unidadesDia, setUnidadesDia] = useState<string>("");
+  const [diasAbiertosMes, setDiasAbiertosMes] = useState<string>("");
 
-  const [precioUnit, setPrecioUnit] = useState<string>("0");
+  const [precioUnit, setPrecioUnit] = useState<string>("");
 
   const [modoCosto, setModoCosto] = useState<ModoCosto>("pct");
-  const [costoPct, setCostoPct] = useState<string>("0");
-  const [costoUnitAbs, setCostoUnitAbs] = useState<string>("0");
+  const [costoPct, setCostoPct] = useState<string>("");
+  const [costoUnitAbs, setCostoUnitAbs] = useState<string>("");
 
-  const [costosFijosMes, setCostosFijosMes] = useState<string>("0");
-  const [inversionInicial, setInversionInicial] = useState<string>("0");
+  const [costosFijosMes, setCostosFijosMes] = useState<string>("");
+  const [inversionInicial, setInversionInicial] = useState<string>("");
 
   const [ivaModo, setIvaModo] = useState<IvaModo>("no_incluido");
 
@@ -95,9 +95,6 @@ export default function Page() {
     parseDigitsToNumber(unidadesDia) *
     parseDigitsToNumber(diasAbiertosMes);
 
-  const isZeroUnidades = unidadesDia === "0";
-  const isZeroDias = diasAbiertosMes === "0";
-
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
       <div className="mx-auto max-w-5xl px-4 py-0">
@@ -126,9 +123,7 @@ export default function Page() {
               <label className="grid gap-2">
                 <span className="text-sm text-white/70">Unidades por día</span>
                 <input
-                  className={`rounded-xl bg-zinc-900 px-4 py-3 outline-none ring-1 ring-white/10 focus:ring-white/30 ${
-                    isZeroUnidades ? "text-white/40" : "text-white"
-                  }`}
+                  className="rounded-xl bg-zinc-900 px-4 py-3 font-semibold text-white outline-none ring-1 ring-white/10 placeholder:text-white/35 focus:ring-white/30"
                   inputMode="numeric"
                   value={formatARIntFromDigits(unidadesDia)}
                   onChange={(e) => setUnidadesDia(onlyDigits(e.target.value))}
@@ -142,9 +137,7 @@ export default function Page() {
                   Días que abrís al mes
                 </span>
                 <input
-                  className={`rounded-xl bg-zinc-900 px-4 py-3 outline-none ring-1 ring-white/10 focus:ring-white/30 ${
-                    isZeroDias ? "text-white/40" : "text-white"
-                  }`}
+                  className="rounded-xl bg-zinc-900 px-4 py-3 font-semibold text-white outline-none ring-1 ring-white/10 placeholder:text-white/35 focus:ring-white/30"
                   inputMode="numeric"
                   value={formatARIntFromDigits(diasAbiertosMes)}
                   onChange={(e) =>
@@ -209,10 +202,11 @@ export default function Page() {
 
                 {modoCosto === "pct" ? (
                   <input
-                    className="rounded-xl bg-zinc-900 px-4 py-3 outline-none ring-1 ring-white/10 focus:ring-white/30"
+                    className="rounded-xl bg-zinc-900 px-4 py-3 font-semibold text-white outline-none ring-1 ring-white/10 placeholder:text-white/35 focus:ring-white/30"
                     inputMode="numeric"
-                    value={costoPct}
+                    value={formatARIntFromDigits(costoPct)}
                     onChange={(e) => setCostoPct(onlyDigits(e.target.value))}
+                    onFocus={(e) => e.currentTarget.select()}
                     placeholder="0"
                   />
                 ) : (

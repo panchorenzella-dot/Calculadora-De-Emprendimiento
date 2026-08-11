@@ -1,43 +1,57 @@
 "use client";
 
-import { useState } from "react";
+import { type FormEvent, useMemo, useState } from "react";
 import Card from "@/components/Card";
 import MoneyInput, { Currency } from "@/components/MoneyInput";
 import { parseDigitsToNumber, onlyDigits } from "@/lib/numberInput";
 import { fmtMoney, fmtNum } from "@/lib/format";
 
 type ModoGanancia = "desde_ganancia" | "desde_precio";
+type Results = {
+  precioCalculado: number;
+  gananciaPorUnidad: number;
+  gananciaEsperadaPct: number;
+  rentabilidadSobreVentaPct: number;
+  costoMensual: number;
+  facturacionMensual: number;
+  gananciaMensual: number;
+};
 
 export default function Page() {
   const [currency, setCurrency] = useState<Currency>("ARS");
   const [modo, setModo] = useState<ModoGanancia>("desde_ganancia");
 
-  const [costo, setCosto] = useState("0");
-  const [gananciaDeseadaPct, setGananciaDeseadaPct] = useState("0");
-  const [precio, setPrecio] = useState("0");
-  const [unidadesMes, setUnidadesMes] = useState("0");
+  const [costo, setCosto] = useState("");
+  const [gananciaDeseadaPct, setGananciaDeseadaPct] = useState("");
+  const [precio, setPrecio] = useState("");
+  const [unidadesMes, setUnidadesMes] = useState("");
+  const [results, setResults] = useState<Results | null>(null);
 
-  const costoNum = parseDigitsToNumber(costo);
-  const gananciaDeseadaPctNum = parseDigitsToNumber(gananciaDeseadaPct);
-  const precioNum = parseDigitsToNumber(precio);
-  const unidadesMesNum = parseDigitsToNumber(unidadesMes);
-
-  const precioCalculado =
-    modo === "desde_ganancia"
+  const draftResults = useMemo<Results>(() => {
+    const costoNum = parseDigitsToNumber(costo);
+    const gananciaDeseadaPctNum = parseDigitsToNumber(gananciaDeseadaPct);
+    const precioNum = parseDigitsToNumber(precio);
+    const unidadesMesNum = parseDigitsToNumber(unidadesMes);
+    const precioCalculado = modo === "desde_ganancia"
       ? costoNum * (1 + gananciaDeseadaPctNum / 100)
       : precioNum;
+    const gananciaPorUnidad = precioCalculado - costoNum;
 
-  const gananciaPorUnidad = precioCalculado - costoNum;
+    return {
+      precioCalculado,
+      gananciaPorUnidad,
+      gananciaEsperadaPct: costoNum > 0 ? (gananciaPorUnidad / costoNum) * 100 : 0,
+      rentabilidadSobreVentaPct: precioCalculado > 0 ? (gananciaPorUnidad / precioCalculado) * 100 : 0,
+      costoMensual: costoNum * unidadesMesNum,
+      facturacionMensual: precioCalculado * unidadesMesNum,
+      gananciaMensual: gananciaPorUnidad * unidadesMesNum,
+    };
+  }, [costo, gananciaDeseadaPct, modo, precio, unidadesMes]);
 
-  const gananciaEsperadaPct =
-    costoNum > 0 ? (gananciaPorUnidad / costoNum) * 100 : 0;
-
-  const rentabilidadSobreVentaPct =
-    precioCalculado > 0 ? (gananciaPorUnidad / precioCalculado) * 100 : 0;
-
-  const costoMensual = costoNum * unidadesMesNum;
-  const facturacionMensual = precioCalculado * unidadesMesNum;
-  const gananciaMensual = gananciaPorUnidad * unidadesMesNum;
+  function handleCalculate(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setResults(draftResults);
+  }
 
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
@@ -63,7 +77,7 @@ export default function Page() {
         <div className="mt-4 flex flex-wrap gap-2">
           <button
             type="button"
-            onClick={() => setModo("desde_ganancia")}
+            onClick={() => { setModo("desde_ganancia"); setResults(null); }}
             className={`rounded-full px-3 py-1.5 text-sm font-medium ring-1 ${
               modo === "desde_ganancia"
                 ? "bg-zinc-800 text-white shadow-sm shadow-black ring-1 ring-inset ring-white/10"
@@ -75,7 +89,7 @@ export default function Page() {
 
           <button
             type="button"
-            onClick={() => setModo("desde_precio")}
+            onClick={() => { setModo("desde_precio"); setResults(null); }}
             className={`rounded-full px-3 py-1.5 text-sm font-medium ring-1 ${
               modo === "desde_precio"
                 ? "bg-zinc-800 text-white shadow-sm shadow-black ring-1 ring-inset ring-white/10"
@@ -87,7 +101,7 @@ export default function Page() {
         </div>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+          <form onSubmit={handleCalculate} className="rounded-2xl border border-white/10 bg-white/5 p-6">
             <h2 className="text-xl font-semibold">Datos</h2>
 
             <div className="mt-5 grid gap-4">
@@ -104,12 +118,13 @@ export default function Page() {
                     Ganancia esperada (%)
                   </span>
                   <input
-                    className="rounded-xl bg-zinc-900 px-4 py-3 outline-none ring-1 ring-white/10 focus:ring-white/30"
+                    className="rounded-xl bg-zinc-900 px-4 py-3 font-semibold text-white outline-none ring-1 ring-white/10 placeholder:text-white/35 focus:ring-white/30"
                     inputMode="numeric"
-                    value={gananciaDeseadaPct}
+                    value={gananciaDeseadaPct ? fmtNum(parseDigitsToNumber(gananciaDeseadaPct), 0) : ""}
                     onChange={(e) =>
                       setGananciaDeseadaPct(onlyDigits(e.target.value))
                     }
+                    onFocus={(e) => e.currentTarget.select()}
                     placeholder="0"
                   />
                 </label>
@@ -127,49 +142,59 @@ export default function Page() {
                   Unidades vendidas por mes
                 </span>
                 <input
-                  className="rounded-xl bg-zinc-900 px-4 py-3 outline-none ring-1 ring-white/10 focus:ring-white/30"
+                  className="rounded-xl bg-zinc-900 px-4 py-3 font-semibold text-white outline-none ring-1 ring-white/10 placeholder:text-white/35 focus:ring-white/30"
                   inputMode="numeric"
-                  value={unidadesMes}
+                  value={unidadesMes ? fmtNum(parseDigitsToNumber(unidadesMes), 0) : ""}
                   onChange={(e) => setUnidadesMes(onlyDigits(e.target.value))}
+                  onFocus={(e) => e.currentTarget.select()}
                   placeholder="0"
                 />
               </label>
             </div>
-          </div>
+            <button type="submit" className="mt-5 w-full rounded-full bg-white px-4 py-3 text-sm font-black text-zinc-950 transition hover:bg-zinc-200">
+              Calcular
+            </button>
+          </form>
 
           <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
             <h2 className="text-xl font-semibold">Resultados</h2>
 
+            {!results ? (
+              <p className="mt-4 text-sm font-medium text-white/60">
+                Cargá tus datos y tocá <strong>Calcular</strong>.
+              </p>
+            ) : (
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               <Card
                 title="Precio de venta"
-                value={fmtMoney(precioCalculado, currency)}
+                value={fmtMoney(results.precioCalculado, currency)}
               />
               <Card
                 title="Ganancia por unidad"
-                value={fmtMoney(gananciaPorUnidad, currency)}
+                value={fmtMoney(results.gananciaPorUnidad, currency)}
               />
               <Card
                 title="Ganancia esperada"
-                value={`${fmtNum(gananciaEsperadaPct, 2)}%`}
+                value={`${fmtNum(results.gananciaEsperadaPct, 2)}%`}
               />
               <Card
                 title="Rentabilidad sobre venta"
-                value={`${fmtNum(rentabilidadSobreVentaPct, 2)}%`}
+                value={`${fmtNum(results.rentabilidadSobreVentaPct, 2)}%`}
               />
               <Card
                 title="Costo mensual estimado"
-                value={fmtMoney(costoMensual, currency)}
+                value={fmtMoney(results.costoMensual, currency)}
               />
               <Card
                 title="Facturación mensual"
-                value={fmtMoney(facturacionMensual, currency)}
+                value={fmtMoney(results.facturacionMensual, currency)}
               />
               <Card
                 title="Ganancia mensual estimada"
-                value={fmtMoney(gananciaMensual, currency)}
+                value={fmtMoney(results.gananciaMensual, currency)}
               />
             </div>
+            )}
           </div>
         </div>
 
