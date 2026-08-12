@@ -168,12 +168,73 @@ textarea {
   border-color: rgba(110, 231, 183, 0.15) !important;
 }
 
-.profile-shell .profile-primary-action,
-.profile-shell a[class*="bg-white"],
-.profile-shell button[class*="bg-white"] {
-  background: #ffffff;
-  color: #09090b !important;
+.profile-shell .profile-primary-action {
+  border: 1px solid rgba(110, 231, 183, 0.34);
+  background: linear-gradient(180deg, #111a15 0%, #0a100d 100%);
+  color: #f4fff9 !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.045),
+    0 10px 28px rgba(0, 0, 0, 0.24);
   font-weight: 800;
+}
+
+.profile-shell .profile-primary-action:hover {
+  border-color: rgba(110, 231, 183, 0.56);
+  background: linear-gradient(180deg, #15251c 0%, #0c1510 100%);
+  color: #ffffff !important;
+  transform: translateY(-1px);
+}
+
+.profile-shell button.bg-white {
+  border: 1px solid rgba(110, 231, 183, 0.34);
+  background: linear-gradient(180deg, #111a15 0%, #0a100d 100%) !important;
+  color: #f4fff9 !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.24);
+}
+
+.profile-shell button.bg-white:hover {
+  border-color: rgba(110, 231, 183, 0.56);
+  background: linear-gradient(180deg, #15251c 0%, #0c1510 100%) !important;
+}
+
+.profile-shell .profile-secondary-action {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(5, 8, 6, 0.78);
+  color: rgba(255, 255, 255, 0.76) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
+}
+
+.profile-shell .profile-secondary-action:hover {
+  border-color: rgba(110, 231, 183, 0.26);
+  background: rgba(12, 21, 16, 0.94);
+  color: #ffffff !important;
+}
+
+.profile-shell .profile-nav-item {
+  border: 1px solid transparent;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.profile-shell .profile-nav-item:hover {
+  border-color: rgba(255, 255, 255, 0.055);
+  background: rgba(255, 255, 255, 0.032);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.profile-shell .profile-nav-item--active {
+  border-color: rgba(110, 231, 183, 0.22);
+  background: linear-gradient(100deg, rgba(16, 185, 129, 0.13), rgba(110, 231, 183, 0.035));
+  color: #ffffff;
+  box-shadow: inset 3px 0 0 rgba(110, 231, 183, 0.78);
+}
+
+.profile-shell a:focus-visible,
+.profile-shell button:focus-visible,
+.profile-shell input:focus-visible,
+.profile-shell select:focus-visible {
+  outline: 2px solid rgba(110, 231, 183, 0.8);
+  outline-offset: 3px;
 }
 
 .ai-surface [class*="bg-[#151719]"],
