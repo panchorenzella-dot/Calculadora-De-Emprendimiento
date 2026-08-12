@@ -168,6 +168,11 @@ textarea {
   border-color: rgba(110, 231, 183, 0.15) !important;
 }
 
+.app-dark-action,
+:is(a, button)[class~="bg-emerald-200"],
+:is(a, button)[class~="bg-emerald-300"],
+:is(a, button)[class~="bg-green-600"],
+:is(a, button)[class~="bg-green-700"],
 .profile-shell .profile-primary-action {
   border: 1px solid rgba(110, 231, 183, 0.34);
   background: linear-gradient(180deg, #111a15 0%, #0a100d 100%);
@@ -178,11 +183,39 @@ textarea {
   font-weight: 800;
 }
 
+.app-dark-action:hover,
+:is(a, button)[class~="bg-emerald-200"]:hover,
+:is(a, button)[class~="bg-emerald-300"]:hover,
+:is(a, button)[class~="bg-green-600"]:hover,
+:is(a, button)[class~="bg-green-700"]:hover,
 .profile-shell .profile-primary-action:hover {
   border-color: rgba(110, 231, 183, 0.56);
   background: linear-gradient(180deg, #15251c 0%, #0c1510 100%);
   color: #ffffff !important;
   transform: translateY(-1px);
+}
+
+.app-dark-action:focus-visible {
+  outline: 2px solid rgba(110, 231, 183, 0.8);
+  outline-offset: 3px;
+}
+
+.app-dark-action:disabled,
+.app-dark-action[aria-disabled="true"],
+:is(a, button)[class~="bg-emerald-200"]:disabled,
+:is(a, button)[class~="bg-emerald-300"]:disabled,
+:is(a, button)[class~="bg-green-600"]:disabled,
+:is(a, button)[class~="bg-green-700"]:disabled,
+:is(a, button)[class~="bg-emerald-200"][aria-disabled="true"],
+:is(a, button)[class~="bg-emerald-300"][aria-disabled="true"],
+:is(a, button)[class~="bg-green-600"][aria-disabled="true"],
+:is(a, button)[class~="bg-green-700"][aria-disabled="true"] {
+  cursor: not-allowed;
+  border-color: rgba(255, 255, 255, 0.08);
+  background: #0a0c0b;
+  color: rgba(255, 255, 255, 0.38) !important;
+  box-shadow: none;
+  transform: none;
 }
 
 .profile-shell button.bg-white {
