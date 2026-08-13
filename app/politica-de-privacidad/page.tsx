@@ -15,7 +15,7 @@ export default function PoliticaPage() {
       eyebrow="Transparencia y confianza"
       title="Política de privacidad"
       description="Te contamos de forma clara qué información usamos, por qué la necesitamos y qué opciones tenés sobre tus datos."
-      updated="16 de julio de 2026"
+      updated="12 de agosto de 2026"
     >
       <div className="grid gap-5">
         <LegalSection number="1" title="Responsable y contacto">
@@ -37,8 +37,9 @@ export default function PoliticaPage() {
         <LegalSection number="6" title="Proveedores de servicio">
           <p>Utilizamos Supabase para autenticación y datos; OpenAI para respuestas de IA; Vercel para alojamiento; y PayPal para pagos. Cada proveedor trata información para prestar su servicio y aplica sus propias condiciones y medidas de seguridad.</p>
         </LegalSection>
-        <LegalSection number="7" title="Cookies y almacenamiento local">
-          <p>Usamos cookies o almacenamiento necesarios para mantener la sesión, completar el ingreso y recordar información temporal. Si incorporamos medición o publicidad no esencial, actualizaremos esta política y aplicaremos los controles que correspondan.</p>
+        <LegalSection number="7" title="Cookies, Analytics y almacenamiento local">
+          <p>Usamos cookies o almacenamiento necesarios para mantener la sesión, completar el ingreso y recordar información temporal. También utilizamos Google Analytics para entender el uso del sitio y mejorar la experiencia.</p>
+          <p>La medición puede registrar páginas visitadas, tipo de dispositivo y navegador, ubicación aproximada e interacciones como calcular, registrarse, iniciar el pago o confirmar una compra. No enviamos a Analytics los importes ni los datos que ingresás dentro de las calculadoras. Para medir conversiones, una compra confirmada puede incluir el plan, el período y el importe de la suscripción, nunca datos bancarios.</p>
         </LegalSection>
         <LegalSection number="8" title="Tus opciones">
           <p>Podés editar tu perfil, eliminar escenarios y conversaciones, cerrar sesión y solicitar acceso, corrección o eliminación de datos. La baja de Pro no elimina automáticamente la cuenta. Algunas constancias pueden conservarse para cumplir obligaciones legales, prevenir fraude o resolver reclamos.</p>
