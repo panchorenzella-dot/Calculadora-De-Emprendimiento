@@ -4,6 +4,7 @@ import Script from "next/script";
 import "./globals.css";
 import Navbar from "@/components/NavBar";
 import Footer from "@/components/Footer";
+import AnalyticsPageView from "@/components/AnalyticsPageView";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -58,6 +59,7 @@ export default function RootLayout({
           <div className="flex-1">{children}</div>
           <Footer />
         </div>
+        <AnalyticsPageView />
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-M4WE874ZS2"
           strategy="afterInteractive"
@@ -67,7 +69,7 @@ export default function RootLayout({
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', 'G-M4WE874ZS2');
+            gtag('config', 'G-M4WE874ZS2', { send_page_view: false });
           `}
         </Script>
       </body>

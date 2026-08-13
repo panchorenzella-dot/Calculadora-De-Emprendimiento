@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { getPayPalSubscription, PayPalApiError } from "@/lib/paypal/server";
 import { syncPayPalSubscription } from "@/lib/paypal/sync";
+import { BILLING_OPTIONS } from "@/lib/plans";
 import { authenticateRequest } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -24,7 +25,13 @@ export async function POST(request: Request) {
     if (!result.active) {
       return NextResponse.json({ pending: true, message: "PayPal todavía está confirmando la suscripción." }, { status: 202 });
     }
-    return NextResponse.json({ active: true, message: "Pago confirmado. Tu plan Pro ya está activo." });
+    const billing = BILLING_OPTIONS.find((option) => option.id === result.interval);
+    return NextResponse.json({
+      active: true,
+      interval: result.interval,
+      value: billing?.totalUsd,
+      message: "Pago confirmado. Tu plan Pro ya está activo.",
+    });
   } catch (error) {
     if (error instanceof z.ZodError) return NextResponse.json({ error: "El identificador de PayPal no es válido." }, { status: 400 });
     if (error instanceof PayPalApiError) {

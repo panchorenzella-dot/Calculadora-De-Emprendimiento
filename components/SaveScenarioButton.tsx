@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import AuthModal from "@/components/AuthModal";
+import { trackEvent } from "@/lib/analytics";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import type { ScenarioDraft } from "@/types/scenario";
 
@@ -96,6 +97,7 @@ export default function SaveScenarioButton({ draft, hasResults }: Props) {
     setTitle("");
     setSavedScenarioId(quota.scenario_id);
     setStatus("Escenario guardado correctamente.");
+    trackEvent("save_scenario", { calculator_name: scenario.calculatorName, calculator_type: scenario.calculatorType, plan: quota.plan });
     return true;
   }
 

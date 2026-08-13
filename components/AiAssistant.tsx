@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
 import AuthModal from "@/components/AuthModal";
+import { trackEvent } from "@/lib/analytics";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import type { ScenarioDraft } from "@/types/scenario";
 
@@ -196,6 +197,7 @@ export default function AiAssistant({ draft, hasResults, initialConversationId, 
       setMessages((current) => [...current, assistantMessage]);
       if (userMessage) await persistMessage(id, session.user.id, userMessage);
       await persistMessage(id, session.user.id, assistantMessage);
+      trackEvent(mode === "analysis" ? "ai_analysis" : "ai_followup", { calculator_name: draft.calculatorName, calculator_type: draft.calculatorType });
       await loadHistory();
     } catch (requestError) {
       if (userMessage) {

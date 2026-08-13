@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { BILLING_OPTIONS, type BillingInterval } from "@/lib/plans";
+import { trackEvent } from "@/lib/analytics";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
 function usd(value: number) {
@@ -21,6 +22,7 @@ export default function PricingSelector({ paypalReady, paypalMode }: Props) {
   const option = BILLING_OPTIONS.find((item) => item.id === selected) ?? BILLING_OPTIONS[0];
 
   useEffect(() => {
+    trackEvent("view_pricing", { currency: "USD" });
     if (new URLSearchParams(window.location.search).get("paypal") === "cancelled") {
       setMessage("Cancelaste el proceso antes de confirmar. No se realizó ningún cobro.");
       window.history.replaceState({}, "", "/precios");
@@ -39,9 +41,13 @@ export default function PricingSelector({ paypalReady, paypalMode }: Props) {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        setMessage("Primero iniciá sesión desde Perfil y después volvé a elegir el plan.");
+        sessionStorage.setItem("calculadora-emprendedora:pending-plan", selected);
+        trackEvent("checkout_login_required", { plan: "pro", interval: selected, value: option.totalUsd, currency: "USD" });
+        window.location.assign("/perfil?modo=registro&continuar=pro");
         return;
       }
+
+      trackEvent("begin_checkout", { currency: "USD", value: option.totalUsd, items: [{ item_id: `pro_${selected}`, item_name: `Calculadora Emprendedora Pro ${option.label}`, price: option.totalUsd, quantity: 1 }] });
 
       const response = await fetch("/api/paypal/subscriptions", {
         method: "POST",
@@ -56,6 +62,7 @@ export default function PricingSelector({ paypalReady, paypalMode }: Props) {
         setMessage(data.error || "No pudimos abrir PayPal.");
         return;
       }
+      trackEvent("checkout_redirect", { provider: "paypal", interval: selected, value: option.totalUsd, currency: "USD" });
       window.location.assign(data.approvalUrl);
     } catch {
       setMessage("No pudimos conectar con PayPal. Intentá nuevamente.");

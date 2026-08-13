@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { guides } from "@/lib/guides";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = "https://www.calculadoraemprendedora.com";
@@ -27,6 +28,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/terminos-y-condiciones",
     "/cancelaciones-y-reembolsos",
     "/politica-de-privacidad",
+    "/guias",
+    ...guides.map((guide) => `/guias/${guide.slug}`),
   ];
 
   return routes.map((route) => ({

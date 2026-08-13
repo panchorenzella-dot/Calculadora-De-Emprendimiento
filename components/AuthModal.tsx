@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 
 import { getSupabaseClient } from "@/lib/supabase/client";
+import { trackEvent } from "@/lib/analytics";
 
 type Props = {
   open: boolean;
@@ -194,6 +195,7 @@ export default function AuthModal({
 
     setLoading("email");
     setFeedback(null);
+    trackEvent(mode === "signup" ? "sign_up_start" : "login_start", { method: "email" });
 
     const response = mode === "login"
       ? await supabase.auth.signInWithPassword({ email: cleanEmail, password })
@@ -285,6 +287,7 @@ export default function AuthModal({
     }
 
     setLoading("google");
+    trackEvent("login_start", { method: "google" });
     setFeedback({ type: "info", text: "Conectando de forma segura con Google..." });
 
     try {

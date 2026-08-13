@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import HomeProfitPreview from "@/components/HomeProfitPreview";
+import CalculatorFinder from "@/components/CalculatorFinder";
+import TrustSection from "@/components/TrustSection";
+import { guides } from "@/lib/guides";
 
 export const metadata: Metadata = {
   title: {
@@ -138,6 +141,10 @@ export default function Home() {
         ))}
       </section>
 
+      <div className="pt-12 sm:pt-16">
+        <CalculatorFinder />
+      </div>
+
       <section className="py-16 sm:py-20">
         <div className="mb-7 max-w-2xl">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/40">
@@ -247,10 +254,24 @@ export default function Home() {
           <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
             <p className="text-sm font-semibold text-white">Empezá con una cuenta gratuita</p>
             <p className="mt-2 text-sm leading-6 text-white/45">Incluye un análisis semanal, cinco mensajes diarios y hasta tres escenarios por día.</p>
-            <Link href="/precios" className="mt-5 flex justify-center rounded-full bg-emerald-200 px-4 py-2.5 text-sm font-bold !text-emerald-950 transition hover:bg-emerald-100">
+            <Link href="/precios" className="app-dark-action mt-5 flex justify-center rounded-full px-4 py-2.5 text-sm transition">
               Comparar Gratis y Pro
             </Link>
           </div>
+        </div>
+      </section>
+
+      <div className="pt-12 sm:pt-16">
+        <TrustSection />
+      </div>
+
+      <section className="py-16 sm:py-20">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div><p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-200/50">Aprendé antes de decidir</p><h2 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">Guías prácticas con ejemplos reales</h2></div>
+          <Link href="/guias" className="text-sm font-bold text-white/55 hover:text-white">Ver todas las guías →</Link>
+        </div>
+        <div className="mt-7 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {guides.slice(0, 3).map((guide) => <Link key={guide.slug} href={`/guias/${guide.slug}`} className="group flex min-h-56 flex-col rounded-3xl border border-white/[0.08] bg-[#090c0a] p-5 transition hover:-translate-y-0.5 hover:border-emerald-300/20"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-200/45">{guide.eyebrow}</p><h3 className="mt-4 text-lg font-bold text-white/90">{guide.title}</h3><p className="mt-3 text-sm leading-6 text-white/45">{guide.description}</p><span className="mt-auto pt-5 text-sm font-bold text-white/65 group-hover:text-white">Leer guía →</span></Link>)}
         </div>
       </section>
 

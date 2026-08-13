@@ -6,6 +6,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import AuthModal from "@/components/AuthModal";
 import PlanUsageDashboard, { type UsageItem } from "@/components/PlanUsageDashboard";
+import ProfileOnboarding from "@/components/ProfileOnboarding";
+import { trackEvent } from "@/lib/analytics";
 import { PLAN_GRACE_DAYS } from "@/lib/plans";
 import { getCalculatorInfo, getScenarioMetrics, getScenarioPreview } from "@/lib/scenarios";
 import { getSupabaseClient } from "@/lib/supabase/client";
@@ -29,7 +31,7 @@ type PlanInfo = {
   cancel_at_period_end: boolean;
   provider: string | null;
 };
-type ProfileData = {
+export type ProfileData = {
   full_name: string;
   phone: string;
   business_name: string;
@@ -118,7 +120,7 @@ function StatCard({ label, value, detail, accent = false, onClick }: { label: st
   return onClick ? <button type="button" onClick={onClick} className={className}>{content}</button> : <div className={className}>{content}</div>;
 }
 
-export default function ProfilePage({ initialAuthMode = "login" }: { initialAuthMode?: "login" | "signup" }) {
+export default function ProfilePage({ initialAuthMode = "login", continueToPro = false }: { initialAuthMode?: "login" | "signup"; continueToPro?: boolean }) {
   const configured = Boolean(getSupabaseClient());
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(configured);
@@ -193,9 +195,18 @@ export default function ProfilePage({ initialAuthMode = "login" }: { initialAuth
         headers: { Authorization: `Bearer ${activeSession.access_token}`, "Content-Type": "application/json" },
         body: JSON.stringify({ subscriptionId }),
       });
-      const data = await response.json() as { message?: string; error?: string; active?: boolean };
+      const data = await response.json() as { message?: string; error?: string; active?: boolean; interval?: string; value?: number };
       setMessage(data.message || data.error || "PayPal está procesando la suscripción.");
-      if (response.ok && data.active) await loadData();
+      if (response.ok && data.active) {
+        trackEvent("purchase", {
+          transaction_id: subscriptionId,
+          currency: "USD",
+          value: data.value,
+          items: [{ item_id: "calculadora_pro", item_name: "Calculadora Emprendedora Pro", item_variant: data.interval, price: data.value, quantity: 1 }],
+        });
+        sessionStorage.removeItem("calculadora-emprendedora:pending-plan");
+        await loadData();
+      }
     } catch {
       setMessage("El plan se activará cuando llegue la confirmación automática de PayPal.");
     }
@@ -234,6 +245,22 @@ export default function ProfilePage({ initialAuthMode = "login" }: { initialAuth
     return () => data.subscription.unsubscribe();
   }, [handlePayPalReturn, loadData]);
 
+  useEffect(() => {
+    if (!session || !continueToPro) return;
+    trackEvent("checkout_resume_after_login", { plan: "pro" });
+    window.location.replace("/precios");
+  }, [continueToPro, session]);
+
+  useEffect(() => {
+    if (!session) return;
+    const key = `calculadora-emprendedora:auth-tracked:${session.user.id}`;
+    if (sessionStorage.getItem(key)) return;
+    const accountAge = Date.now() - new Date(session.user.created_at).getTime();
+    const provider = String(session.user.app_metadata.provider || "email");
+    trackEvent(accountAge < 10 * 60_000 ? "sign_up" : "login", { method: provider, completed: true });
+    sessionStorage.setItem(key, "1");
+  }, [session]);
+
   async function saveProfile(event: React.FormEvent) {
     event.preventDefault();
     const supabase = getSupabaseClient();
@@ -248,6 +275,24 @@ export default function ProfilePage({ initialAuthMode = "login" }: { initialAuth
       setEditing(false);
       setMessage("Tu perfil se actualizó para todo el ecosistema Growtella.");
     }
+  }
+
+  async function saveOnboarding(data: Pick<ProfileData, "business_type" | "main_goal" | "preferred_currency">) {
+    const supabase = getSupabaseClient();
+    if (!supabase) return;
+    const nextProfile = { ...profile, ...data };
+    setSaving(true);
+    setMessage("");
+    const { data: response, error } = await supabase.auth.updateUser({ data: nextProfile });
+    setSaving(false);
+    if (error) {
+      setMessage("No pudimos guardar la configuración inicial.");
+      return;
+    }
+    setProfile(nextProfile);
+    if (response.user) setSession((current) => current ? { ...current, user: response.user } : current);
+    setMessage("Listo. Personalizamos tus recomendaciones según tu objetivo.");
+    trackEvent("complete_onboarding", { business_type: data.business_type, main_goal: data.main_goal, preferred_currency: data.preferred_currency });
   }
 
   async function renameScenario(scenario: SavedScenario) {
@@ -290,7 +335,7 @@ export default function ProfilePage({ initialAuthMode = "login" }: { initialAuth
   }, [scenarioQuery, scenarios]);
 
   if (loading) return <div className="grid min-h-[65vh] place-items-center text-sm text-white/40">Preparando tu espacio...</div>;
-  if (!session) return <main><AuthModal open returnTo="/perfil" initialMode={initialAuthMode} /></main>;
+  if (!session) return <main><AuthModal open returnTo={continueToPro ? "/perfil?continuar=pro" : "/perfil"} initialMode={initialAuthMode} /></main>;
 
   const user = session.user;
   const name = String(user.user_metadata.full_name || user.user_metadata.name || "Emprendedor/a");
@@ -324,6 +369,7 @@ export default function ProfilePage({ initialAuthMode = "login" }: { initialAuth
 
         {view === "inicio" && <>
           <header className="flex min-w-0 flex-col gap-6 sm:flex-row sm:items-end sm:justify-between"><div className="min-w-0"><p className="text-xs font-bold text-emerald-200/70">Tu centro de decisiones</p><h1 className="mt-2 break-words text-3xl font-bold tracking-[-.035em] sm:text-4xl">Hola, {name.split(" ")[0]}</h1><p className="mt-3 max-w-xl text-sm font-medium leading-6 text-white/60">Tus cálculos, análisis y próximos pasos reunidos en un solo lugar.</p></div><div className="grid w-full gap-2 sm:w-auto sm:grid-cols-2"><a href="https://www.growtella.com/diagnostico" className="profile-secondary-action rounded-full px-4 py-2.5 text-center text-sm font-bold transition">Diagnosticar negocio</a><Link href="/calculadoras" className="profile-primary-action rounded-full px-5 py-2.5 text-center text-sm transition">Nueva consulta</Link></div></header>
+          <ProfileOnboarding initialData={{ business_type: profile.business_type, main_goal: profile.main_goal, preferred_currency: profile.preferred_currency }} saving={saving} onSave={saveOnboarding} />
           <section className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><StatCard label="Escenarios guardados" value={scenarios.length} detail={scenarios.length ? `Último: ${formatRelativeDate(latestScenario?.created_at)}` : "Creá tu primera comparación"} onClick={() => changeView("escenarios")}/><StatCard label="Análisis con IA" value={conversations.length} detail={conversations.length ? `Último: ${formatRelativeDate(latestConversation?.updated_at)}` : "Tu historial aparecerá acá"} onClick={() => changeView("analisis")}/><StatCard label="Plan actual" value={plan.plan === "pro" ? "Pro" : "Gratis"} detail={plan.plan === "pro" ? "Beneficios ampliados activos" : "Podés mejorar cuando lo necesites"} accent onClick={() => changeView("plan")}/><StatCard label="Perfil preparado" value={`${profileProgress}%`} detail={profileProgress === 100 ? "Listo para personalizar resultados" : "Completalo para mejorar la experiencia"} onClick={() => changeView("cuenta")}/></section>
           <section className="mt-9 grid gap-7 xl:grid-cols-[1.18fr_.82fr]"><div><div className="flex items-end justify-between gap-4"><div><p className="text-xs font-semibold text-emerald-200/55">Último escenario</p><h2 className="mt-2 text-xl font-semibold">Continuá donde lo dejaste</h2></div>{latestScenario && <button type="button" onClick={() => changeView("escenarios")} className="text-xs font-semibold text-white/35 hover:text-white">Ver todos →</button>}</div><div className="mt-4">{latestScenario ? renderScenarioCard(latestScenario, true) : <div className="rounded-3xl border border-dashed border-white/10 p-9 text-center"><p className="text-sm text-white/35">Todavía no guardaste ningún escenario.</p><Link href="/calculadoras" className="app-dark-action mt-4 inline-flex rounded-full px-4 py-2.5 text-sm transition">Elegir calculadora</Link></div>}</div></div><div><p className="text-xs font-semibold text-emerald-200/55">Actividad reciente</p><h2 className="mt-2 text-xl font-semibold">Tus análisis</h2><div className="mt-4 space-y-1">{conversations.length ? conversations.slice(0, 4).map(renderAnalysisRow) : <div className="rounded-3xl border border-dashed border-white/10 p-8 text-center text-sm text-white/35">Cuando analices un escenario con IA, la conversación aparecerá acá.</div>}</div></div></section>
           <section className="mt-9 grid gap-4 rounded-3xl border border-white/[0.07] bg-[linear-gradient(120deg,rgba(110,231,183,.065),rgba(255,255,255,.018))] p-6 sm:grid-cols-[1fr_auto] sm:items-center"><div><p className="text-xs font-semibold text-emerald-200/55">Estado de tu espacio</p><h2 className="mt-2 text-xl font-semibold">{dataLoading ? "Actualizando información..." : latestActivity ? `Última actividad: ${formatRelativeDate(latestActivity)}` : "Tu espacio está listo"}</h2><p className="mt-2 text-sm leading-6 text-white/38">Tu cuenta, plan y datos son los mismos en todo Growtella.</p></div><a href="https://www.growtella.com/cuenta" className="rounded-full border border-white/10 px-4 py-2.5 text-center text-sm font-semibold text-white/65 hover:bg-white/5 hover:text-white">Abrir cuenta Growtella</a></section>

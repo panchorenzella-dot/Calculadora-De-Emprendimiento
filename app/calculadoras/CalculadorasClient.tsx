@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
+
+import CalculatorFinder from "@/components/CalculatorFinder";
 
 type Calculator = {
   title: string;
@@ -30,7 +33,7 @@ const secciones: Section[] = [
           "Calculá costos por hamburguesa, margen, precio recomendado y ganancia mensual.",
         idealFor: "Hamburgueserías, dark kitchens y locales de comida",
         href: "/hamburgueseria",
-        tags: ["hamburguesería", "comida", "delivery", "margen"],
+        tags: ["hamburguesería", "gastronomía", "comida", "delivery", "margen"],
       },
       {
         title: "Cafeterías",
@@ -38,7 +41,7 @@ const secciones: Section[] = [
           "Estimá costos, ticket promedio, margen por venta y punto de equilibrio.",
         idealFor: "Cafeterías, bares y locales gastronómicos",
         href: "/cafeteria",
-        tags: ["cafetería", "café", "ticket", "margen"],
+        tags: ["cafetería", "gastronomía", "café", "ticket", "margen"],
       },
       {
         title: "Fábrica / Producción",
@@ -211,7 +214,8 @@ function matchesSearch(calc: Calculator, query: string) {
 }
 
 export default function CalculadorasPage() {
-  const [search, setSearch] = useState("");
+  const searchParams = useSearchParams();
+  const [search, setSearch] = useState(() => searchParams.get("buscar") || "");
 
   const { availableSections, comingSoonCalculators } = useMemo(() => {
     const query = search.toLowerCase().trim();
@@ -272,6 +276,10 @@ export default function CalculadorasPage() {
               </div>
             </div>
         </section>
+
+        <div className="mt-8">
+          <CalculatorFinder compact />
+        </div>
 
         {hasResults ? (
           <div className="mt-12 space-y-14">

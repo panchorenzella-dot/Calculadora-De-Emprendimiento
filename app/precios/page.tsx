@@ -35,6 +35,13 @@ const comparisons = [
   ["Modelo de IA", "Esencial", "Mayor capacidad"],
 ];
 
+const proOutcomes = [
+  { number: "01", title: "Compará antes de decidir", copy: "Guardá escenarios ilimitados y volvé a cada alternativa sin rehacer el cálculo." },
+  { number: "02", title: "Profundizá con contexto", copy: "La IA recibe los datos del escenario para explicar riesgos, oportunidades y próximos pasos." },
+  { number: "03", title: "Conservá el historial", copy: "Tus cálculos y conversaciones siguen disponibles desde cualquier dispositivo." },
+  { number: "04", title: "Una cuenta para Growtella", copy: "El mismo acceso y plan se reconocen en las herramientas compatibles del ecosistema." },
+];
+
 function CheckIcon() {
   return (
     <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4" fill="none">
@@ -62,24 +69,30 @@ export default function PricingPage() {
       <section className="mx-auto max-w-6xl px-4 pb-12 pt-20 text-center sm:px-6 sm:pb-16 sm:pt-28">
         <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-emerald-300/15 bg-emerald-300/[0.055] px-3 py-1.5 text-xs font-medium text-emerald-100/75">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(110,231,183,0.9)]" />
-          Más capacidad para decisiones importantes
+          Pro para decisiones que merecen más contexto
         </div>
         <h1 className="mx-auto mt-7 max-w-4xl text-4xl font-semibold leading-[1.02] tracking-[-0.045em] sm:text-6xl lg:text-7xl">
-          Elegí cuánto querés apoyarte en la IA
+          Calculá, compará y decidí sin perder el hilo
         </h1>
         <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-white/50 sm:text-lg sm:leading-8">
-          Empezá gratis y pasá a Pro cuando necesites analizar más escenarios,
-          profundizar conversaciones y trabajar con un modelo de mayor capacidad.
+          Empezá gratis. Elegí Pro cuando necesites guardar más alternativas,
+          profundizar el análisis y conservar todo tu proceso de decisión.
         </p>
         <div className="mx-auto mt-9 grid max-w-2xl grid-cols-2 divide-x divide-white/10 rounded-2xl border border-white/[0.08] bg-black/25 p-4 backdrop-blur sm:p-5">
           <div className="px-2">
-            <p className="text-2xl font-semibold tracking-tight text-emerald-200 sm:text-3xl">Más de 25</p>
-            <p className="mt-1 text-xs text-white/35 sm:text-sm">análisis por mes en Pro</p>
+            <p className="text-2xl font-semibold tracking-tight text-emerald-200 sm:text-3xl">30</p>
+            <p className="mt-1 text-xs text-white/35 sm:text-sm">análisis con IA por mes</p>
           </div>
           <div className="px-2">
-            <p className="text-2xl font-semibold tracking-tight text-emerald-200 sm:text-3xl">Más de 200</p>
-            <p className="mt-1 text-xs text-white/35 sm:text-sm">mensajes por mes en Pro</p>
+            <p className="text-2xl font-semibold tracking-tight text-emerald-200 sm:text-3xl">300</p>
+            <p className="mt-1 text-xs text-white/35 sm:text-sm">mensajes de seguimiento por mes</p>
           </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-5xl px-4 pb-14 sm:px-6 sm:pb-20">
+        <div className="grid gap-px overflow-hidden rounded-[28px] border border-white/[0.08] bg-white/[0.08] sm:grid-cols-2 lg:grid-cols-4">
+          {proOutcomes.map((item) => <article key={item.number} className="bg-[#080b09] p-5 sm:p-6"><p className="text-[10px] font-bold tracking-[0.16em] text-emerald-200/45">{item.number}</p><h2 className="mt-4 text-base font-bold text-white/90">{item.title}</h2><p className="mt-2 text-sm leading-6 text-white/45">{item.copy}</p></article>)}
         </div>
       </section>
 

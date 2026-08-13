@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 
 import SaveScenarioButton from "@/components/SaveScenarioButton";
 import AiAssistant from "@/components/AiAssistant";
+import { trackEvent } from "@/lib/analytics";
 import { buildScenarioResults } from "@/lib/scenarios";
 import type { ScenarioDraft, ScenarioValue } from "@/types/scenario";
 
@@ -165,6 +166,19 @@ export default function CalculatorScenarioCapture() {
   const [snapshot, setSnapshot] = useState<ReturnType<typeof capture>>(null);
   const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
   const lastSnapshot = useRef("");
+  const resultTracked = useRef(false);
+
+  useEffect(() => {
+    const calculator = calculators[pathname];
+    resultTracked.current = false;
+    if (calculator) trackEvent("view_calculator", { calculator_name: calculator.name, calculator_type: calculator.type, page_path: pathname });
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!snapshot?.hasResults || resultTracked.current) return;
+    resultTracked.current = true;
+    trackEvent("calculate", { calculator_name: snapshot.draft.calculatorName, calculator_type: snapshot.draft.calculatorType });
+  }, [snapshot]);
 
   useEffect(() => {
     if (!calculators[pathname]) return;

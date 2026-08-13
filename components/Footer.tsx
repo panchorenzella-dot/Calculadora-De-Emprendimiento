@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 const links = [
+  ["/guias", "Guías"],
   ["/precios", "Planes"],
   ["/perfil", "Perfil"],
   ["/terminos-y-condiciones", "Términos"],
