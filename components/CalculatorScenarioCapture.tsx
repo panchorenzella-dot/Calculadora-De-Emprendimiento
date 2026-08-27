@@ -253,10 +253,20 @@ export default function CalculatorScenarioCapture() {
   if (!portalTarget) return null;
 
   return createPortal(
-    <>
-      <AiAssistant draft={snapshot?.draft ?? null} hasResults={snapshot?.hasResults ?? false} />
-      <SaveScenarioButton draft={snapshot?.draft ?? null} hasResults={snapshot?.hasResults ?? false} />
-    </>,
+    <section className="mx-auto mt-10 max-w-5xl overflow-hidden rounded-2xl border border-white/[0.1] bg-[#0a0d0b] shadow-[0_24px_70px_rgba(0,0,0,0.22)]">
+      <header className="grid gap-4 px-6 py-6 sm:px-8 lg:grid-cols-[1fr_auto] lg:items-end">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-200/55">Después del cálculo</p>
+          <h2 className="mt-2 text-xl font-semibold tracking-[-0.025em] text-white sm:text-2xl">Guardá el escenario o profundizá el resultado</h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-white/48">Las dos acciones usan los datos y resultados de esta calculadora. Elegí cómo querés continuar.</p>
+        </div>
+        <p className="text-xs text-white/30">Disponible con una cuenta</p>
+      </header>
+      <div className="grid border-t border-white/[0.08] md:grid-cols-2 md:divide-x md:divide-white/[0.08]">
+        <SaveScenarioButton draft={snapshot?.draft ?? null} hasResults={snapshot?.hasResults ?? false} />
+        <AiAssistant draft={snapshot?.draft ?? null} hasResults={snapshot?.hasResults ?? false} />
+      </div>
+    </section>,
     portalTarget
   );
 }

@@ -81,7 +81,7 @@ export default function SaveScenarioButton({ draft, hasResults }: Props) {
     }
 
     if (saveError) {
-      setStatus("No pudimos verificar el cupo. Aplicá la migración 006 de Supabase.");
+      setStatus("No pudimos guardar el escenario en este momento. Volvé a intentar en unos segundos.");
       return false;
     }
     if (!quota?.allowed) {
@@ -151,27 +151,32 @@ export default function SaveScenarioButton({ draft, hasResults }: Props) {
   }
 
   return (
-    <section className="mx-auto max-w-5xl border-b border-white/[0.07] py-5">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="font-semibold">¿Querés volver a este cálculo?</h2>
-          <p className="mt-1 text-sm text-white/55">
-            Gratis: hasta 3 por día · Pro: escenarios ilimitados.
-          </p>
+    <section className="flex h-full flex-col p-6 sm:p-8">
+      <div className="flex items-start gap-4">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-white/[0.1] bg-white/[0.035] text-xs font-semibold text-white/55">01</span>
+        <div className="min-w-0">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/32">Historial personal</p>
+          <h2 className="mt-1.5 text-lg font-semibold tracking-[-0.02em] text-white">Guardar escenario</h2>
+          <p className="mt-2 text-sm leading-6 text-white/48">Conservá los valores y resultados para revisarlos o compararlos más adelante.</p>
         </div>
+      </div>
+
+      <div className="mt-auto pt-6">
         <button
           type="button"
           onClick={beginSave}
           disabled={saving}
-          className="shrink-0 rounded-full border border-white/15 bg-black px-4 py-2 text-sm font-medium text-white/90 transition hover:border-white/25 hover:bg-zinc-900 hover:text-white disabled:opacity-60"
+          className="flex min-h-11 w-full items-center justify-between rounded-xl border border-white/[0.13] bg-white/[0.045] px-4 py-3 text-sm font-semibold text-white/88 transition hover:border-white/25 hover:bg-white/[0.075] hover:text-white disabled:cursor-not-allowed disabled:opacity-55"
         >
-          {saving ? "Guardando..." : "Guardar escenario"}
+          <span>{saving ? "Guardando..." : "Guardar escenario"}</span>
+          <span aria-hidden="true" className="text-base font-normal text-white/40">＋</span>
         </button>
+        <p className="mt-3 text-xs leading-5 text-white/28">Gratis: hasta 3 por día · Pro: escenarios ilimitados.</p>
       </div>
 
       {nameOpen && draft && (
         <form
-          className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto]"
+          className="mt-4 grid gap-3"
           onSubmit={async (event) => {
             event.preventDefault();
             await persist(draft, title);
@@ -181,9 +186,9 @@ export default function SaveScenarioButton({ draft, hasResults }: Props) {
             value={title}
             onChange={(event) => setTitle(event.target.value)}
             placeholder={`Nombre opcional · ${defaultTitle(draft)}`}
-            className="rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-3 text-sm outline-none focus:border-white/20"
+            className="rounded-xl border border-white/10 bg-white/[0.035] px-4 py-3 text-sm outline-none transition focus:border-emerald-300/30"
           />
-          <button className="rounded-full bg-white px-4 py-2.5 text-sm font-medium text-zinc-950 transition hover:bg-zinc-200">
+          <button className="rounded-xl bg-white px-4 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-200">
             Confirmar guardado
           </button>
         </form>
@@ -195,7 +200,7 @@ export default function SaveScenarioButton({ draft, hasResults }: Props) {
           {savedScenarioId ? (
             <Link
               href={`/perfil/escenarios/${savedScenarioId}`}
-              className="rounded-full bg-emerald-300 px-4 py-2 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-200"
+              className="rounded-lg bg-emerald-300 px-3.5 py-2 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-200"
             >
               Ver escenario guardado
             </Link>

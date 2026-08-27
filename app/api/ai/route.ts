@@ -111,7 +111,7 @@ export async function POST(request: Request) {
     const { data: quotaRows, error: quotaError } = await supabase.rpc("consume_ai_quota", { p_kind: body.mode });
     if (quotaError) {
       console.error("AI quota error", quotaError.message);
-      return NextResponse.json({ error: "No pudimos verificar tu límite. Revisá que estén aplicadas las migraciones de Supabase." }, { status: 503 });
+      return NextResponse.json({ error: "No pudimos verificar tu disponibilidad en este momento. Volvé a intentar en unos segundos." }, { status: 503 });
     }
     const quota = (quotaRows as QuotaResult[] | null)?.[0];
     const plan = quota?.plan === "pro" ? "pro" : "free";
