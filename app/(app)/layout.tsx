@@ -7,7 +7,7 @@ export default function AppLayout({
 }) {
   return (
     <main className="calculator-theme min-h-screen bg-zinc-950 text-white">
-      <div className="mx-auto w-full max-w-5xl px-4 pb-10 pt-6">
+      <div className="calculator-page-shell mx-auto w-full max-w-5xl px-4 pb-10 pt-6">
         {children}
         <CalculatorScenarioCapture />
       </div>

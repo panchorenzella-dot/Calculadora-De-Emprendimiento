@@ -62,6 +62,122 @@ textarea {
     #09090b;
 }
 
+.calculator-page-shell > main {
+  min-height: auto !important;
+  max-width: none !important;
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+.calculator-page-shell > main > :is(div, section)[class*="max-w-"] {
+  max-width: none !important;
+  padding: 0 !important;
+}
+
+.calculator-page-shell > main .calculator-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: 1.5rem;
+  border: 1px solid rgba(110, 231, 183, 0.15);
+  border-radius: 1.75rem;
+  background:
+    radial-gradient(circle at 88% 5%, rgba(110, 231, 183, 0.12), transparent 15rem),
+    linear-gradient(135deg, rgba(16, 185, 129, 0.075), rgba(255, 255, 255, 0.025) 48%, rgba(56, 189, 248, 0.025));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    0 24px 70px rgba(0, 0, 0, 0.18);
+}
+
+.calculator-page-shell > main .calculator-hero::after {
+  position: absolute;
+  z-index: -1;
+  top: -5rem;
+  right: -4rem;
+  width: 13rem;
+  height: 13rem;
+  border-radius: 9999px;
+  background: rgba(52, 211, 153, 0.075);
+  filter: blur(48px);
+  content: "";
+}
+
+.calculator-page-shell > main .calculator-hero > p:first-child {
+  margin-bottom: 0;
+  color: rgba(110, 231, 183, 0.72) !important;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+}
+
+.calculator-page-shell > main .calculator-hero h1 {
+  margin-top: 0.75rem;
+  font-size: clamp(2rem, 5vw, 2.75rem);
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}
+
+.calculator-page-shell > main .calculator-hero h1 + p {
+  max-width: 48rem;
+  margin-top: 0.85rem;
+  color: rgba(255, 255, 255, 0.62) !important;
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.calculator-page-shell > main :is(form, section, div)[class*="border-zinc-800"][class*="bg-zinc-950"],
+.calculator-page-shell > main :is(form, section, div)[class*="border-white/10"][class*="bg-white/5"] {
+  border-color: rgba(110, 231, 183, 0.13) !important;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.038), rgba(16, 185, 129, 0.022) 58%, rgba(0, 0, 0, 0.2)),
+    rgba(7, 10, 8, 0.88) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.025),
+    0 16px 50px rgba(0, 0, 0, 0.11);
+}
+
+.calculator-page-shell > main :is(section, div)[class*="border-zinc-600"][class*="bg-zinc-900"] {
+  border-color: rgba(110, 231, 183, 0.28) !important;
+  background: linear-gradient(145deg, rgba(16, 185, 129, 0.105), rgba(5, 12, 8, 0.92)) !important;
+}
+
+.calculator-page-shell > main :is(input, select, textarea) {
+  border-color: rgba(255, 255, 255, 0.09) !important;
+  background-color: rgba(4, 8, 6, 0.86) !important;
+}
+
+.calculator-page-shell > main button[type="submit"] {
+  border: 1px solid rgba(167, 243, 208, 0.42);
+  background: linear-gradient(180deg, #f4fff9 0%, #c7f9df 100%) !important;
+  color: #07110b !important;
+  box-shadow: 0 12px 28px rgba(16, 185, 129, 0.12);
+}
+
+.calculator-page-shell > main button[type="submit"]:hover {
+  border-color: rgba(209, 250, 229, 0.72);
+  background: linear-gradient(180deg, #ffffff 0%, #dcfce7 100%) !important;
+  transform: translateY(-1px);
+}
+
+.calculator-page-shell > main section:has(> h2:first-child) div[class*="rounded-2xl"]:has([class~="text-zinc-600"]) {
+  display: none;
+}
+
+.calculator-page-shell > main [data-scenario-metric] {
+  transition: border-color 160ms ease, transform 160ms ease, background-color 160ms ease;
+}
+
+.calculator-page-shell > main [data-scenario-metric]:hover {
+  border-color: rgba(110, 231, 183, 0.24) !important;
+  transform: translateY(-1px);
+}
+
+@media (min-width: 640px) {
+  .calculator-page-shell > main .calculator-hero {
+    padding: 2rem;
+  }
+}
+
 .calculator-theme input:focus,
 .calculator-theme select:focus,
 .calculator-theme textarea:focus {

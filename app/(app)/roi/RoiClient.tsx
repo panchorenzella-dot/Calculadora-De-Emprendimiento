@@ -51,16 +51,19 @@ export default function Page() {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
-      <h1 className="text-4xl font-bold tracking-tight">
-        Calculadora de ROI
-      </h1>
+      <header className="calculator-hero mb-8">
+        <p>Costos y rentabilidad</p>
+        <h1 className="text-4xl font-bold tracking-tight">
+          Calculadora de ROI
+        </h1>
 
-      <p className="mt-4 max-w-2xl text-white/70">
-        Calculá la rentabilidad de una inversión de forma simple usando la
-        inversión inicial, los ingresos, los costos y el valor final obtenido.
-      </p>
+        <p className="mt-4 max-w-2xl text-white/70">
+          Calculá la rentabilidad de una inversión de forma simple usando la
+          inversión inicial, los ingresos, los costos y el valor final obtenido.
+        </p>
+      </header>
 
-      <div className="mt-10 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+      <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
         <form onSubmit={handleCalculate} className="rounded-2xl border border-white/10 bg-white/5 p-6">
           <h2 className="text-xl font-semibold">Datos</h2>
 

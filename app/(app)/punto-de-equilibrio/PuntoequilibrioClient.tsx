@@ -71,7 +71,8 @@ export default function PuntoEquilibrioPage() {
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
       <section className="mx-auto max-w-6xl px-4 py-10">
-        <div className="mb-8">
+        <header className="calculator-hero mb-8">
+          <p>Costos y rentabilidad</p>
           <h1 className="text-4xl font-bold tracking-tight">
             Calculadora de Punto de Equilibrio
           </h1>
@@ -79,7 +80,7 @@ export default function PuntoEquilibrioPage() {
             Calculá cuántas unidades necesitás vender para cubrir tus costos
             fijos y empezar a generar ganancia en tu negocio.
           </p>
-        </div>
+        </header>
 
         <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
           <form onSubmit={handleCalculate} className="rounded-2xl border border-white/10 bg-white/5 p-5">

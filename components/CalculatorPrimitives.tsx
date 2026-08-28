@@ -7,7 +7,7 @@ import { fmtMoney } from "@/lib/format";
 import { formatARIntFromDigits, onlyDigits } from "@/lib/numberInput";
 
 export function CalculatorHeader({ eyebrow, title, description }: { eyebrow: string; title: string; description: string }) {
-  return <header className="mb-8">
+  return <header className="calculator-hero mb-8">
     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300/65">{eyebrow}</p>
     <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">{title}</h1>
     <p className="mt-3 max-w-3xl text-sm leading-7 text-white/65 sm:text-base">{description}</p>

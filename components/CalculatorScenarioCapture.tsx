@@ -192,24 +192,29 @@ export default function CalculatorScenarioCapture() {
     anchor.dataset.saveScenarioAnchor = "true";
 
     const explicitBoundary = document.querySelector<HTMLElement>("[data-scenario-actions-before]");
-    const seoHeading = Array.from(document.querySelectorAll("h2, h3")).find(
-      (heading) => {
-        const text = cleanLabel(heading.textContent || "").toLowerCase();
-        return (
-          text.startsWith("cómo lo calculamos") ||
-          text.startsWith("como lo calculamos") ||
-          text.startsWith("qué es") ||
-          text.startsWith("¿qué es") ||
-          text.startsWith("ejemplo práctico")
-        );
-      }
+    const contentHeadings = Array.from(document.querySelectorAll("h2, h3"));
+    const calculationHeading = contentHeadings.find((heading) => {
+      const text = cleanLabel(heading.textContent || "").toLowerCase();
+      return text.startsWith("cómo lo calculamos")
+        || text.startsWith("como lo calculamos")
+        || text.startsWith("cómo se calcula")
+        || text.startsWith("como se calcula");
+    });
+    const fallbackHeading = contentHeadings.find((heading) => {
+      const text = cleanLabel(heading.textContent || "").toLowerCase();
+      return text.startsWith("qué es")
+        || text.startsWith("¿qué es")
+        || text.startsWith("ejemplo práctico");
+    });
+    const seoHeading = calculationHeading ?? fallbackHeading;
+    const seoBoundary = seoHeading?.closest<HTMLElement>(
+      "[data-scenario-actions-before], .mt-10, .mt-12, .mt-16, section",
     );
-    const seoSection = seoHeading?.closest("section");
 
     if (explicitBoundary?.parentElement) {
       explicitBoundary.parentElement.insertBefore(anchor, explicitBoundary);
-    } else if (seoSection?.parentElement) {
-      seoSection.parentElement.insertBefore(anchor, seoSection);
+    } else if (seoBoundary?.parentElement) {
+      seoBoundary.parentElement.insertBefore(anchor, seoBoundary);
     } else {
       document.querySelector("main main")?.appendChild(anchor);
     }

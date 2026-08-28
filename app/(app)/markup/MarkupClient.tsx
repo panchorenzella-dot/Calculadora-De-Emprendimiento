@@ -56,14 +56,17 @@ export default function Page() {
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
       <div className="mx-auto max-w-5xl px-4 py-0">
-        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-          Calculadora de Precio de Venta
-        </h1>
+        <header className="calculator-hero mb-8">
+          <p>Costos y rentabilidad</p>
+          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            Calculadora de Precio de Venta
+          </h1>
 
-        <p className="mt-2 max-w-2xl text-white/70">
-          Calculá precio de venta, ganancia por unidad, facturación y ganancia
-          mensual estimada para tu negocio.
-        </p>
+          <p className="mt-2 max-w-2xl text-white/70">
+            Calculá precio de venta, ganancia por unidad, facturación y ganancia
+            mensual estimada para tu negocio.
+          </p>
+        </header>
 
         <div className="mt-6 flex items-center gap-3">
           <span className="text-sm text-white/50">Moneda</span>

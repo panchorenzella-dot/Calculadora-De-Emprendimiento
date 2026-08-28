@@ -236,7 +236,7 @@ export default function HamburgueseriaPage() {
   return (
     <main className="min-h-screen bg-black px-4 py-10 text-white">
       <div className="mx-auto max-w-6xl">
-        <section className="mb-10">
+        <section className="calculator-hero mb-10">
           <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-500">
             Calculadoras para emprendedores
           </p>

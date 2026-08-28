@@ -98,13 +98,16 @@ export default function Page() {
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
       <div className="mx-auto max-w-5xl px-4 py-0">
-        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-          Calculadora de Margen para tu negocio
-        </h1>
-        <p className="mt-2 max-w-2xl text-white/70">
-          Calculá margen de ganancia, ventas netas, punto de equilibrio, ROI
-          anual y período de recupero para tu emprendimiento en segundos.
-        </p>
+        <header className="calculator-hero mb-8">
+          <p>Costos y rentabilidad</p>
+          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            Calculadora de Margen para tu negocio
+          </h1>
+          <p className="mt-2 max-w-2xl text-white/70">
+            Calculá margen de ganancia, ventas netas, punto de equilibrio, ROI
+            anual y período de recupero para tu emprendimiento en segundos.
+          </p>
+        </header>
 
         <div className="mt-6 flex items-center gap-3">
           <span className="text-sm text-white/50">Moneda</span>
