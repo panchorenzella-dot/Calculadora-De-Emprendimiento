@@ -39,6 +39,10 @@ const calculators: Record<string, { type: string; name: string }> = {
   },
   "/reventa": { type: "reventa", name: "Compra y venta" },
   "/roi-inversion": { type: "roi-inversion", name: "ROI de inversión" },
+  "/iva-mensual": { type: "iva-mensual", name: "IVA mensual" },
+  "/iva-producto": { type: "iva-producto", name: "IVA por producto" },
+  "/ingresos-brutos": { type: "ingresos-brutos", name: "Ingresos Brutos" },
+  "/costo-laboral": { type: "costo-laboral", name: "Costo laboral" },
 };
 
 function cleanLabel(value: string) {
@@ -187,6 +191,7 @@ export default function CalculatorScenarioCapture() {
     const anchor = document.createElement("div");
     anchor.dataset.saveScenarioAnchor = "true";
 
+    const explicitBoundary = document.querySelector<HTMLElement>("[data-scenario-actions-before]");
     const seoHeading = Array.from(document.querySelectorAll("h2, h3")).find(
       (heading) => {
         const text = cleanLabel(heading.textContent || "").toLowerCase();
@@ -201,7 +206,9 @@ export default function CalculatorScenarioCapture() {
     );
     const seoSection = seoHeading?.closest("section");
 
-    if (seoSection?.parentElement) {
+    if (explicitBoundary?.parentElement) {
+      explicitBoundary.parentElement.insertBefore(anchor, explicitBoundary);
+    } else if (seoSection?.parentElement) {
       seoSection.parentElement.insertBefore(anchor, seoSection);
     } else {
       document.querySelector("main main")?.appendChild(anchor);

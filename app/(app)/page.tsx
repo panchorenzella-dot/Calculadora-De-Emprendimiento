@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     absolute: "Calculadora Emprendedora | Calculadoras para negocios e inversiones",
   },
   description:
-    "Calculadoras online gratuitas para emprendedores: margen de ganancia, precio de venta, punto de equilibrio, ROI, interés compuesto y más.",
+    "Calculadoras online gratuitas para emprendedores: IVA, Ingresos Brutos, costo laboral, margen, precio de venta, punto de equilibrio e inversiones.",
 };
 
 const steps = [
@@ -32,6 +32,12 @@ const steps = [
 ];
 
 const categories = [
+  {
+    title: "Impuestos y costos en Argentina",
+    text: "Estimá IVA mensual, IVA por producto, Ingresos Brutos y costo laboral.",
+    href: "/iva-mensual",
+    action: "Calcular impuestos",
+  },
   {
     title: "Por tipo de negocio",
     text: "Herramientas para gastronomía, producción, distribución, reventa y negocios a comisión.",
@@ -91,7 +97,7 @@ export default function Home() {
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300/15 bg-emerald-300/[0.06] px-3 py-1.5 text-[11px] font-semibold text-emerald-100/80">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
-              16 calculadoras disponibles gratis
+              20 calculadoras disponibles gratis
             </div>
             <h1 className="mt-5 max-w-3xl text-4xl font-bold leading-[1.05] tracking-[-0.04em] text-white sm:text-5xl lg:text-[56px]">
               Entendé los números de tu negocio antes de decidir
@@ -129,8 +135,8 @@ export default function Home() {
 
       <section className="grid grid-cols-2 divide-x divide-white/[0.07] border-b border-white/[0.07] py-7 sm:grid-cols-4">
         {[
-          ["16", "calculadoras activas"],
-          ["3", "categorías principales"],
+          ["20", "calculadoras activas"],
+          ["4", "categorías principales"],
           ["ARS · USD", "monedas disponibles"],
           ["24/7", "acceso online"],
         ].map(([value, label]) => (
@@ -179,7 +185,7 @@ export default function Home() {
             Encontrá la herramienta que necesitás
           </h2>
         </div>
-        <div className="grid gap-5 lg:grid-cols-3">
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
           {categories.map((category, index) => (
             <Link
               key={category.title}

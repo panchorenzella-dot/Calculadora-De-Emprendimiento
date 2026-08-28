@@ -23,6 +23,45 @@ type Section = {
 
 const secciones: Section[] = [
   {
+    title: "Impuestos y costos en Argentina",
+    description:
+      "Herramientas para estimar IVA, Ingresos Brutos y el costo de contratar personal.",
+    calculators: [
+      {
+        title: "IVA mensual a pagar",
+        description:
+          "Estimá débito fiscal, crédito fiscal, saldos a favor y el IVA del mes.",
+        idealFor: "Responsables inscriptos y administración de negocios",
+        href: "/iva-mensual",
+        tags: ["iva", "mensual", "impuestos", "arca", "débito", "crédito"],
+      },
+      {
+        title: "IVA por producto",
+        description:
+          "Agregá IVA a un precio o separá el impuesto incluido en el total.",
+        idealFor: "Precios, presupuestos, productos y servicios",
+        href: "/iva-producto",
+        tags: ["iva", "producto", "precio", "impuestos", "factura"],
+      },
+      {
+        title: "Ingresos Brutos",
+        description:
+          "Estimá el anticipo local con alícuota, retenciones y percepciones.",
+        idealFor: "Contribuyentes locales de una jurisdicción",
+        href: "/ingresos-brutos",
+        tags: ["iibb", "ingresos brutos", "provincia", "impuestos", "sircreb"],
+      },
+      {
+        title: "Costo laboral",
+        description:
+          "Calculá sueldo bruto, cargas patronales, ART y costo completo.",
+        idealFor: "Empleadores y planificación de nuevas contrataciones",
+        href: "/costo-laboral",
+        tags: ["empleado", "sueldo", "cargas sociales", "art", "aguinaldo"],
+      },
+    ],
+  },
+  {
     title: "Calculadoras por tipo de negocio",
     description:
       "Herramientas pensadas para rubros concretos, con costos y variables reales de cada negocio.",
@@ -391,7 +430,7 @@ export default function CalculadorasPage() {
 
             <p className="mt-2 text-sm text-white/60">
               Probá buscar por margen, precio, inversión, ROI, ahorro o punto de
-              equilibrio.
+              equilibrio, IVA o costos laborales.
             </p>
           </div>
         )}

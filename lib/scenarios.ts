@@ -33,6 +33,10 @@ const CALCULATORS: Record<string, CalculatorInfo> = {
   "rendimiento-real": { name: "Rendimiento real", description: "Retorno descontando inflación", icon: "≈" },
   reventa: { name: "Compra y venta", description: "Margen y ganancia de reventa", icon: "↻" },
   "roi-inversion": { name: "ROI de inversión", description: "Retorno total de un proyecto", icon: "△" },
+  "iva-mensual": { name: "IVA mensual", description: "Débito, crédito y saldo mensual estimado", icon: "%" },
+  "iva-producto": { name: "IVA por producto", description: "IVA incluido o agregado a un precio", icon: "+" },
+  "ingresos-brutos": { name: "Ingresos Brutos", description: "Anticipo provincial y pagos a cuenta", icon: "◇" },
+  "costo-laboral": { name: "Costo laboral", description: "Cargas patronales y costo empleador", icon: "▤" },
 };
 
 const RESULT_LABELS: Record<string, string[]> = {
@@ -52,6 +56,10 @@ const RESULT_LABELS: Record<string, string[]> = {
   "precio-venta": ["Costo total", "Precio de venta", "Ganancia por unidad", "Margen", "Markup", "Ventas mensuales", "Ganancia mensual"],
   roi: ["Ganancia neta", "ROI", "Retorno total", "Capital final"],
   "punto-de-equilibrio": ["Punto de equilibrio", "Ventas de equilibrio", "Margen de contribución", "Ganancia estimada"],
+  "iva-mensual": ["Débito fiscal por ventas", "Crédito fiscal por compras", "Impuesto determinado", "IVA estimado a pagar", "Nuevo saldo técnico a favor"],
+  "iva-producto": ["Precio neto unitario", "IVA por unidad", "Precio final unitario", "IVA total", "Total final"],
+  "ingresos-brutos": ["Impuesto determinado", "Ingresos Brutos a pagar", "Saldo a favor estimado", "Tasa efectiva"],
+  "costo-laboral": ["Sueldo bruto", "Seguridad social", "Obra social", "Costo mensual de caja", "Costo mensual completo"],
 };
 
 const FALLBACK_RESULT_LABELS = [

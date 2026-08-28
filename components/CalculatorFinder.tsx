@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 
 import { trackEvent } from "@/lib/analytics";
 
-type Goal = "price" | "profit" | "sales" | "investment" | "savings" | "industry";
+type Goal = "price" | "profit" | "sales" | "investment" | "savings" | "taxes" | "labor" | "industry";
 type Industry = "gastronomy" | "production" | "resale" | "distribution";
 
 const goals: Array<{ id: Goal; label: string; short: string }> = [
@@ -14,6 +14,8 @@ const goals: Array<{ id: Goal; label: string; short: string }> = [
   { id: "sales", label: "Saber cuánto vender", short: "Ventas" },
   { id: "investment", label: "Evaluar una inversión", short: "Inversión" },
   { id: "savings", label: "Alcanzar una meta", short: "Ahorro" },
+  { id: "taxes", label: "Estimar mis impuestos", short: "Impuestos" },
+  { id: "labor", label: "Calcular un empleado", short: "Personal" },
   { id: "industry", label: "Calcular costos de mi rubro", short: "Mi rubro" },
 ];
 
@@ -30,6 +32,8 @@ const recommendations = {
   sales: { title: "Punto de equilibrio", description: "Conocé la cantidad mínima que necesitás vender para cubrir todos tus costos.", href: "/punto-de-equilibrio", eyebrow: "Para definir tu piso de ventas" },
   investment: { title: "ROI de inversión", description: "Compará lo invertido con el beneficio esperado antes de comprometer capital.", href: "/roi-inversion", eyebrow: "Para decidir antes de invertir" },
   savings: { title: "Meta de ahorro", description: "Calculá cuánto aportar y durante cuánto tiempo para llegar a un objetivo concreto.", href: "/meta-ahorro", eyebrow: "Para convertir una meta en un plan" },
+  taxes: { title: "IVA mensual", description: "Estimá el IVA del mes usando ventas, compras, retenciones, percepciones y saldos anteriores.", href: "/iva-mensual", eyebrow: "Para ordenar tus impuestos" },
+  labor: { title: "Costo laboral", description: "Estimá cuánto cuesta incorporar una persona incluyendo cargas, ART y provisiones.", href: "/costo-laboral", eyebrow: "Para planificar una contratación" },
   gastronomy: { title: "Calculadoras gastronómicas", description: "Elegí entre cafetería y hamburguesería para incluir ingredientes, operación y ventas.", href: "/calculadoras?buscar=gastronomía", eyebrow: "Para negocios gastronómicos" },
   production: { title: "Producción", description: "Calculá costo unitario, margen y resultado mensual de lo que fabricás.", href: "/produccion", eyebrow: "Para fabricar con números claros" },
   resale: { title: "Compra y venta", description: "Incluí compra, comisiones, envíos y otros costos antes de fijar el precio.", href: "/reventa", eyebrow: "Para reventa y comercio" },
@@ -92,4 +96,3 @@ export default function CalculatorFinder({ compact = false }: { compact?: boolea
     </section>
   );
 }
-
