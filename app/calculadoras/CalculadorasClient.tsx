@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import CalculatorFinder from "@/components/CalculatorFinder";
+import { trackEvent } from "@/lib/analytics";
 import { calculatorSections, type Calculator } from "./catalog";
 
 function normalizeSearch(value: string) {
@@ -156,6 +157,14 @@ export default function CalculadorasPage() {
                             key={calculator.href}
                             href={calculator.href}
                             aria-labelledby={titleId}
+                            onClick={() =>
+                              trackEvent("select_calculator", {
+                                calculator_name: calculator.title,
+                                calculator_category: section.id,
+                                destination: calculator.href,
+                                source: "calculator_catalog",
+                              })
+                            }
                             className="group block h-full"
                           >
                             <article className="flex h-full min-h-[250px] flex-col rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.055] to-emerald-300/[0.025] p-5 shadow-lg shadow-black/10 transition duration-200 group-hover:-translate-y-0.5 group-hover:border-emerald-300/30 group-hover:shadow-emerald-950/20">

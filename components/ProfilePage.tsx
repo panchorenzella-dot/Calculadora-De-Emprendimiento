@@ -229,6 +229,7 @@ export default function ProfilePage({ initialAuthMode = "login", continueToPro =
       }
     });
     const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      window.dispatchEvent(new Event("calculator-auth-changed"));
       setSession(nextSession);
       setProfile(profileFromUser(nextSession?.user));
       setLoading(false);

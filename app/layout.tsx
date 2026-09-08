@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import Navbar from "@/components/NavBar";
@@ -14,11 +14,7 @@ const siteDescription =
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  display: "optional",
 });
 
 export const metadata: Metadata = {
@@ -120,7 +116,7 @@ export default function RootLayout({
   return (
     <html lang="es-AR">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-zinc-950 text-white`}
+        className={`${geistSans.variable} antialiased bg-zinc-950 text-white`}
       >
         <script
           type="application/ld+json"
@@ -133,11 +129,6 @@ export default function RootLayout({
           <div className="flex-1">{children}</div>
           <Footer />
         </div>
-        <AnalyticsPageView />
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-M4WE874ZS2"
-          strategy="afterInteractive"
-        />
         <Script id="google-analytics" strategy="afterInteractive">
           {`
             window.dataLayer = window.dataLayer || [];
@@ -146,6 +137,11 @@ export default function RootLayout({
             gtag('config', 'G-M4WE874ZS2', { send_page_view: false });
           `}
         </Script>
+        <AnalyticsPageView />
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-M4WE874ZS2"
+          strategy="lazyOnload"
+        />
       </body>
     </html>
   );

@@ -22,7 +22,7 @@ export default function Footer() {
         </div>
         <nav aria-label="Enlaces legales y de ayuda" className="flex flex-wrap gap-x-4 gap-y-3">
           {links.map(([href, label]) => (
-            <Link key={href} className="transition hover:text-white" href={href}>{label}</Link>
+            <Link key={href} prefetch={href === "/perfil" ? false : undefined} className="transition hover:text-white" href={href}>{label}</Link>
           ))}
         </nav>
       </div>

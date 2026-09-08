@@ -4,20 +4,43 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { getSupabaseClient } from "@/lib/supabase/client";
+function hasStoredSession() {
+  if (typeof window === "undefined") return false;
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!supabaseUrl) return false;
+
+  try {
+    const projectReference = new URL(supabaseUrl).hostname.split(".")[0];
+    const rawSession = window.localStorage.getItem(
+      `sb-${projectReference}-auth-token`,
+    );
+    if (!rawSession) return false;
+
+    const session = JSON.parse(rawSession) as {
+      access_token?: string;
+      refresh_token?: string;
+    };
+    return Boolean(session.access_token || session.refresh_token);
+  } catch {
+    return false;
+  }
+}
 
 export default function Navbar() {
   const pathname = usePathname();
   const [signedIn, setSignedIn] = useState(false);
 
   useEffect(() => {
-    const supabase = getSupabaseClient();
-    if (!supabase) return;
-
-    void supabase.auth.getSession().then(({ data }) => setSignedIn(Boolean(data.session)));
-    const { data } = supabase.auth.onAuthStateChange((_event, session) => setSignedIn(Boolean(session)));
-    return () => data.subscription.unsubscribe();
-  }, []);
+    const updateSession = () => setSignedIn(hasStoredSession());
+    updateSession();
+    window.addEventListener("storage", updateSession);
+    window.addEventListener("calculator-auth-changed", updateSession);
+    return () => {
+      window.removeEventListener("storage", updateSession);
+      window.removeEventListener("calculator-auth-changed", updateSession);
+    };
+  }, [pathname]);
 
   const links = [
     { href: "/", label: "Inicio", visibility: "hidden sm:inline-flex" },
@@ -41,7 +64,7 @@ export default function Navbar() {
             <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-green-600" aria-hidden="true" />
             <span className="sm:hidden">Guardá tus cálculos gratis.</span>
             <span className="hidden sm:inline">Creá tu cuenta gratis, guardá tus escenarios y continuá desde cualquier dispositivo.</span>
-            <Link href="/perfil?modo=registro" className="shrink-0 font-black text-green-500 hover:text-green-400">
+            <Link prefetch={false} href="/perfil?modo=registro" className="shrink-0 font-black text-green-500 hover:text-green-400">
               Registrarme →
             </Link>
           </div>
@@ -65,9 +88,9 @@ export default function Navbar() {
           ))}
 
           {signedIn ? (
-            <Link href="/perfil" aria-current={pathname.startsWith("/perfil") ? "page" : undefined} className={linkClass("/perfil")}>Perfil</Link>
+            <Link prefetch={false} href="/perfil" aria-current={pathname.startsWith("/perfil") ? "page" : undefined} className={linkClass("/perfil")}>Perfil</Link>
           ) : (
-            <Link href="/perfil" className="ml-1 inline-flex whitespace-nowrap rounded-full bg-green-700 px-3.5 py-2 text-sm font-black text-white transition hover:bg-green-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500">
+            <Link prefetch={false} href="/perfil" className="ml-1 inline-flex whitespace-nowrap rounded-full bg-green-700 px-3.5 py-2 text-sm font-black text-white transition hover:bg-green-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500">
               <span className="sm:hidden">Entrar</span>
               <span className="hidden sm:inline">Ingresar</span>
             </Link>

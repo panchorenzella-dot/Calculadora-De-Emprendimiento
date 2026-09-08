@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 
 import { BILLING_OPTIONS, type BillingInterval } from "@/lib/plans";
 import { trackEvent } from "@/lib/analytics";
-import { getSupabaseClient } from "@/lib/supabase/client";
 
 function usd(value: number) {
   return `US$ ${value.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -31,6 +30,7 @@ export default function PricingSelector({ paypalReady, paypalMode }: Props) {
 
   async function startPayPalCheckout() {
     setMessage("");
+    const { getSupabaseClient } = await import("@/lib/supabase/client");
     const supabase = getSupabaseClient();
     if (!supabase) {
       setMessage("Falta configurar el acceso a tu cuenta.");

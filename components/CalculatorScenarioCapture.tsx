@@ -1,49 +1,16 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-import SaveScenarioButton from "@/components/SaveScenarioButton";
-import AiAssistant from "@/components/AiAssistant";
 import { trackEvent } from "@/lib/analytics";
+import { calculatorTracking } from "@/lib/calculatorTracking";
 import { buildScenarioResults } from "@/lib/scenarios";
 import type { ScenarioDraft, ScenarioValue } from "@/types/scenario";
 
-const calculators: Record<string, { type: string; name: string }> = {
-  "/margen": { type: "margen", name: "Margen de ganancia" },
-  "/markup": { type: "precio-venta", name: "Precio de venta" },
-  "/roi": { type: "roi", name: "ROI" },
-  "/punto-de-equilibrio": {
-    type: "punto-de-equilibrio",
-    name: "Punto de equilibrio",
-  },
-  "/interes-compuesto": {
-    type: "interes-compuesto",
-    name: "Interés compuesto",
-  },
-  "/aporte-mensual": { type: "aporte-mensual", name: "Aporte mensual" },
-  "/cafeteria": { type: "cafeteria", name: "Cafetería" },
-  "/distribuidora": { type: "distribuidora", name: "Distribuidora" },
-  "/hamburgueseria": { type: "hamburgueseria", name: "Hamburguesería" },
-  "/intermediarios": { type: "intermediarios", name: "Intermediarios" },
-  "/meta-ahorro": { type: "meta-ahorro", name: "Meta de ahorro" },
-  "/produccion": { type: "produccion", name: "Producción" },
-  "/recupero-capital": {
-    type: "recupero-capital",
-    name: "Recupero de capital",
-  },
-  "/rendimiento-real": {
-    type: "rendimiento-real",
-    name: "Rendimiento real",
-  },
-  "/reventa": { type: "reventa", name: "Compra y venta" },
-  "/roi-inversion": { type: "roi-inversion", name: "ROI de inversión" },
-  "/iva-mensual": { type: "iva-mensual", name: "IVA mensual" },
-  "/iva-producto": { type: "iva-producto", name: "IVA por producto" },
-  "/ingresos-brutos": { type: "ingresos-brutos", name: "Ingresos Brutos" },
-  "/costo-laboral": { type: "costo-laboral", name: "Costo laboral" },
-};
+const SaveScenarioButton = lazy(() => import("@/components/SaveScenarioButton"));
+const AiAssistant = lazy(() => import("@/components/AiAssistant"));
 
 function cleanLabel(value: string) {
   return value.replace(/\s+/g, " ").replace(/[:*]$/, "").trim();
@@ -105,7 +72,7 @@ function captureMetrics(resultContainers: HTMLElement[]) {
 }
 
 function capture(pathname: string): { draft: ScenarioDraft; hasResults: boolean } | null {
-  const calculator = calculators[pathname];
+  const calculator = calculatorTracking[pathname];
   if (!calculator) return null;
 
   const fields: Record<string, ScenarioValue> = {};
@@ -173,19 +140,20 @@ export default function CalculatorScenarioCapture() {
   const resultTracked = useRef(false);
 
   useEffect(() => {
-    const calculator = calculators[pathname];
     resultTracked.current = false;
-    if (calculator) trackEvent("view_calculator", { calculator_name: calculator.name, calculator_type: calculator.type, page_path: pathname });
   }, [pathname]);
 
   useEffect(() => {
     if (!snapshot?.hasResults || resultTracked.current) return;
     resultTracked.current = true;
-    trackEvent("calculate", { calculator_name: snapshot.draft.calculatorName, calculator_type: snapshot.draft.calculatorType });
+    trackEvent("calculate", {
+      calculator_name: snapshot.draft.calculatorName,
+      calculator_type: snapshot.draft.calculatorType,
+    });
   }, [snapshot]);
 
   useEffect(() => {
-    if (!calculators[pathname]) return;
+    if (!calculatorTracking[pathname]) return;
 
     let cancelled = false;
     const anchor = document.createElement("div");
@@ -229,7 +197,7 @@ export default function CalculatorScenarioCapture() {
   }, [pathname]);
 
   useEffect(() => {
-    if (!calculators[pathname]) return;
+    if (!calculatorTracking[pathname]) return;
 
     let timeout: ReturnType<typeof setTimeout>;
     const update = () => {
@@ -260,7 +228,7 @@ export default function CalculatorScenarioCapture() {
     };
   }, [pathname]);
 
-  if (!calculators[pathname]) return null;
+  if (!calculatorTracking[pathname]) return null;
 
   if (!portalTarget) return null;
 
@@ -274,10 +242,24 @@ export default function CalculatorScenarioCapture() {
         </div>
         <p className="text-xs text-white/30">Disponible con una cuenta</p>
       </header>
-      <div className="grid border-t border-white/[0.08] md:grid-cols-2 md:divide-x md:divide-white/[0.08]">
-        <SaveScenarioButton draft={snapshot?.draft ?? null} hasResults={snapshot?.hasResults ?? false} />
-        <AiAssistant draft={snapshot?.draft ?? null} hasResults={snapshot?.hasResults ?? false} />
-      </div>
+      {snapshot?.hasResults ? (
+        <Suspense
+          fallback={
+            <p className="border-t border-white/[0.08] px-6 py-7 text-sm text-white/45 sm:px-8">
+              Preparando las opciones para guardar y analizar…
+            </p>
+          }
+        >
+          <div className="grid border-t border-white/[0.08] md:grid-cols-2 md:divide-x md:divide-white/[0.08]">
+            <SaveScenarioButton draft={snapshot.draft} hasResults />
+            <AiAssistant draft={snapshot.draft} hasResults />
+          </div>
+        </Suspense>
+      ) : (
+        <p className="border-t border-white/[0.08] px-6 py-7 text-sm text-white/45 sm:px-8">
+          Completá los datos y calculá para habilitar estas opciones.
+        </p>
+      )}
     </section>,
     portalTarget
   );

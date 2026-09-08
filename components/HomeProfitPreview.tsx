@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+
+import { trackEvent } from "@/lib/analytics";
 
 function formatMoney(value: number) {
   return new Intl.NumberFormat("es-AR", {
@@ -19,6 +21,30 @@ function clampAmount(value: string) {
 export default function HomeProfitPreview() {
   const [cost, setCost] = useState("14000");
   const [price, setPrice] = useState("25000");
+  const interactionStarted = useRef(false);
+  const completedInputs = useRef(new Set<string>());
+
+  function updateInput(
+    field: "cost" | "price",
+    value: string,
+    setter: (nextValue: string) => void,
+  ) {
+    if (!interactionStarted.current) {
+      interactionStarted.current = true;
+      trackEvent("hero_calculator_start", { location: "home_hero" });
+    }
+    setter(value);
+  }
+
+  function completeInput(field: "cost" | "price", value: string) {
+    if (!interactionStarted.current || !value || completedInputs.current.has(field)) return;
+    completedInputs.current.add(field);
+    trackEvent("hero_input_complete", {
+      location: "home_hero",
+      field_name: field,
+      completed_fields: completedInputs.current.size,
+    });
+  }
 
   const result = useMemo(() => {
     const numericCost = clampAmount(cost);
@@ -61,7 +87,8 @@ export default function HomeProfitPreview() {
               min="0"
               inputMode="decimal"
               value={cost}
-              onChange={(event) => setCost(event.target.value)}
+              onChange={(event) => updateInput("cost", event.target.value, setCost)}
+              onBlur={(event) => completeInput("cost", event.target.value)}
               className="min-w-0 flex-1 bg-transparent text-lg font-semibold text-white outline-none"
             />
           </span>
@@ -76,7 +103,8 @@ export default function HomeProfitPreview() {
               min="0"
               inputMode="decimal"
               value={price}
-              onChange={(event) => setPrice(event.target.value)}
+              onChange={(event) => updateInput("price", event.target.value, setPrice)}
+              onBlur={(event) => completeInput("price", event.target.value)}
               className="min-w-0 flex-1 bg-transparent text-lg font-semibold text-white outline-none"
             />
           </span>
@@ -105,6 +133,12 @@ export default function HomeProfitPreview() {
       </p>
       <Link
         href="/margen"
+        onClick={() =>
+          trackEvent("hero_calculator_cta", {
+            location: "home_hero",
+            destination: "/margen",
+          })
+        }
         className="mt-4 flex items-center justify-center rounded-xl bg-white px-4 py-2.5 text-sm font-bold !text-zinc-950 transition hover:bg-emerald-100"
       >
         Analizar mi negocio →

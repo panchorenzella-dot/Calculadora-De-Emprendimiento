@@ -1,4 +1,4 @@
-import CalculatorScenarioCapture from "@/components/CalculatorScenarioCapture";
+import CalculatorEnhancementsLoader from "@/components/CalculatorEnhancementsLoader";
 
 export default function AppLayout({
   children,
@@ -9,7 +9,7 @@ export default function AppLayout({
     <main className="calculator-theme min-h-screen bg-zinc-950 text-white">
       <div className="calculator-page-shell mx-auto w-full max-w-5xl px-4 pb-10 pt-6">
         {children}
-        <CalculatorScenarioCapture />
+        <CalculatorEnhancementsLoader />
       </div>
     </main>
   );

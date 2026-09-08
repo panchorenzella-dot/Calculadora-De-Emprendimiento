@@ -223,6 +223,7 @@ export default function AuthModal({
     }
 
     setFeedback({ type: "success", text: "Listo, ya ingresaste a tu cuenta." });
+    window.dispatchEvent(new Event("calculator-auth-changed"));
     await onAuthenticated?.();
   }
 
