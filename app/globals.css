@@ -141,9 +141,13 @@ textarea {
   background: linear-gradient(145deg, rgba(16, 185, 129, 0.105), rgba(5, 12, 8, 0.92)) !important;
 }
 
-.calculator-page-shell > main :is(input, select, textarea) {
+.calculator-page-shell > main :is(input, select, textarea):not([class~="bg-transparent"]) {
   border-color: rgba(255, 255, 255, 0.09) !important;
   background-color: rgba(4, 8, 6, 0.86) !important;
+}
+
+.calculator-page-shell > main input[class~="bg-transparent"] {
+  background-color: transparent !important;
 }
 
 .calculator-page-shell > main button[type="submit"] {
