@@ -26,7 +26,7 @@ const calculators: Record<string, { type: string; name: string }> = {
   "/cafeteria": { type: "cafeteria", name: "Cafetería" },
   "/distribuidora": { type: "distribuidora", name: "Distribuidora" },
   "/hamburgueseria": { type: "hamburgueseria", name: "Hamburguesería" },
-  "/Intermediarios": { type: "intermediarios", name: "Intermediarios" },
+  "/intermediarios": { type: "intermediarios", name: "Intermediarios" },
   "/meta-ahorro": { type: "meta-ahorro", name: "Meta de ahorro" },
   "/produccion": { type: "produccion", name: "Producción" },
   "/recupero-capital": {

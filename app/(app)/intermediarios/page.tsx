@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
-import MarkupClient from "./MarkupClient";
+import IntermediariosClient from "./IntermediariosClient";
 
 const baseUrl = "https://www.calculadoraemprendedora.com";
-const pageTitle = "Calculadora de precio de venta";
+const pageTitle = "Calculadora de comisiones para intermediarios";
 const pageDescription =
-  "Calculá el precio de venta de un producto o servicio con costos, margen, markup, comisiones, impuestos y gastos fijos.";
+  "Calculá comisiones por operación, ganancia mensual, punto de equilibrio, recupero de capital y ROI para intermediarios y vendedores.";
 
 export const metadata: Metadata = {
   title: pageTitle,
   description: pageDescription,
-  alternates: { canonical: "/markup" },
+  alternates: { canonical: "/intermediarios" },
   openGraph: {
     title: pageTitle,
     description: pageDescription,
-    url: "/markup",
+    url: "/intermediarios",
     type: "website",
     images: [
       {
@@ -38,21 +38,20 @@ export default function Page() {
     "@graph": [
       {
         "@type": "WebApplication",
-        "@id": `${baseUrl}/markup#calculator`,
+        "@id": `${baseUrl}/intermediarios#calculator`,
         name: pageTitle,
         description: pageDescription,
-        url: `${baseUrl}/markup`,
+        url: `${baseUrl}/intermediarios`,
         applicationCategory: "BusinessApplication",
         operatingSystem: "Any",
-        browserRequirements: "Requiere JavaScript",
         inLanguage: "es-AR",
         isAccessibleForFree: true,
         offers: { "@type": "Offer", price: "0", priceCurrency: "ARS" },
         featureList: [
-          "Calcular precio de venta desde el costo",
-          "Comparar margen y markup",
-          "Incluir costos fijos y costos unitarios",
-          "Incluir comisiones e impuestos porcentuales",
+          "Comisión neta por operación",
+          "Ganancia mensual estimada",
+          "Punto de equilibrio",
+          "Recupero de capital y ROI",
         ],
       },
       {
@@ -73,8 +72,8 @@ export default function Page() {
           {
             "@type": "ListItem",
             position: 3,
-            name: "Precio de venta",
-            item: `${baseUrl}/markup`,
+            name: "Intermediarios y comisiones",
+            item: `${baseUrl}/intermediarios`,
           },
         ],
       },
@@ -89,7 +88,7 @@ export default function Page() {
           __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
         }}
       />
-      <MarkupClient />
+      <IntermediariosClient />
     </>
   );
 }

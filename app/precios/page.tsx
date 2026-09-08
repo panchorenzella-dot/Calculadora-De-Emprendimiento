@@ -5,9 +5,29 @@ import PricingSelector from "@/components/PricingSelector";
 import { PLAN_LIMITS } from "@/lib/plans";
 
 export const metadata: Metadata = {
-  title: "Planes",
+  title: "Planes Gratis y Pro",
   description:
-    "Compará el plan Gratis y Calculadora Emprendedora Pro: más análisis con IA, más mensajes y una experiencia pensada para decidir mejor.",
+    "Compará los planes Gratis y Pro. Guardá escenarios, analizá riesgos con IA y convertí cada cálculo en una decisión más clara.",
+  alternates: { canonical: "/precios" },
+  openGraph: {
+    title: "Planes Gratis y Pro | Calculadora Emprendedora",
+    description: "Compará escenarios y recibí una lectura estratégica de los números de tu negocio.",
+    url: "/precios",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Calculadora Emprendedora — decisiones de negocio con números claros",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Planes Gratis y Pro | Calculadora Emprendedora",
+    description: "Compará escenarios y recibí una lectura estratégica de los números de tu negocio.",
+    images: ["/opengraph-image"],
+  },
 };
 
 const freeFeatures = [
@@ -78,21 +98,76 @@ export default function PricingPage() {
           Empezá gratis. Elegí Pro cuando necesites guardar más alternativas,
           profundizar el análisis y conservar todo tu proceso de decisión.
         </p>
-        <div className="mx-auto mt-9 grid max-w-2xl grid-cols-2 divide-x divide-white/10 rounded-2xl border border-white/[0.08] bg-black/25 p-4 backdrop-blur sm:p-5">
-          <div className="px-2">
-            <p className="text-2xl font-semibold tracking-tight text-emerald-200 sm:text-3xl">30</p>
-            <p className="mt-1 text-xs text-white/35 sm:text-sm">análisis con IA por mes</p>
-          </div>
-          <div className="px-2">
-            <p className="text-2xl font-semibold tracking-tight text-emerald-200 sm:text-3xl">300</p>
-            <p className="mt-1 text-xs text-white/35 sm:text-sm">mensajes de seguimiento por mes</p>
-          </div>
+        <div className="mx-auto mt-9 grid max-w-3xl gap-px overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.08] text-left sm:grid-cols-3">
+          {[
+            ["01", "Detectá riesgos", "Encontrá costos o supuestos que podrían cambiar el resultado."],
+            ["02", "Compará alternativas", "Volvé a cada escenario sin rehacer cuentas ni perder contexto."],
+            ["03", "Definí el próximo paso", "Convertí las métricas en una acción concreta para tu negocio."],
+          ].map(([number, title, copy]) => (
+            <div key={number} className="bg-[#070a08] p-5">
+              <p className="text-[10px] font-bold tracking-[0.16em] text-emerald-200/45">{number}</p>
+              <p className="mt-3 text-sm font-bold text-white/90">{title}</p>
+              <p className="mt-1.5 text-xs leading-5 text-white/45">{copy}</p>
+            </div>
+          ))}
         </div>
       </section>
 
-      <section className="mx-auto max-w-5xl px-4 pb-14 sm:px-6 sm:pb-20">
+      <section className="mx-auto max-w-5xl px-4 pb-14 sm:px-6 sm:pb-16">
         <div className="grid gap-px overflow-hidden rounded-[28px] border border-white/[0.08] bg-white/[0.08] sm:grid-cols-2 lg:grid-cols-4">
           {proOutcomes.map((item) => <article key={item.number} className="bg-[#080b09] p-5 sm:p-6"><p className="text-[10px] font-bold tracking-[0.16em] text-emerald-200/45">{item.number}</p><h2 className="mt-4 text-base font-bold text-white/90">{item.title}</h2><p className="mt-2 text-sm leading-6 text-white/45">{item.copy}</p></article>)}
+        </div>
+      </section>
+
+      <section aria-labelledby="ai-example-title" className="mx-auto max-w-5xl px-4 pb-20 sm:px-6">
+        <div className="overflow-hidden rounded-[30px] border border-emerald-300/15 bg-[linear-gradient(145deg,rgba(16,185,129,0.08),rgba(5,8,5,0.96)_44%)] shadow-[0_30px_100px_rgba(0,0,0,0.2)]">
+          <div className="grid border-b border-white/[0.08] lg:grid-cols-[.78fr_1.22fr]">
+            <div className="p-6 sm:p-8">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-200/55">Ejemplo realista</p>
+              <h2 id="ai-example-title" className="mt-4 text-3xl font-semibold tracking-tight">Así transforma un cálculo en una decisión</h2>
+              <p className="mt-4 text-sm leading-7 text-white/50">La IA trabaja con los datos del escenario. No reemplaza al cálculo: lo explica, marca supuestos y propone qué revisar.</p>
+              <dl className="mt-7 grid grid-cols-2 gap-3">
+                {[
+                  ["Precio", "$18.000"],
+                  ["Costo total", "$11.200"],
+                  ["Margen neto", "37,8%"],
+                  ["Ventas/mes", "100"],
+                ].map(([label, value]) => (
+                  <div key={label} className="rounded-2xl border border-white/[0.08] bg-black/20 p-4">
+                    <dt className="text-[11px] text-white/38">{label}</dt>
+                    <dd className="mt-1 text-lg font-bold text-white/90">{value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+            <div className="border-t border-white/[0.08] bg-black/20 p-4 sm:p-6 lg:border-l lg:border-t-0">
+              <div className="flex items-center justify-between gap-4 border-b border-white/[0.08] pb-4">
+                <div className="flex items-center gap-3">
+                  <span className="grid h-9 w-9 place-items-center rounded-xl border border-emerald-200/20 bg-emerald-200/[0.08] text-sm font-black text-emerald-100">IA</span>
+                  <div><p className="text-sm font-bold">Lectura del escenario</p><p className="text-xs text-white/38">Usando tus números</p></div>
+                </div>
+                <span className="rounded-full border border-emerald-200/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-100/55">Demostración</span>
+              </div>
+              <div className="mt-5 space-y-3">
+                <article className="rounded-2xl border border-emerald-200/15 bg-emerald-200/[0.055] p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-emerald-200/55">Lectura principal</p>
+                  <p className="mt-2 text-sm leading-6 text-white/72">El negocio conserva un margen positivo, pero una comisión adicional de 5% lo reduciría a aproximadamente 32,8%.</p>
+                </article>
+                <article className="rounded-2xl border border-amber-200/15 bg-amber-200/[0.045] p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-amber-100/55">Riesgo a revisar</p>
+                  <p className="mt-2 text-sm leading-6 text-white/68">El escenario supone 100 ventas todos los meses. Probá también 70 unidades para conocer tu resultado conservador.</p>
+                </article>
+                <article className="rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/38">Próximo paso</p>
+                  <p className="mt-2 text-sm leading-6 text-white/68">Compará el precio actual contra uno que absorba la comisión sin bajar de 30% de margen neto.</p>
+                </article>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col gap-3 px-6 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+            <p className="text-xs leading-5 text-white/38">Ejemplo ilustrativo. Cada análisis se genera con los datos reales del escenario guardado.</p>
+            <Link href="/perfil?modo=registro" className="rounded-full border border-emerald-200/20 bg-emerald-200/[0.07] px-4 py-2.5 text-center text-sm font-bold text-emerald-100 transition hover:bg-emerald-200/[0.12]">Probar gratis</Link>
+          </div>
         </div>
       </section>
 
@@ -109,8 +184,8 @@ export default function PricingPage() {
           <p className="mt-7 max-w-md text-sm leading-6 text-white/45">
             Calculá, guardá y probá el análisis inteligente sin pagar.
           </p>
-          <Link href="/calculadoras" className="mt-7 rounded-full border border-white/12 bg-white/[0.04] px-4 py-3 text-center text-sm font-semibold text-white/80 transition hover:border-white/25 hover:bg-white/[0.08] hover:text-white">
-            Empezar gratis
+          <Link href="/perfil?modo=registro" className="mt-7 rounded-full border border-white/12 bg-white/[0.04] px-4 py-3 text-center text-sm font-semibold text-white/80 transition hover:border-white/25 hover:bg-white/[0.08] hover:text-white">
+            Crear mi cuenta gratis
           </Link>
           <div className="my-7 h-px bg-white/[0.08]" />
           <ul className="space-y-4">
@@ -132,7 +207,7 @@ export default function PricingPage() {
                 <span className="rounded-full bg-emerald-300 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-950">Recomendado</span>
               </div>
             </div>
-            <span className="rounded-full border border-emerald-200/20 bg-emerald-200/[0.06] px-3 py-1 text-xs text-emerald-100/70">30 + 300</span>
+            <span className="rounded-full border border-emerald-200/20 bg-emerald-200/[0.06] px-3 py-1 text-xs text-emerald-100/70">Más contexto</span>
           </div>
           <p className="relative mt-7 max-w-md text-sm leading-6 text-white/55">
             Más margen para comparar escenarios y conversar en profundidad antes de decidir.

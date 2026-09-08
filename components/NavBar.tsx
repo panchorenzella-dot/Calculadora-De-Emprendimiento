@@ -35,7 +35,7 @@ export default function Navbar() {
 
   return (
     <header className="border-b border-white/10 bg-[#050605]">
-      {!signedIn && pathname !== "/perfil" && (
+      {!signedIn && !pathname.startsWith("/perfil") && (
         <div className="border-b border-white/10 bg-[#0a0b0a] text-white">
           <div className="mx-auto flex min-h-9 max-w-6xl items-center justify-center gap-2 px-4 py-2 text-center text-xs font-bold sm:text-sm">
             <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-green-600" aria-hidden="true" />
@@ -59,17 +59,17 @@ export default function Navbar() {
 
         <nav aria-label="Navegación principal" className="flex shrink-0 items-center gap-1">
           {links.map((link) => (
-            <Link key={link.href} href={link.href} className={`${linkClass(link.href)} ${link.visibility}`}>
+            <Link key={link.href} href={link.href} aria-current={pathname === link.href ? "page" : undefined} className={`${linkClass(link.href)} ${link.visibility}`}>
               {link.label}
             </Link>
           ))}
 
           {signedIn ? (
-            <Link href="/perfil" className={linkClass("/perfil")}>Perfil</Link>
+            <Link href="/perfil" aria-current={pathname.startsWith("/perfil") ? "page" : undefined} className={linkClass("/perfil")}>Perfil</Link>
           ) : (
-            <Link href="/perfil?modo=registro" className="ml-1 inline-flex whitespace-nowrap rounded-full bg-green-700 px-3.5 py-2 text-sm font-black text-white transition hover:bg-green-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500">
-              <span className="sm:hidden">Registro</span>
-              <span className="hidden sm:inline">Crear cuenta</span>
+            <Link href="/perfil" className="ml-1 inline-flex whitespace-nowrap rounded-full bg-green-700 px-3.5 py-2 text-sm font-black text-white transition hover:bg-green-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500">
+              <span className="sm:hidden">Entrar</span>
+              <span className="hidden sm:inline">Ingresar</span>
             </Link>
           )}
         </nav>

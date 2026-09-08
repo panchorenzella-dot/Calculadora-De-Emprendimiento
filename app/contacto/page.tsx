@@ -1,6 +1,38 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { siteConfig } from "@/lib/site";
+
+const baseUrl = "https://www.calculadoraemprendedora.com";
+const pageTitle = "Contacto y soporte";
+const pageDescription =
+  "Contactá al equipo de Calculadora Emprendedora por consultas, sugerencias, errores, pagos o suscripciones.";
+
+export const metadata: Metadata = {
+  title: pageTitle,
+  description: pageDescription,
+  alternates: { canonical: "/contacto" },
+  openGraph: {
+    title: pageTitle,
+    description: pageDescription,
+    url: "/contacto",
+    type: "website",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Calculadora Emprendedora — decisiones de negocio con números claros",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: pageTitle,
+    description: pageDescription,
+    images: ["/opengraph-image"],
+  },
+};
 
 const reasons = [
   ["Consultas", "¿No sabés qué calculadora usar? Contanos qué necesitás resolver."],
@@ -9,8 +41,52 @@ const reasons = [
 ];
 
 export default function ContactoPage() {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "ContactPage",
+        "@id": `${baseUrl}/contacto#webpage`,
+        url: `${baseUrl}/contacto`,
+        name: pageTitle,
+        description: pageDescription,
+        inLanguage: "es-AR",
+        mainEntity: {
+          "@type": "Organization",
+          "@id": `${baseUrl}/#organization`,
+          name: "Calculadora Emprendedora",
+          url: baseUrl,
+          email: siteConfig.contactEmail,
+        },
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Inicio",
+            item: baseUrl,
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: "Contacto",
+            item: `${baseUrl}/contacto`,
+          },
+        ],
+      },
+    ],
+  };
+
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+        }}
+      />
       <section className="border-b border-white/10 bg-[radial-gradient(circle_at_top,rgba(52,211,153,0.12),transparent_45%)]">
         <div className="mx-auto max-w-6xl px-6 py-16 sm:py-24">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-300/75">

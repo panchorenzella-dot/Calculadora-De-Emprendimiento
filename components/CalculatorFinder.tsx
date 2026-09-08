@@ -62,25 +62,36 @@ export default function CalculatorFinder({ compact = false }: { compact?: boolea
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-200/60">Recomendación personalizada</p>
           <h2 id="calculator-finder-title" className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">¿Qué querés resolver hoy?</h2>
-          <p className="mt-3 max-w-xl text-sm leading-6 text-white/55">Elegí tu objetivo y te mostramos por dónde empezar. No necesitás registrarte para calcular.</p>
-          <div className="mt-6 grid gap-2 sm:grid-cols-2">
-            {goals.map((item) => (
-              <button key={item.id} type="button" aria-pressed={goal === item.id} onClick={() => selectGoal(item.id)} className={`rounded-2xl border px-4 py-3 text-left text-sm font-bold transition ${goal === item.id ? "border-emerald-300/35 bg-emerald-300/[0.08] text-white" : "border-white/[0.08] bg-black/25 text-white/65 hover:border-white/15 hover:text-white"}`}>
-                <span className="text-emerald-200/65">{item.short}</span><span className="mx-2 text-white/20">·</span>{item.label}
-              </button>
-            ))}
-          </div>
-          {goal === "industry" && (
-            <div className="mt-4">
-              <p className="text-xs font-semibold text-white/45">Elegí el tipo de negocio</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {industries.map((item) => <button key={item.id} type="button" aria-pressed={industry === item.id} onClick={() => { setIndustry(item.id); trackEvent("calculator_recommendation_answer", { question: "industry", answer: item.id }); }} className={`rounded-full border px-3.5 py-2 text-xs font-bold transition ${industry === item.id ? "border-emerald-300/35 bg-emerald-300/[0.08] text-white" : "border-white/10 text-white/55 hover:text-white"}`}>{item.label}</button>)}
-              </div>
+          <p id="calculator-finder-help" className="mt-3 max-w-xl text-sm leading-6 text-white/55">Elegí tu objetivo y te mostramos por dónde empezar. No necesitás registrarte para calcular.</p>
+          <fieldset aria-describedby="calculator-finder-help" className="mt-6">
+            <legend className="sr-only">Objetivo principal</legend>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {goals.map((item) => (
+                <label key={item.id} className={`cursor-pointer rounded-2xl border px-4 py-3 text-left text-sm font-bold transition focus-within:ring-2 focus-within:ring-emerald-300/55 focus-within:ring-offset-2 focus-within:ring-offset-[#080c09] ${goal === item.id ? "border-emerald-300/35 bg-emerald-300/[0.08] text-white" : "border-white/[0.08] bg-black/25 text-white/65 hover:border-white/15 hover:text-white"}`}>
+                  <input
+                    type="radio"
+                    name="calculator-goal"
+                    value={item.id}
+                    checked={goal === item.id}
+                    onChange={() => selectGoal(item.id)}
+                    className="sr-only"
+                  />
+                  <span className="text-emerald-200/65">{item.short}</span><span aria-hidden="true" className="mx-2 text-white/20">·</span>{item.label}
+                </label>
+              ))}
             </div>
+          </fieldset>
+          {goal === "industry" && (
+            <fieldset className="mt-4">
+              <legend className="text-xs font-semibold text-white/45">Elegí el tipo de negocio</legend>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {industries.map((item) => <label key={item.id} className={`cursor-pointer rounded-full border px-3.5 py-2 text-xs font-bold transition focus-within:ring-2 focus-within:ring-emerald-300/55 focus-within:ring-offset-2 focus-within:ring-offset-[#080c09] ${industry === item.id ? "border-emerald-300/35 bg-emerald-300/[0.08] text-white" : "border-white/10 text-white/55 hover:text-white"}`}><input type="radio" name="calculator-industry" value={item.id} checked={industry === item.id} onChange={() => { setIndustry(item.id); trackEvent("calculator_recommendation_answer", { question: "industry", answer: item.id }); }} className="sr-only" />{item.label}</label>)}
+              </div>
+            </fieldset>
           )}
         </div>
 
-        <div aria-live="polite" className="min-h-[230px] rounded-3xl border border-white/[0.08] bg-black/30 p-6 sm:p-7">
+        <div aria-live="polite" aria-atomic="true" className="min-h-[230px] rounded-3xl border border-white/[0.08] bg-black/30 p-6 sm:p-7">
           {recommendation ? <>
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-200/55">{recommendation.eyebrow}</p>
             <h3 className="mt-3 text-2xl font-bold tracking-tight text-white">Te recomendamos: {recommendation.title}</h3>
