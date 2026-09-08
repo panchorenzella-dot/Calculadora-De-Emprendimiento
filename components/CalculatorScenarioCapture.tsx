@@ -98,7 +98,9 @@ function capture(pathname: string): { draft: ScenarioDraft; hasResults: boolean 
   });
 
   const resultHeadings = Array.from(document.querySelectorAll("h2, h3")).filter(
-    (heading) => heading.textContent?.toLowerCase().includes("resultado")
+    (heading) =>
+      !heading.closest("[data-save-scenario-anchor]") &&
+      heading.textContent?.toLowerCase().includes("resultado"),
   );
   const resultContainers = resultHeadings
     .map((heading) => heading.parentElement)
