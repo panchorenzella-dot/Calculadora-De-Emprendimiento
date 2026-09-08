@@ -1,6 +1,8 @@
 "use client";
 
 import { type FormEvent, type ReactNode, useState } from "react";
+import { calculateRecuperoCapital } from "@/lib/calculations/investments";
+import { formatLocaleNumberInput, parseLocaleNumber, validateNumericFields } from "@/lib/numberInput";
 
 type Currency = "ARS" | "USD";
 
@@ -17,35 +19,11 @@ type Results = {
 };
 
 function parseInput(value: string) {
-  const cleanValue = value.replace(/\./g, "").replace(",", ".");
-  const parsed = Number(cleanValue);
-  return Number.isFinite(parsed) ? parsed : 0;
-}
-
-function addThousandsSeparator(value: string) {
-  return value.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  return parseLocaleNumber(value);
 }
 
 function formatInputValue(value: string) {
-  const cleanValue = value.replace(/[^\d,]/g, "");
-
-  if (!cleanValue) return "";
-
-  const hasComma = cleanValue.includes(",");
-  const [integerRaw, ...decimalParts] = cleanValue.split(",");
-
-  const integerPart = integerRaw.replace(/\D/g, "");
-  const decimalPart = decimalParts.join("").replace(/\D/g, "");
-
-  const formattedInteger = integerPart
-    ? addThousandsSeparator(integerPart)
-    : "";
-
-  if (hasComma) {
-    return `${formattedInteger},${decimalPart}`;
-  }
-
-  return formattedInteger;
+  return formatLocaleNumberInput(value);
 }
 
 function formatMoney(value: number, currency: Currency) {
@@ -88,74 +66,7 @@ function calculateResults({
   gananciaMensualNeta: number;
   mesesAnalisis: number;
 }): Results {
-  const safeInversionInicial = Math.max(0, inversionInicial);
-  const safeGananciaMensualNeta = Math.max(0, gananciaMensualNeta);
-  const safeMesesAnalisis = Math.max(0, mesesAnalisis);
-
-  const gananciaAcumulada = safeGananciaMensualNeta * safeMesesAnalisis;
-
-  const capitalRecuperado = Math.min(gananciaAcumulada, safeInversionInicial);
-
-  const capitalPendiente = Math.max(
-    safeInversionInicial - gananciaAcumulada,
-    0
-  );
-
-  const porcentajeRecuperado =
-    safeInversionInicial > 0
-      ? (capitalRecuperado / safeInversionInicial) * 100
-      : 0;
-
-  const mesesParaRecuperar =
-    safeGananciaMensualNeta > 0 && safeInversionInicial > 0
-      ? safeInversionInicial / safeGananciaMensualNeta
-      : null;
-
-  const recuperaDentroDelPeriodo =
-    mesesParaRecuperar !== null && mesesParaRecuperar <= safeMesesAnalisis;
-
-  const gananciaDespuesDeRecuperar = Math.max(
-    gananciaAcumulada - safeInversionInicial,
-    0
-  );
-
-  let estado = "Cargá una inversión y una ganancia mensual";
-
-  if (safeInversionInicial > 0 && safeGananciaMensualNeta === 0) {
-    estado = "No se recupera con ganancia mensual cero";
-  }
-
-  if (
-    safeInversionInicial > 0 &&
-    safeGananciaMensualNeta > 0 &&
-    recuperaDentroDelPeriodo
-  ) {
-    estado = "Recuperás la inversión dentro del período";
-  }
-
-  if (
-    safeInversionInicial > 0 &&
-    safeGananciaMensualNeta > 0 &&
-    !recuperaDentroDelPeriodo
-  ) {
-    estado = "Todavía falta recuperar capital";
-  }
-
-  if (safeInversionInicial === 0) {
-    estado = "No hay inversión inicial cargada";
-  }
-
-  return {
-    mesesParaRecuperar,
-    gananciaAcumulada,
-    capitalRecuperado,
-    capitalPendiente,
-    porcentajeRecuperado,
-    gananciaDespuesDeRecuperar,
-    estado,
-    recuperaDentroDelPeriodo,
-    mesesAnalisis: safeMesesAnalisis,
-  };
+  return calculateRecuperoCapital({ inversionInicial, gananciaMensualNeta, mesesAnalisis });
 }
 
 type InputFieldProps = {
@@ -198,9 +109,11 @@ function InputField({
 
         <input
           type="text"
+          aria-label={label}
           inputMode="decimal"
           value={value}
           onChange={(event) => onChange(formatInputValue(event.target.value))}
+          onFocus={(event) => event.currentTarget.select()}
           placeholder="0"
           className={`w-full rounded-2xl border border-zinc-800 bg-zinc-950 py-3 text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-emerald-300/50 ${leftPaddingClass} ${rightPaddingClass}`}
         />
@@ -276,11 +189,24 @@ export default function RecuperoDeCapitalPage() {
   const [mesesAnalisis, setMesesAnalisis] = useState("");
 
   const [results, setResults] = useState<Results | null>(null);
+  const [error, setError] = useState("");
 
   const moneyPrefix = currency === "ARS" ? "$" : "US$";
 
   function handleCalculate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    const validation = validateNumericFields([
+      { name: "initial", label: "Inversión inicial", value: inversionInicial, required: true, min: 0 },
+      { name: "profit", label: "Ganancia mensual neta", value: gananciaMensualNeta, required: true, min: 0 },
+      { name: "months", label: "Meses de análisis", value: mesesAnalisis, required: true, min: 1, max: 1200, integer: true },
+    ]);
+    if (!validation.valid || validation.values.initial <= 0) {
+      setError(validation.firstError || "La inversión inicial debe ser mayor que cero.");
+      setResults(null);
+      return;
+    }
+    setError("");
 
     const inversionInicialNumber = parseInput(inversionInicial);
     const gananciaMensualNetaNumber = parseInput(gananciaMensualNeta);
@@ -394,6 +320,8 @@ export default function RecuperoDeCapitalPage() {
                   />
                 </div>
               </div>
+
+              {error ? <p role="alert" className="rounded-xl border border-rose-300/20 bg-rose-300/[0.06] px-4 py-3 text-sm font-semibold text-rose-100">{error}</p> : null}
 
               <button
                 type="submit"

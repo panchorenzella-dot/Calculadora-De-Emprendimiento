@@ -4,8 +4,9 @@ import { type FormEvent, useMemo, useState } from "react";
 
 import Card from "@/components/Card";
 import MoneyInput, { Currency } from "@/components/MoneyInput";
+import { calculateRoi } from "@/lib/calculations/business";
 import { fmtMoney } from "@/lib/format";
-import { parseDigitsToNumber } from "@/lib/numberInput";
+import { parseDigitsToNumber, validateNumericFields } from "@/lib/numberInput";
 
 type Results = {
   gananciaNeta: number;
@@ -22,6 +23,7 @@ export default function Page() {
   const [costosTotales, setCostosTotales] = useState("");
   const [valorFinal, setValorFinal] = useState("");
   const [calc, setCalc] = useState<Results | null>(null);
+  const [error, setError] = useState("");
 
   const draftCalc = useMemo<Results>(() => {
     const inversion = parseDigitsToNumber(inversionInicial);
@@ -29,23 +31,35 @@ export default function Page() {
     const costos = parseDigitsToNumber(costosTotales);
     const finalValue = parseDigitsToNumber(valorFinal);
 
-    const gananciaNeta = ingresos + finalValue - inversion - costos;
-    const roi = inversion > 0 ? (gananciaNeta / inversion) * 100 : 0;
-
-    const retornoBruto = finalValue - inversion;
-    const margenSobreRetorno =
-      finalValue > 0 ? (gananciaNeta / finalValue) * 100 : 0;
+    const result = calculateRoi({
+      initialInvestment: inversion,
+      generatedRevenue: ingresos,
+      totalCosts: costos,
+      finalValue,
+    });
 
     return {
-      gananciaNeta,
-      roi,
-      retornoBruto,
-      margenSobreRetorno,
+      gananciaNeta: result.netProfit,
+      roi: result.roiPct,
+      retornoBruto: result.grossReturn,
+      margenSobreRetorno: result.returnMarginPct,
     };
   }, [inversionInicial, ingresosGenerados, costosTotales, valorFinal]);
 
   function handleCalculate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const validation = validateNumericFields([
+      { name: "investment", label: "Inversión inicial", value: inversionInicial, required: true, min: 0 },
+      { name: "revenue", label: "Ingresos generados", value: ingresosGenerados, min: 0 },
+      { name: "costs", label: "Costos totales", value: costosTotales, min: 0 },
+      { name: "finalValue", label: "Valor final obtenido", value: valorFinal, min: 0 },
+    ]);
+    if (!validation.valid || validation.values.investment <= 0) {
+      setError(validation.firstError || "La inversión inicial debe ser mayor que cero.");
+      setCalc(null);
+      return;
+    }
+    setError("");
     setCalc(draftCalc);
   }
 
@@ -96,6 +110,7 @@ export default function Page() {
               currency={currency}
             />
           </div>
+          {error ? <p role="alert" className="mt-5 rounded-xl border border-rose-300/20 bg-rose-300/[0.06] px-4 py-3 text-sm font-semibold text-rose-100">{error}</p> : null}
           <button type="submit" className="mt-6 w-full rounded-full bg-white px-4 py-3 text-sm font-black text-zinc-950 transition hover:bg-zinc-200">
             Calcular
           </button>

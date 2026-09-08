@@ -17,7 +17,7 @@ import {
 } from "@/components/CalculatorPrimitives";
 import { calculateIibb } from "@/lib/argentinaCalculators";
 import { fmtNum } from "@/lib/format";
-import { parseDigitsToNumber } from "@/lib/numberInput";
+import { parseDigitsToNumber, validateNumericFields } from "@/lib/numberInput";
 
 const jurisdictions = [
   "Ciudad Autónoma de Buenos Aires", "Buenos Aires", "Catamarca", "Chaco", "Chubut", "Córdoba", "Corrientes", "Entre Ríos", "Formosa", "Jujuy", "La Pampa", "La Rioja", "Mendoza", "Misiones", "Neuquén", "Río Negro", "Salta", "San Juan", "San Luis", "Santa Cruz", "Santa Fe", "Santiago del Estero", "Tierra del Fuego", "Tucumán",
@@ -34,6 +34,7 @@ export default function IngresosBrutosClient() {
   const [bankCollections, setBankCollections] = useState("");
   const [previousBalance, setPreviousBalance] = useState("");
   const [results, setResults] = useState<ReturnType<typeof calculateIibb> | null>(null);
+  const [error, setError] = useState("");
 
   const draft = useMemo(() => calculateIibb({
     taxableRevenue: parseDigitsToNumber(taxableRevenue),
@@ -47,13 +48,28 @@ export default function IngresosBrutosClient() {
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const validation = validateNumericFields([
+      { name: "revenue", label: "Facturación gravada del período", value: taxableRevenue, required: true, min: 0 },
+      { name: "rate", label: "Alícuota aplicable", value: rate, required: true, min: 0, max: 100 },
+      { name: "minimum", label: "Impuesto mínimo del período", value: minimumTax, min: 0 },
+      { name: "withholdings", label: "Retenciones sufridas", value: withholdings, min: 0 },
+      { name: "perceptions", label: "Percepciones sufridas", value: perceptions, min: 0 },
+      { name: "bank", label: "Recaudaciones bancarias", value: bankCollections, min: 0 },
+      { name: "balance", label: "Saldo a favor anterior", value: previousBalance, min: 0 },
+    ]);
+    if (!validation.valid || validation.values.revenue <= 0) {
+      setError(validation.firstError || "La facturación gravada debe ser mayor que cero.");
+      setResults(null);
+      return;
+    }
+    setError("");
     setResults(draft);
   }
 
   return <main>
     <CalculatorHeader eyebrow="Impuestos provinciales · Argentina" title="Calculadora de Ingresos Brutos" description="Estimá el anticipo de Ingresos Brutos de una jurisdicción usando tu facturación gravada, alícuota y recaudaciones sufridas." />
     <div className="grid gap-6 lg:grid-cols-2">
-      <CalculatorForm onSubmit={submit}>
+      <CalculatorForm onSubmit={submit} error={error}>
         <SelectField label="Jurisdicción" value={jurisdiction} onChange={setJurisdiction} hint="La selección identifica el escenario; la alícuota se carga manualmente porque depende de la actividad y la normativa local.">
           {jurisdictions.map((item) => <option key={item} value={item}>{item}</option>)}
         </SelectField>

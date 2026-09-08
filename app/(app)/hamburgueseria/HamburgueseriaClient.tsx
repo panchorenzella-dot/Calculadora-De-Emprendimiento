@@ -1,6 +1,8 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { calculateHamburgueseria } from "@/lib/calculations/business";
+import { formatLocaleNumberInput, parseLocaleNumber, validateNumericFields } from "@/lib/numberInput";
 
 type Currency = "ARS" | "USD";
 
@@ -19,33 +21,11 @@ type Results = {
 };
 
 function parseInput(value: string) {
-  const normalizedValue = value
-    .replace(/\./g, "")
-    .replace(",", ".")
-    .replace(/[^0-9.]/g, "");
-
-  const parsed = Number(normalizedValue);
-  return Number.isFinite(parsed) ? parsed : 0;
+  return parseLocaleNumber(value);
 }
 
 function formatInputValue(value: string) {
-  const cleanedValue = value.replace(/[^0-9,]/g, "");
-  const hasDecimalComma = cleanedValue.includes(",");
-
-  const [integerPartRaw, decimalPartRaw = ""] = cleanedValue.split(",");
-  const integerPart = integerPartRaw.replace(/\D/g, "");
-
-  const formattedInteger =
-    integerPart.length > 0
-      ? new Intl.NumberFormat("es-AR").format(Number(integerPart))
-      : "";
-
-  if (hasDecimalComma) {
-    const decimalPart = decimalPartRaw.replace(/\D/g, "").slice(0, 2);
-    return `${formattedInteger},${decimalPart}`;
-  }
-
-  return formattedInteger;
+  return formatLocaleNumberInput(value);
 }
 
 function formatMoney(value: number, currency: Currency) {
@@ -105,6 +85,7 @@ function InputField({
           inputMode="decimal"
           value={value}
           onChange={(event) => onChange(formatInputValue(event.target.value))}
+          onFocus={(event) => event.currentTarget.select()}
           placeholder="0"
           className={`w-full appearance-none rounded-2xl border border-zinc-800 bg-zinc-950 py-3 text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-emerald-300/50 ${
             prefix ? "pl-16 pr-4" : "px-4"
@@ -166,11 +147,27 @@ export default function HamburgueseriaPage() {
   const [costosFijos, setCostosFijos] = useState("");
 
   const [results, setResults] = useState<Results | null>(null);
+  const [error, setError] = useState("");
 
   const moneyPrefix = currency === "ARS" ? "$" : "US$";
 
   function handleCalculate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    const validation = validateNumericFields([
+      { name: "cost", label: "Costo de hamburguesa", value: costoHamburguesa, required: true, min: 0 },
+      { name: "other", label: "Otros gastos por hamburguesa", value: otrosGastos, min: 0 },
+      { name: "price", label: "Precio de venta por hamburguesa", value: precioVenta, required: true, min: 0 },
+      { name: "units", label: "Hamburguesas vendidas por día", value: hamburguesasPorDia, required: true, min: 0, integer: true },
+      { name: "days", label: "Días abiertos por mes", value: diasAbiertos, required: true, min: 1, max: 31, integer: true },
+      { name: "fixed", label: "Costos fijos mensuales", value: costosFijos, min: 0 },
+    ]);
+    if (!validation.valid || validation.values.price <= 0 || validation.values.units <= 0) {
+      setError(validation.firstError || (validation.values.price <= 0 ? "El precio de venta debe ser mayor que cero." : "Las hamburguesas por día deben ser mayores que cero."));
+      setResults(null);
+      return;
+    }
+    setError("");
 
     const costoHamburguesaNumber = parseInput(costoHamburguesa);
     const otrosGastosNumber = parseInput(otrosGastos);
@@ -179,41 +176,14 @@ export default function HamburgueseriaPage() {
     const diasAbiertosNumber = parseInput(diasAbiertos);
     const costosFijosNumber = parseInput(costosFijos);
 
-    const costoTotalUnitario = costoHamburguesaNumber + otrosGastosNumber;
-    const gananciaPorUnidad = precioVentaNumber - costoTotalUnitario;
-
-    const margenGanancia =
-      precioVentaNumber > 0
-        ? (gananciaPorUnidad / precioVentaNumber) * 100
-        : 0;
-
-    const hamburguesasPorMes = hamburguesasPorDiaNumber * diasAbiertosNumber;
-    const ventasMensuales = precioVentaNumber * hamburguesasPorMes;
-    const costoVariableMensual = costoTotalUnitario * hamburguesasPorMes;
-    const gananciaBrutaMensual = ventasMensuales - costoVariableMensual;
-    const gananciaNetaMensual = gananciaBrutaMensual - costosFijosNumber;
-
-    const puntoEquilibrioMensual =
-      gananciaPorUnidad > 0 ? costosFijosNumber / gananciaPorUnidad : null;
-
-    const puntoEquilibrioDiario =
-      puntoEquilibrioMensual !== null && diasAbiertosNumber > 0
-        ? puntoEquilibrioMensual / diasAbiertosNumber
-        : null;
-
-    setResults({
+    setResults(calculateHamburgueseria({
       costoHamburguesa: costoHamburguesaNumber,
-      costoTotalUnitario,
-      gananciaPorUnidad,
-      margenGanancia,
-      hamburguesasPorMes,
-      ventasMensuales,
-      costoVariableMensual,
-      gananciaBrutaMensual,
-      gananciaNetaMensual,
-      puntoEquilibrioMensual,
-      puntoEquilibrioDiario,
-    });
+      otrosGastos: otrosGastosNumber,
+      precioVenta: precioVentaNumber,
+      hamburguesasPorDia: hamburguesasPorDiaNumber,
+      diasAbiertos: diasAbiertosNumber,
+      costosFijos: costosFijosNumber,
+    }));
   }
 
   const emptyResults: Results = {
@@ -351,6 +321,8 @@ export default function HamburgueseriaPage() {
                   helper="Incluye alquiler, sueldos, luz, gas, agua, internet, contador, marketing y mantenimiento."
                 />
               </div>
+
+              {error ? <p role="alert" className="rounded-xl border border-rose-300/20 bg-rose-300/[0.06] px-4 py-3 text-sm font-semibold text-rose-100">{error}</p> : null}
 
               <button
                 type="submit"

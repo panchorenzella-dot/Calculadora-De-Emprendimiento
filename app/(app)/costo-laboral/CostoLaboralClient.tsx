@@ -17,7 +17,7 @@ import {
 } from "@/components/CalculatorPrimitives";
 import { calculateLaborCost } from "@/lib/argentinaCalculators";
 import { fmtNum } from "@/lib/format";
-import { parseDigitsToNumber } from "@/lib/numberInput";
+import { parseDigitsToNumber, validateNumericFields } from "@/lib/numberInput";
 
 type EmployerType = "general" | "large-services" | "custom";
 
@@ -33,6 +33,7 @@ export default function CostoLaboralClient() {
   const [otherCosts, setOtherCosts] = useState("");
   const [vacationDays, setVacationDays] = useState("14");
   const [results, setResults] = useState<ReturnType<typeof calculateLaborCost> | null>(null);
+  const [error, setError] = useState("");
   const socialSecurityRate = employerType === "general" ? 18 : employerType === "large-services" ? 20.4 : parseDecimalInput(customSocialRate);
 
   const draft = useMemo(() => calculateLaborCost({
@@ -49,13 +50,30 @@ export default function CostoLaboralClient() {
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const validation = validateNumericFields([
+      { name: "salary", label: "Sueldo bruto mensual", value: grossSalary, required: true, min: 0 },
+      ...(employerType === "custom" ? [{ name: "social", label: "Contribuciones de seguridad social", value: customSocialRate, required: true, min: 0, max: 100 }] : []),
+      { name: "health", label: "Contribución a obra social", value: healthInsuranceRate, required: true, min: 0, max: 100 },
+      { name: "art", label: "ART variable estimada", value: artRate, required: true, min: 0, max: 100 },
+      { name: "artFixed", label: "Componente fijo de ART", value: artFixed, min: 0 },
+      { name: "agreement", label: "Contribución adicional de convenio", value: collectiveAgreementRate, min: 0, max: 100 },
+      { name: "insurance", label: "Seguro de vida obligatorio", value: lifeInsurance, min: 0 },
+      { name: "other", label: "Otros costos mensuales", value: otherCosts, min: 0 },
+      { name: "vacation", label: "Días de vacaciones anuales", value: vacationDays, required: true, min: 0, max: 365, integer: true },
+    ]);
+    if (!validation.valid || validation.values.salary <= 0) {
+      setError(validation.firstError || "El sueldo bruto debe ser mayor que cero.");
+      setResults(null);
+      return;
+    }
+    setError("");
     setResults(draft);
   }
 
   return <main>
     <CalculatorHeader eyebrow="Empleo · Argentina" title="Calculadora de costo laboral" description="Estimá el costo mensual de contratar a una persona en relación de dependencia, con cargas patronales, obra social, ART y provisiones." />
     <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-      <CalculatorForm onSubmit={submit}>
+      <CalculatorForm onSubmit={submit} error={error}>
         <MoneyField label="Sueldo bruto mensual" value={grossSalary} onChange={setGrossSalary} />
         <SelectField label="Tipo de empleador" value={employerType} onChange={(value) => setEmployerType(value as EmployerType)} hint="Referencia general. Beneficios, detracciones y regímenes especiales pueden modificar la carga efectiva.">
           <option value="general">Empleador general / MiPyME · 18%</option>

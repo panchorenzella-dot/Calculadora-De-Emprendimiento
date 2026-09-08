@@ -1,0 +1,174 @@
+{
+  "/cafeteria": [
+    {
+      "id": "cafeteria-barrio",
+      "title": "Cafetería de barrio",
+      "description": "Salón pequeño con consumo promedio y apertura casi diaria.",
+      "values": {
+        "Costo promedio por pedido": "1800",
+        "Otros gastos por pedido": "350",
+        "Ticket promedio por cliente": "5200",
+        "Clientes por día": "55",
+        "Días abiertos por mes": "26",
+        "Costos fijos mensuales": "2800000"
+      }
+    },
+    {
+      "id": "cafe-al-paso",
+      "title": "Café al paso",
+      "description": "Operación ágil, ticket menor y mayor rotación diaria.",
+      "values": {
+        "Costo promedio por pedido": "1250",
+        "Otros gastos por pedido": "250",
+        "Ticket promedio por cliente": "3400",
+        "Clientes por día": "85",
+        "Días abiertos por mes": "26",
+        "Costos fijos mensuales": "2100000"
+      }
+    }
+  ],
+  "/hamburgueseria": [
+    {
+      "id": "hamburgueseria-delivery",
+      "title": "Hamburguesería con delivery",
+      "description": "Venta directa y por aplicaciones, con costos operativos completos.",
+      "values": {
+        "Costo de hamburguesa": "3600",
+        "Otros gastos por hamburguesa": "900",
+        "Precio de venta por hamburguesa": "9000",
+        "Hamburguesas vendidas por día": "45",
+        "Días abiertos por mes": "26",
+        "Costos fijos mensuales": "3500000"
+      }
+    },
+    {
+      "id": "food-truck",
+      "title": "Food truck",
+      "description": "Menor estructura fija y concentración de ventas en jornadas fuertes.",
+      "values": {
+        "Costo de hamburguesa": "3000",
+        "Otros gastos por hamburguesa": "650",
+        "Precio de venta por hamburguesa": "7600",
+        "Hamburguesas vendidas por día": "70",
+        "Días abiertos por mes": "20",
+        "Costos fijos mensuales": "1900000"
+      }
+    }
+  ],
+  "/distribuidora": [
+    {
+      "id": "distribuidora-local",
+      "title": "Distribuidora local",
+      "description": "Cartera minorista, volumen moderado y reparto propio.",
+      "values": {
+        "Costo de compra por unidad": "4500",
+        "Precio de venta por unidad": "6200",
+        "Otros gastos por unidad": "350",
+        "Unidades vendidas por día": "80",
+        "Días de venta por mes": "24",
+        "Costos fijos mensuales": "3200000",
+        "Capital invertido en mercadería": "12000000"
+      }
+    },
+    {
+      "id": "distribuidora-mayorista",
+      "title": "Operación mayorista",
+      "description": "Más capital inmovilizado, volumen alto y margen unitario acotado.",
+      "values": {
+        "Costo de compra por unidad": "9500",
+        "Precio de venta por unidad": "12500",
+        "Otros gastos por unidad": "550",
+        "Unidades vendidas por día": "120",
+        "Días de venta por mes": "22",
+        "Costos fijos mensuales": "4800000",
+        "Capital invertido en mercadería": "28000000"
+      }
+    }
+  ],
+  "/reventa": [
+    {
+      "id": "reventa-online",
+      "title": "Tienda online",
+      "description": "Producto físico con comisión, embalaje y publicidad por operación.",
+      "values": {
+        "Costo de compra": "12000",
+        "Precio de venta": "18500",
+        "Gastos por venta": "1800",
+        "Unidades vendidas por mes": "90",
+        "Costos fijos mensuales": "850000",
+        "Capital invertido": "1600000"
+      }
+    },
+    {
+      "id": "reventa-local",
+      "title": "Local de reventa",
+      "description": "Stock permanente, atención presencial y estructura mensual mayor.",
+      "values": {
+        "Costo de compra": "22000",
+        "Precio de venta": "34000",
+        "Gastos por venta": "1600",
+        "Unidades vendidas por mes": "125",
+        "Costos fijos mensuales": "2400000",
+        "Capital invertido": "6200000"
+      }
+    }
+  ],
+  "/produccion": [
+    {
+      "id": "taller-artesanal",
+      "title": "Taller artesanal",
+      "description": "Producción manual en series cortas con packaging individual.",
+      "values": {
+        "Costo de producción por unidad": "2400",
+        "Packaging por unidad": "500",
+        "Otros gastos por unidad": "300",
+        "Precio de venta por unidad": "6200",
+        "Unidades producidas por día": "60",
+        "Días de producción por mes": "22",
+        "Costos fijos mensuales": "2600000"
+      }
+    },
+    {
+      "id": "produccion-textil",
+      "title": "Producción textil",
+      "description": "Prendas de baja escala con insumos, empaque y merma incluidos.",
+      "values": {
+        "Costo de producción por unidad": "9000",
+        "Packaging por unidad": "750",
+        "Otros gastos por unidad": "1250",
+        "Precio de venta por unidad": "21000",
+        "Unidades producidas por día": "18",
+        "Días de producción por mes": "22",
+        "Costos fijos mensuales": "3100000"
+      }
+    }
+  ],
+  "/intermediarios": [
+    {
+      "id": "intermediacion-inmobiliaria",
+      "title": "Intermediación inmobiliaria",
+      "description": "Pocas operaciones de valor alto con comisión porcentual.",
+      "values": {
+        "Valor promedio de operación": "80000000",
+        "Comisión que cobrás": "3",
+        "Gastos por operación": "150000",
+        "Operaciones cerradas por mes": "2",
+        "Costos fijos mensuales": "1000000",
+        "Capital invertido": "500000"
+      }
+    },
+    {
+      "id": "intermediacion-servicios",
+      "title": "Intermediación de servicios",
+      "description": "Más operaciones mensuales, comisión mayor y tickets medianos.",
+      "values": {
+        "Valor promedio de operación": "2500000",
+        "Comisión que cobrás": "10",
+        "Gastos por operación": "30000",
+        "Operaciones cerradas por mes": "8",
+        "Costos fijos mensuales": "600000",
+        "Capital invertido": "300000"
+      }
+    }
+  ]
+}

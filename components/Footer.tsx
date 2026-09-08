@@ -14,7 +14,7 @@ export default function Footer() {
   const growtellaUrl = process.env.NEXT_PUBLIC_GROWTELLA_URL || "https://www.growtella.com";
 
   return (
-    <footer className="border-t border-white/10 px-6 py-7 text-xs text-white/55">
+    <footer className="border-t border-white/10 px-6 py-7 text-xs text-white/55 print:hidden">
       <div className="mx-auto flex max-w-6xl flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p>© {new Date().getFullYear()} Calculadora Emprendedora</p>

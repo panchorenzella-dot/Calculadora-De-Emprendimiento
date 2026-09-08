@@ -1,16 +1,10 @@
 "use client";
 
 import { type FormEvent, type ReactNode, useState } from "react";
+import { calculateMetaAhorro } from "@/lib/calculations/investments";
+import { formatLocaleNumberInput, parseLocaleNumber, validateNumericFields } from "@/lib/numberInput";
 
 type Currency = "ARS" | "USD";
-
-type Simulation = {
-  valorFinal: number;
-  aportesMensualesTotales: number;
-  totalAportado: number;
-  rendimientoGenerado: number;
-  ultimoAporteMensual: number;
-};
 
 type Results = {
   ahorroMensualNecesario: number | null;
@@ -29,34 +23,11 @@ type Results = {
 };
 
 function parseInput(value: string) {
-  const normalizedValue = value
-    .replace(/\./g, "")
-    .replace(",", ".")
-    .replace(/[^0-9.]/g, "");
-
-  const parsed = Number(normalizedValue);
-  return Number.isFinite(parsed) ? parsed : 0;
+  return parseLocaleNumber(value);
 }
 
 function formatInputValue(value: string) {
-  const cleanedValue = value.replace(/\./g, "").replace(/[^0-9,]/g, "");
-  const hasDecimalComma = cleanedValue.includes(",");
-
-  const [integerPartRaw, ...decimalParts] = cleanedValue.split(",");
-  const integerPart = integerPartRaw.replace(/\D/g, "");
-  const decimalPartRaw = decimalParts.join("").replace(/\D/g, "");
-
-  const formattedInteger =
-    integerPart.length > 0
-      ? new Intl.NumberFormat("es-AR").format(Number(integerPart))
-      : "";
-
-  if (hasDecimalComma) {
-    const decimalPart = decimalPartRaw.slice(0, 2);
-    return `${formattedInteger},${decimalPart}`;
-  }
-
-  return formattedInteger;
+  return formatLocaleNumberInput(value);
 }
 
 function formatMoney(value: number, currency: Currency) {
@@ -91,209 +62,6 @@ function formatMonthlySaving(value: number | null, currency: Currency) {
   return formatMoney(value, currency);
 }
 
-function simulateGoal({
-  ahorroInicial,
-  ahorroMensualInicial,
-  meses,
-  rendimientoAnual,
-  aumentoAnualAporte,
-}: {
-  ahorroInicial: number;
-  ahorroMensualInicial: number;
-  meses: number;
-  rendimientoAnual: number;
-  aumentoAnualAporte: number;
-}): Simulation {
-  const safeAhorroInicial = Math.max(0, ahorroInicial);
-  const safeAhorroMensualInicial = Math.max(0, ahorroMensualInicial);
-  const safeMeses = Math.max(0, Math.round(meses));
-  const safeRendimientoAnual = Math.max(0, rendimientoAnual);
-  const safeAumentoAnualAporte = Math.max(0, aumentoAnualAporte);
-
-  const tasaMensual = Math.pow(1 + safeRendimientoAnual / 100, 1 / 12) - 1;
-  const aumentoAnualDecimal = safeAumentoAnualAporte / 100;
-
-  let saldo = safeAhorroInicial;
-  let aporteMensual = safeAhorroMensualInicial;
-  let aportesMensualesTotales = 0;
-  let ultimoAporteMensual = 0;
-
-  for (let mes = 1; mes <= safeMeses; mes++) {
-    saldo = saldo * (1 + tasaMensual);
-
-    saldo = saldo + aporteMensual;
-    aportesMensualesTotales = aportesMensualesTotales + aporteMensual;
-    ultimoAporteMensual = aporteMensual;
-
-    if (mes % 12 === 0) {
-      aporteMensual = aporteMensual * (1 + aumentoAnualDecimal);
-    }
-  }
-
-  const totalAportado = safeAhorroInicial + aportesMensualesTotales;
-  const rendimientoGenerado = Math.max(saldo - totalAportado, 0);
-
-  return {
-    valorFinal: saldo,
-    aportesMensualesTotales,
-    totalAportado,
-    rendimientoGenerado,
-    ultimoAporteMensual,
-  };
-}
-
-function findRequiredMonthlySaving({
-  metaAhorro,
-  ahorroInicial,
-  meses,
-  rendimientoAnual,
-  aumentoAnualAporte,
-}: {
-  metaAhorro: number;
-  ahorroInicial: number;
-  meses: number;
-  rendimientoAnual: number;
-  aumentoAnualAporte: number;
-}) {
-  const safeMetaAhorro = Math.max(0, metaAhorro);
-  const safeAhorroInicial = Math.max(0, ahorroInicial);
-  const safeMeses = Math.max(0, Math.round(meses));
-
-  if (safeMetaAhorro <= 0) return 0;
-  if (safeAhorroInicial >= safeMetaAhorro) return 0;
-  if (safeMeses <= 0) return null;
-
-  const withoutMonthlySaving = simulateGoal({
-    ahorroInicial: safeAhorroInicial,
-    ahorroMensualInicial: 0,
-    meses: safeMeses,
-    rendimientoAnual,
-    aumentoAnualAporte,
-  });
-
-  if (withoutMonthlySaving.valorFinal >= safeMetaAhorro) return 0;
-
-  let low = 0;
-  let high = Math.max((safeMetaAhorro - safeAhorroInicial) / safeMeses, 1);
-
-  for (let i = 0; i < 80; i++) {
-    const simulation = simulateGoal({
-      ahorroInicial: safeAhorroInicial,
-      ahorroMensualInicial: high,
-      meses: safeMeses,
-      rendimientoAnual,
-      aumentoAnualAporte,
-    });
-
-    if (simulation.valorFinal >= safeMetaAhorro) {
-      break;
-    }
-
-    high = high * 2;
-  }
-
-  for (let i = 0; i < 100; i++) {
-    const mid = (low + high) / 2;
-
-    const simulation = simulateGoal({
-      ahorroInicial: safeAhorroInicial,
-      ahorroMensualInicial: mid,
-      meses: safeMeses,
-      rendimientoAnual,
-      aumentoAnualAporte,
-    });
-
-    if (simulation.valorFinal >= safeMetaAhorro) {
-      high = mid;
-    } else {
-      low = mid;
-    }
-  }
-
-  return high;
-}
-
-function calculateResults({
-  metaAhorro,
-  ahorroInicial,
-  meses,
-  rendimientoAnual,
-  aumentoAnualAporte,
-}: {
-  metaAhorro: number;
-  ahorroInicial: number;
-  meses: number;
-  rendimientoAnual: number;
-  aumentoAnualAporte: number;
-}): Results {
-  const safeMetaAhorro = Math.max(0, metaAhorro);
-  const safeAhorroInicial = Math.max(0, ahorroInicial);
-  const safeMeses = Math.max(0, Math.round(meses));
-
-  const ahorroMensualNecesario = findRequiredMonthlySaving({
-    metaAhorro: safeMetaAhorro,
-    ahorroInicial: safeAhorroInicial,
-    meses: safeMeses,
-    rendimientoAnual,
-    aumentoAnualAporte,
-  });
-
-  const simulation = simulateGoal({
-    ahorroInicial: safeAhorroInicial,
-    ahorroMensualInicial: ahorroMensualNecesario ?? 0,
-    meses: safeMeses,
-    rendimientoAnual,
-    aumentoAnualAporte,
-  });
-
-  const montoFaltaJuntar = Math.max(safeMetaAhorro - safeAhorroInicial, 0);
-
-  const porcentajeCubiertoInicial =
-    safeMetaAhorro > 0 ? (safeAhorroInicial / safeMetaAhorro) * 100 : 0;
-
-  const porcentajeMetaFinal =
-    safeMetaAhorro > 0 ? (simulation.valorFinal / safeMetaAhorro) * 100 : 0;
-
-  let estado = "Cargá una meta de ahorro";
-
-  if (safeMetaAhorro > 0 && safeAhorroInicial >= safeMetaAhorro) {
-    estado = "Ya alcanzaste la meta";
-  }
-
-  if (
-    safeMetaAhorro > 0 &&
-    safeAhorroInicial < safeMetaAhorro &&
-    safeMeses <= 0
-  ) {
-    estado = "Necesitás cargar un plazo";
-  }
-
-  if (
-    safeMetaAhorro > 0 &&
-    safeAhorroInicial < safeMetaAhorro &&
-    safeMeses > 0 &&
-    ahorroMensualNecesario !== null
-  ) {
-    estado = "Meta posible con ahorro mensual";
-  }
-
-  return {
-    ahorroMensualNecesario,
-    metaAhorro: safeMetaAhorro,
-    ahorroInicial: safeAhorroInicial,
-    montoFaltaJuntar,
-    valorFinalEstimado: simulation.valorFinal,
-    totalAportado: simulation.totalAportado,
-    aportesMensualesTotales: simulation.aportesMensualesTotales,
-    rendimientoGenerado: simulation.rendimientoGenerado,
-    porcentajeCubiertoInicial,
-    porcentajeMetaFinal,
-    ultimoAporteMensual: simulation.ultimoAporteMensual,
-    meses: safeMeses,
-    estado,
-  };
-}
-
 type InputFieldProps = {
   label: string;
   value: string;
@@ -326,9 +94,11 @@ function InputField({
 
         <input
           type="text"
+          aria-label={label}
           inputMode="decimal"
           value={value}
           onChange={(event) => onChange(formatInputValue(event.target.value))}
+          onFocus={(event) => event.currentTarget.select()}
           placeholder="0"
           className={`w-full appearance-none rounded-2xl border border-zinc-800 bg-zinc-950 py-3 text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-emerald-300/50 ${
             prefix ? "pl-16" : "pl-4"
@@ -408,13 +178,28 @@ export default function MetaDeAhorroPage() {
   const [aumentoAnualAporte, setAumentoAnualAporte] = useState("");
 
   const [results, setResults] = useState<Results | null>(null);
+  const [error, setError] = useState("");
 
   const moneyPrefix = currency === "ARS" ? "$" : "US$";
 
   function handleCalculate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const calculatedResults = calculateResults({
+    const validation = validateNumericFields([
+      { name: "target", label: "Meta de ahorro", value: metaAhorro, required: true, min: 0 },
+      { name: "initial", label: "Ahorro inicial", value: ahorroInicial, min: 0 },
+      { name: "months", label: "Plazo para alcanzar la meta", value: meses, required: true, min: 1, max: 1200, integer: true },
+      { name: "rate", label: "Rendimiento anual estimado", value: rendimientoAnual, min: 0, max: 10000 },
+      { name: "increase", label: "Aumento anual del aporte", value: aumentoAnualAporte, min: 0, max: 10000 },
+    ]);
+    if (!validation.valid || validation.values.target <= 0) {
+      setError(validation.firstError || "La meta de ahorro debe ser mayor que cero.");
+      setResults(null);
+      return;
+    }
+    setError("");
+
+    const calculatedResults = calculateMetaAhorro({
       metaAhorro: parseInput(metaAhorro),
       ahorroInicial: parseInput(ahorroInicial),
       meses: parseInput(meses),
@@ -552,6 +337,8 @@ export default function MetaDeAhorroPage() {
                   />
                 </div>
               </div>
+
+              {error ? <p role="alert" className="rounded-xl border border-rose-300/20 bg-rose-300/[0.06] px-4 py-3 text-sm font-semibold text-rose-100">{error}</p> : null}
 
               <button
                 type="submit"

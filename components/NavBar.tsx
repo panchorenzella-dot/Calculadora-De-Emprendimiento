@@ -57,7 +57,7 @@ export default function Navbar() {
     }`;
 
   return (
-    <header className="border-b border-white/10 bg-[#050605]">
+    <header className="border-b border-white/10 bg-[#050605] print:hidden">
       {!signedIn && !pathname.startsWith("/perfil") && (
         <div className="border-b border-white/10 bg-[#0a0b0a] text-white">
           <div className="mx-auto flex min-h-9 max-w-6xl items-center justify-center gap-2 px-4 py-2 text-center text-xs font-bold sm:text-sm">

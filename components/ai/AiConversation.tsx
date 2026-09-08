@@ -22,6 +22,7 @@ type AiConversationStreamProps = {
   loading: boolean;
   loadingHistory: boolean;
   error: string;
+  errorRequestId?: string | null;
   notice: string;
   copiedMessageIndex: number | null;
   onCopyMessage: (index: number, content: string) => void;
@@ -120,7 +121,7 @@ function HistoryLoading() {
   );
 }
 
-export function AiConversationStream({ messages, calculatorName, loading, loadingHistory, error, notice, copiedMessageIndex, onCopyMessage, onRetry }: AiConversationStreamProps) {
+export function AiConversationStream({ messages, calculatorName, loading, loadingHistory, error, errorRequestId, notice, copiedMessageIndex, onCopyMessage, onRetry }: AiConversationStreamProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const firstAssistantIndex = useMemo(() => messages.findIndex((item) => item.role === "assistant"), [messages]);
 
@@ -202,7 +203,11 @@ export function AiConversationStream({ messages, calculatorName, loading, loadin
 
             {error && (
               <div role="alert" className="rounded-2xl border border-red-300/15 bg-red-500/[0.065] p-4 text-sm leading-6 text-red-50/82 sm:flex sm:items-center sm:justify-between sm:gap-4">
-                <div><p className="font-bold text-red-50/90">No pudimos completar la consulta</p><p className="mt-0.5">{error}</p></div>
+                <div>
+                  <p className="font-bold text-red-50/90">No pudimos completar la consulta</p>
+                  <p className="mt-0.5">{error}</p>
+                  {errorRequestId && <p className="mt-1 text-[11px] text-red-50/45">Referencia: <code>{errorRequestId}</code></p>}
+                </div>
                 {onRetry && <button type="button" onClick={onRetry} className="mt-3 shrink-0 rounded-full border border-red-200/20 bg-black/20 px-3.5 py-2 text-xs font-bold text-red-50/85 transition hover:bg-red-100/10 hover:text-white sm:mt-0">Volver a intentar</button>}
               </div>
             )}

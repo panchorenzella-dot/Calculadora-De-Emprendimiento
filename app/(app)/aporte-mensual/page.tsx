@@ -1,6 +1,8 @@
 "use client";
 
 import { type FormEvent, type ReactNode, useState } from "react";
+import { calculateAporteMensual } from "@/lib/calculations/investments";
+import { formatLocaleNumberInput, parseLocaleNumber, validateNumericFields } from "@/lib/numberInput";
 
 type Currency = "ARS" | "USD";
 
@@ -21,21 +23,11 @@ type Results = {
 };
 
 function parseInput(value: string) {
-  const parsed = Number(value.replace(/\./g, "").replace(",", "."));
-  return Number.isFinite(parsed) ? parsed : 0;
+  return parseLocaleNumber(value);
 }
 
 function formatInputValue(value: string) {
-  const cleanedValue = value.replace(/[^0-9,]/g, "");
-  const hasDecimalComma = cleanedValue.includes(",");
-  const [integerPartRaw, decimalPartRaw = ""] = cleanedValue.split(",");
-  const integerPart = integerPartRaw.replace(/\D/g, "");
-  const formattedInteger = integerPart
-    ? new Intl.NumberFormat("es-AR").format(Number(integerPart))
-    : "";
-
-  if (!hasDecimalComma) return formattedInteger;
-  return `${formattedInteger},${decimalPartRaw.replace(/\D/g, "").slice(0, 2)}`;
+  return formatLocaleNumberInput(value);
 }
 
 function formatMoney(value: number, currency: Currency) {
@@ -59,129 +51,6 @@ function formatNumber(value: number) {
 function formatPercent(value: number) {
   const safeValue = Number.isFinite(value) ? value : 0;
   return `${safeValue.toFixed(2)} %`;
-}
-
-function simulateMonthlyInvestment({
-  capitalInicial,
-  aporteMensual,
-  anos,
-  rendimientoAnual,
-  aumentoAnualAporte,
-}: {
-  capitalInicial: number;
-  aporteMensual: number;
-  anos: number;
-  rendimientoAnual: number;
-  aumentoAnualAporte: number;
-}) {
-  const safeCapitalInicial = Math.max(0, capitalInicial);
-  const safeAporteMensual = Math.max(0, aporteMensual);
-  const safeAnos = Math.max(0, anos);
-  const safeRendimientoAnual = Math.max(0, rendimientoAnual);
-  const safeAumentoAnualAporte = Math.max(0, aumentoAnualAporte);
-
-  const mesesTotales = Math.round(safeAnos * 12);
-  const tasaMensual = Math.pow(1 + safeRendimientoAnual / 100, 1 / 12) - 1;
-  const aumentoAporteDecimal = safeAumentoAnualAporte / 100;
-
-  let saldo = safeCapitalInicial;
-  let aporteActual = safeAporteMensual;
-  let totalInvertido = safeCapitalInicial;
-  let sumaAportesMensuales = 0;
-  let aportesRealizados = 0;
-  let ultimoAporteMensual = 0;
-
-  for (let mes = 1; mes <= mesesTotales; mes++) {
-    saldo = saldo * (1 + tasaMensual);
-
-    saldo = saldo + aporteActual;
-    totalInvertido = totalInvertido + aporteActual;
-    sumaAportesMensuales = sumaAportesMensuales + aporteActual;
-    aportesRealizados = aportesRealizados + 1;
-    ultimoAporteMensual = aporteActual;
-
-    if (mes % 12 === 0) {
-      aporteActual = aporteActual * (1 + aumentoAporteDecimal);
-    }
-  }
-
-  const gananciaGenerada = saldo - totalInvertido;
-
-  const rendimientoTotal =
-    totalInvertido > 0 ? (gananciaGenerada / totalInvertido) * 100 : 0;
-
-  const aportePromedio =
-    aportesRealizados > 0 ? sumaAportesMensuales / aportesRealizados : 0;
-
-  return {
-    capitalFinal: saldo,
-    totalInvertido,
-    gananciaGenerada,
-    rendimientoTotal,
-    aportesRealizados,
-    aportePromedio,
-    ultimoAporteMensual,
-  };
-}
-
-function calculateResults({
-  capitalInicial,
-  aporteMensual,
-  anos,
-  rendimientoAnual,
-  aumentoAnualAporte,
-}: {
-  capitalInicial: number;
-  aporteMensual: number;
-  anos: number;
-  rendimientoAnual: number;
-  aumentoAnualAporte: number;
-}): Results {
-  const safeRendimientoAnual = Math.max(0, rendimientoAnual);
-
-  const tasaConservadora = Math.max(0, safeRendimientoAnual - 5);
-  const tasaEstimada = safeRendimientoAnual;
-  const tasaOptimista = safeRendimientoAnual + 5;
-
-  const conservador = simulateMonthlyInvestment({
-    capitalInicial,
-    aporteMensual,
-    anos,
-    rendimientoAnual: tasaConservadora,
-    aumentoAnualAporte,
-  });
-
-  const estimado = simulateMonthlyInvestment({
-    capitalInicial,
-    aporteMensual,
-    anos,
-    rendimientoAnual: tasaEstimada,
-    aumentoAnualAporte,
-  });
-
-  const optimista = simulateMonthlyInvestment({
-    capitalInicial,
-    aporteMensual,
-    anos,
-    rendimientoAnual: tasaOptimista,
-    aumentoAnualAporte,
-  });
-
-  return {
-    capitalFinal: estimado.capitalFinal,
-    totalInvertido: estimado.totalInvertido,
-    gananciaGenerada: estimado.gananciaGenerada,
-    rendimientoTotal: estimado.rendimientoTotal,
-    aportesRealizados: estimado.aportesRealizados,
-    aportePromedio: estimado.aportePromedio,
-    ultimoAporteMensual: estimado.ultimoAporteMensual,
-    escenarioConservador: conservador.capitalFinal,
-    escenarioEstimado: estimado.capitalFinal,
-    escenarioOptimista: optimista.capitalFinal,
-    tasaConservadora,
-    tasaEstimada,
-    tasaOptimista,
-  };
 }
 
 type InputFieldProps = {
@@ -343,11 +212,26 @@ export default function InversionConAportesMensualesPage() {
   const [aumentoAnualAporte, setAumentoAnualAporte] = useState("");
 
   const [results, setResults] = useState<Results | null>(null);
+  const [error, setError] = useState("");
 
   const moneyPrefix = currency === "ARS" ? "$" : "US$";
 
   function handleCalculate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    const validation = validateNumericFields([
+      { name: "capital", label: "Capital inicial", value: capitalInicial, min: 0 },
+      { name: "contribution", label: "Aporte mensual", value: aporteMensual, min: 0 },
+      { name: "years", label: "Plazo de inversión", value: anos, required: true, min: 0, max: 100 },
+      { name: "rate", label: "Rendimiento anual estimado", value: rendimientoAnual, required: true, min: 0, max: 10000 },
+      { name: "increase", label: "Aumento anual del aporte", value: aumentoAnualAporte, min: 0, max: 10000 },
+    ]);
+    if (!validation.valid || validation.values.years <= 0 || (validation.values.capital <= 0 && validation.values.contribution <= 0)) {
+      setError(validation.firstError || (validation.values.years <= 0 ? "El plazo debe ser mayor que cero." : "Ingresá un capital inicial o un aporte mensual mayor que cero."));
+      setResults(null);
+      return;
+    }
+    setError("");
 
     const capitalInicialNumber = parseInput(capitalInicial);
     const aporteMensualNumber = parseInput(aporteMensual);
@@ -355,7 +239,7 @@ export default function InversionConAportesMensualesPage() {
     const rendimientoAnualNumber = parseInput(rendimientoAnual);
     const aumentoAnualAporteNumber = parseInput(aumentoAnualAporte);
 
-    const calculatedResults = calculateResults({
+    const calculatedResults = calculateAporteMensual({
       capitalInicial: capitalInicialNumber,
       aporteMensual: aporteMensualNumber,
       anos: anosNumber,
@@ -495,6 +379,8 @@ export default function InversionConAportesMensualesPage() {
                   />
                 </div>
               </div>
+
+              {error ? <p role="alert" className="rounded-xl border border-rose-300/20 bg-rose-300/[0.06] px-4 py-3 text-sm font-semibold text-rose-100">{error}</p> : null}
 
               <button
                 type="submit"

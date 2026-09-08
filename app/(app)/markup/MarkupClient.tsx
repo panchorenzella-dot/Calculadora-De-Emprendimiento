@@ -3,8 +3,9 @@
 import { type FormEvent, useMemo, useState } from "react";
 import Card from "@/components/Card";
 import MoneyInput, { Currency } from "@/components/MoneyInput";
+import { calculateMarkupPricing } from "@/lib/calculations/business";
 import { fmtMoney, fmtNum } from "@/lib/format";
-import { onlyDigits, parseDigitsToNumber } from "@/lib/numberInput";
+import { formatLocaleNumberInput, parseDigitsToNumber, parseLocaleNumber, validateNumericFields } from "@/lib/numberInput";
 
 type ModoGanancia = "desde_ganancia" | "desde_precio";
 type NivelCalculo = "rapido" | "completo";
@@ -26,15 +27,11 @@ type Results = {
 };
 
 function normalizePercentInput(value: string) {
-  const cleaned = value.replace(/[^\d,.]/g, "").replace(/\./g, ",");
-  const [whole = "", ...decimalParts] = cleaned.split(",");
-  const decimal = decimalParts.join("").slice(0, 2);
-  return decimalParts.length ? `${whole},${decimal}` : whole;
+  return formatLocaleNumberInput(value, { maxDecimals: 2 });
 }
 
 function parsePercent(value: string) {
-  const parsed = Number(value.replace(",", "."));
-  return Number.isFinite(parsed) ? parsed : 0;
+  return parseLocaleNumber(value);
 }
 
 function PercentInput({ label, value, onChange, hint }: {
@@ -127,32 +124,32 @@ export default function Page() {
     const costosFijos = nivel === "completo" ? parseDigitsToNumber(costosFijosMensuales) : 0;
     const comision = nivel === "completo" ? parsePercent(comisionPct) : 0;
     const impuestos = nivel === "completo" ? parsePercent(impuestosPct) : 0;
-    const tasaCargos = (comision + impuestos) / 100;
-    const costoVariableUnitario = costoProducto + costoExtra;
-    const costoFijoPorUnidad = unidades > 0 ? costosFijos / unidades : 0;
-    const costoTotalUnitario = costoVariableUnitario + costoFijoPorUnidad;
-    const ingresoNetoObjetivo = costoTotalUnitario * (1 + markupObjetivo / 100);
-    const precioCalculado = modo === "desde_ganancia"
-      ? ingresoNetoObjetivo / Math.max(1 - tasaCargos, 0.01)
-      : precioIngresado;
-    const cargosPorVenta = precioCalculado * tasaCargos;
-    const gananciaPorUnidad = precioCalculado - cargosPorVenta - costoTotalUnitario;
-    const margenContribucion = precioCalculado - cargosPorVenta - costoVariableUnitario;
+    const result = calculateMarkupPricing({
+      productCost: costoProducto,
+      targetMarkupPct: markupObjetivo,
+      salePrice: precioIngresado,
+      unitsPerMonth: unidades,
+      extraUnitCosts: costoExtra,
+      monthlyFixedCosts: costosFijos,
+      commissionPct: comision,
+      taxPct: impuestos,
+      mode: modo === "desde_ganancia" ? "from-markup" : "from-price",
+    });
 
     return {
-      precioCalculado,
-      costoVariableUnitario,
-      costoFijoPorUnidad,
-      costoTotalUnitario,
-      cargosPorVenta,
-      gananciaPorUnidad,
-      gananciaEsperadaPct: costoTotalUnitario > 0 ? (gananciaPorUnidad / costoTotalUnitario) * 100 : 0,
-      rentabilidadSobreVentaPct: precioCalculado > 0 ? (gananciaPorUnidad / precioCalculado) * 100 : 0,
-      costoMensual: costoVariableUnitario * unidades + costosFijos,
-      cargosMensuales: cargosPorVenta * unidades,
-      facturacionMensual: precioCalculado * unidades,
-      gananciaMensual: gananciaPorUnidad * unidades,
-      puntoEquilibrio: costosFijos > 0 && margenContribucion > 0 ? Math.ceil(costosFijos / margenContribucion) : null,
+      precioCalculado: result.calculatedPrice,
+      costoVariableUnitario: result.variableUnitCost,
+      costoFijoPorUnidad: result.fixedCostPerUnit,
+      costoTotalUnitario: result.totalUnitCost,
+      cargosPorVenta: result.chargesPerSale,
+      gananciaPorUnidad: result.profitPerUnit,
+      gananciaEsperadaPct: result.actualMarkupPct,
+      rentabilidadSobreVentaPct: result.marginPct,
+      costoMensual: result.monthlyCost,
+      cargosMensuales: result.monthlyCharges,
+      facturacionMensual: result.monthlyRevenue,
+      gananciaMensual: result.monthlyProfit,
+      puntoEquilibrio: result.breakEvenUnits,
     };
   }, [comisionPct, costo, costosFijosMensuales, gananciaDeseadaPct, impuestosPct, modo, nivel, otrosCostosUnitarios, precio, unidadesMes]);
 
@@ -171,6 +168,26 @@ export default function Page() {
     const costoNum = parseDigitsToNumber(costo);
     const unidades = parseDigitsToNumber(unidadesMes);
     const cargos = parsePercent(comisionPct) + parsePercent(impuestosPct);
+
+    const fields = [
+      { name: "cost", label: "Costo del producto", value: costo, required: true, min: 0 },
+      { name: "markup", label: "Ganancia deseada", value: gananciaDeseadaPct, min: 0 },
+      { name: "units", label: "Unidades vendidas por mes", value: unidadesMes, min: 0, integer: true },
+      ...(modo === "desde_precio" ? [{ name: "price", label: "Precio de venta", value: precio, required: true, min: 0 }] : []),
+      ...(nivel === "completo" ? [
+        { name: "extra", label: "Otros costos por unidad", value: otrosCostosUnitarios, min: 0 },
+        { name: "fixed", label: "Costos fijos mensuales", value: costosFijosMensuales, min: 0 },
+        { name: "commission", label: "Comisión por venta", value: comisionPct, min: 0, max: 100 },
+        { name: "taxes", label: "Impuestos y cargos sobre la venta", value: impuestosPct, min: 0, max: 100 },
+      ] : []),
+    ] as const;
+    const validation = validateNumericFields(fields);
+
+    if (!validation.valid) {
+      setError(validation.firstError);
+      setResults(null);
+      return;
+    }
 
     if (costoNum <= 0) {
       setError("Ingresá un costo de producto mayor que cero.");
@@ -278,7 +295,7 @@ export default function Page() {
               )}
               <label className="grid gap-2">
                 <span className="text-sm font-semibold text-white/80">Unidades vendidas por mes</span>
-                <input aria-label="Unidades vendidas por mes" className="rounded-xl bg-zinc-900 px-4 py-3 font-semibold text-white outline-none ring-1 ring-white/10 placeholder:text-white/35 focus:ring-white/30" inputMode="numeric" value={unidadesMes ? fmtNum(parseDigitsToNumber(unidadesMes), 0) : ""} onChange={(event) => updateField(setUnidadesMes, onlyDigits(event.target.value))} onFocus={(event) => event.currentTarget.select()} placeholder="0" />
+                <input aria-label="Unidades vendidas por mes" className="rounded-xl bg-zinc-900 px-4 py-3 font-semibold text-white outline-none ring-1 ring-white/10 placeholder:text-white/35 focus:ring-white/30" inputMode="numeric" value={formatLocaleNumberInput(unidadesMes, { maxDecimals: 0 })} onChange={(event) => updateField(setUnidadesMes, formatLocaleNumberInput(event.target.value, { maxDecimals: 0 }))} onFocus={(event) => event.currentTarget.select()} placeholder="0" />
               </label>
               {nivel === "completo" ? (
                 <div className="grid gap-4 border-t border-white/[0.08] pt-4 sm:grid-cols-2">

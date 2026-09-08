@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { type FormEvent, useMemo, useState } from "react";
 
 import Card from "@/components/Card";
 import MoneyInput, { Currency } from "@/components/MoneyInput";
@@ -9,9 +9,9 @@ import SeoContent from "@/components/SeoContent";
 
 import { fmtMoney, fmtNum } from "@/lib/format";
 import {
-  formatARIntFromDigits,
-  onlyDigits,
+  formatLocaleNumberInput,
   parseDigitsToNumber,
+  validateNumericFields,
 } from "@/lib/numberInput";
 
 import type { CalcResponse, IvaModo, ModoCosto } from "@/types/calc";
@@ -35,6 +35,7 @@ export default function Page() {
 
   const [loading, setLoading] = useState(false);
   const [resp, setResp] = useState<CalcResponse | null>(null);
+  const [error, setError] = useState("");
 
   const payload = useMemo(() => {
     const uDia = parseDigitsToNumber(unidadesDia);
@@ -70,9 +71,25 @@ export default function Page() {
     ivaModo,
   ]);
 
-  async function calcular() {
+  async function calcular(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const validation = validateNumericFields([
+      { name: "units", label: "Unidades por día", value: unidadesDia, required: true, min: 0, integer: true },
+      { name: "days", label: "Días que abrís al mes", value: diasAbiertosMes, required: true, min: 1, max: 31, integer: true },
+      { name: "price", label: "Precio por unidad", value: precioUnit, required: true, min: 0 },
+      { name: "cost", label: modoCosto === "pct" ? "Costo variable porcentual" : "Costo por unidad", value: modoCosto === "pct" ? costoPct : costoUnitAbs, required: true, min: 0, ...(modoCosto === "pct" ? { max: 100 } : {}) },
+      { name: "fixed", label: "Costos fijos por mes", value: costosFijosMes, min: 0 },
+      { name: "investment", label: "Inversión inicial", value: inversionInicial, min: 0 },
+    ]);
+    if (!validation.valid || validation.values.units <= 0 || validation.values.price <= 0) {
+      setError(validation.firstError || (validation.values.units <= 0 ? "Las unidades por día deben ser mayores que cero." : "El precio por unidad debe ser mayor que cero."));
+      setResp(null);
+      return;
+    }
+
     setLoading(true);
     setResp(null);
+    setError("");
 
     try {
       const r = await fetch("/api/calc", {
@@ -81,8 +98,20 @@ export default function Page() {
         body: JSON.stringify(payload),
       });
 
-      const data = (await r.json()) as CalcResponse;
+      const raw = await r.text();
+      let data: CalcResponse;
+      try {
+        data = JSON.parse(raw) as CalcResponse;
+      } catch {
+        throw new Error("Respuesta inválida");
+      }
+      if (!r.ok || !data.ok) {
+        setError(data.error || "Revisá los datos e intentá nuevamente.");
+        return;
+      }
       setResp(data);
+    } catch {
+      setError("No pudimos completar el cálculo. Revisá tu conexión y volvé a intentar.");
     } finally {
       setLoading(false);
     }
@@ -113,23 +142,24 @@ export default function Page() {
           <span className="text-sm text-white/50">Moneda</span>
           <div className="inline-flex rounded-xl border border-white/10 bg-black/40 p-1 shadow-inner shadow-black/40">
             {(["ARS", "USD"] as Currency[]).map((item) => (
-              <button key={item} type="button" onClick={() => setCurrency(item)} className={`rounded-lg px-3 py-1.5 text-sm font-medium tracking-wide transition ${currency === item ? "bg-zinc-800 text-white shadow-sm shadow-black ring-1 ring-inset ring-white/10" : "text-white/40 hover:bg-white/5 hover:text-white/75"}`}>{item}</button>
+              <button key={item} type="button" aria-pressed={currency === item} onClick={() => setCurrency(item)} className={`rounded-lg px-3 py-1.5 text-sm font-medium tracking-wide transition ${currency === item ? "bg-zinc-800 text-white shadow-sm shadow-black ring-1 ring-inset ring-white/10" : "text-white/40 hover:bg-white/5 hover:text-white/75"}`}>{item}</button>
             ))}
           </div>
         </div>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+          <form onSubmit={calcular} className="rounded-2xl border border-white/10 bg-white/5 p-6">
             <h2 className="text-xl font-semibold">Inputs</h2>
 
             <div className="mt-5 grid gap-4">
               <label className="grid gap-2">
                 <span className="text-sm text-white/70">Unidades por día</span>
                 <input
+                  aria-label="Unidades por día"
                   className="rounded-xl bg-zinc-900 px-4 py-3 font-semibold text-white outline-none ring-1 ring-white/10 placeholder:text-white/35 focus:ring-white/30"
                   inputMode="numeric"
-                  value={formatARIntFromDigits(unidadesDia)}
-                  onChange={(e) => setUnidadesDia(onlyDigits(e.target.value))}
+                  value={formatLocaleNumberInput(unidadesDia, { maxDecimals: 0 })}
+                  onChange={(e) => setUnidadesDia(formatLocaleNumberInput(e.target.value, { maxDecimals: 0 }))}
                   onFocus={(e) => e.currentTarget.select()}
                   placeholder="0"
                 />
@@ -140,12 +170,11 @@ export default function Page() {
                   Días que abrís al mes
                 </span>
                 <input
+                  aria-label="Días que abrís al mes"
                   className="rounded-xl bg-zinc-900 px-4 py-3 font-semibold text-white outline-none ring-1 ring-white/10 placeholder:text-white/35 focus:ring-white/30"
                   inputMode="numeric"
-                  value={formatARIntFromDigits(diasAbiertosMes)}
-                  onChange={(e) =>
-                    setDiasAbiertosMes(onlyDigits(e.target.value))
-                  }
+                  value={formatLocaleNumberInput(diasAbiertosMes, { maxDecimals: 0 })}
+                  onChange={(e) => setDiasAbiertosMes(formatLocaleNumberInput(e.target.value, { maxDecimals: 0 }))}
                   onFocus={(e) => e.currentTarget.select()}
                   placeholder="0"
                 />
@@ -165,6 +194,7 @@ export default function Page() {
               <div className="grid gap-2">
                 <span className="text-sm text-white/70">IVA</span>
                 <select
+                  aria-label="Tratamiento del IVA"
                   className="rounded-xl bg-zinc-900 px-4 py-3 outline-none ring-1 ring-white/10 focus:ring-white/30"
                   value={ivaModo}
                   onChange={(e) => setIvaModo(e.target.value as IvaModo)}
@@ -205,10 +235,11 @@ export default function Page() {
 
                 {modoCosto === "pct" ? (
                   <input
+                    aria-label="Costo variable porcentual"
                     className="rounded-xl bg-zinc-900 px-4 py-3 font-semibold text-white outline-none ring-1 ring-white/10 placeholder:text-white/35 focus:ring-white/30"
-                    inputMode="numeric"
-                    value={formatARIntFromDigits(costoPct)}
-                    onChange={(e) => setCostoPct(onlyDigits(e.target.value))}
+                    inputMode="decimal"
+                    value={formatLocaleNumberInput(costoPct, { maxDecimals: 2 })}
+                    onChange={(e) => setCostoPct(formatLocaleNumberInput(e.target.value, { maxDecimals: 2 }))}
                     onFocus={(e) => e.currentTarget.select()}
                     placeholder="0"
                   />
@@ -237,15 +268,17 @@ export default function Page() {
                 currency={currency}
               />
 
+              {error ? <p role="alert" className="rounded-xl border border-rose-300/20 bg-rose-300/[0.06] px-4 py-3 text-sm font-semibold text-rose-100">{error}</p> : null}
+
               <button
-                onClick={calcular}
+                type="submit"
                 disabled={loading}
                 className="mt-2 rounded-full bg-white px-4 py-2.5 font-semibold text-zinc-950 transition hover:bg-zinc-200 disabled:opacity-70"
               >
                 {loading ? "Calculando..." : "Calcular"}
               </button>
             </div>
-          </div>
+          </form>
 
           <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
             <h2 className="text-xl font-semibold">Resultados</h2>

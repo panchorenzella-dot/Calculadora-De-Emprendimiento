@@ -1,5 +1,7 @@
 import type { SavedScenario, ScenarioData, ScenarioValue } from "@/types/scenario";
 
+export const SAVED_SCENARIO_COLUMNS = "id,user_id,calculator_type,title,inputs,results,notes,created_at,updated_at";
+
 export type ScenarioMetric = {
   label: string;
   value: string;

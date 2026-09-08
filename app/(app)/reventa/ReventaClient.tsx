@@ -1,6 +1,8 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { calculateReventa } from "@/lib/calculations/business";
+import { formatLocaleNumberInput, parseLocaleNumber, validateNumericFields } from "@/lib/numberInput";
 
 type Currency = "ARS" | "USD";
 
@@ -20,35 +22,11 @@ type Results = {
 };
 
 function parseInput(value: string) {
-  const cleanValue = value.replace(/\./g, "").replace(",", ".");
-  const parsed = Number(cleanValue);
-  return Number.isFinite(parsed) ? parsed : 0;
-}
-
-function addThousandsSeparator(value: string) {
-  return value.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  return parseLocaleNumber(value);
 }
 
 function formatInputValue(value: string) {
-  const cleanValue = value.replace(/[^\d,]/g, "");
-
-  if (!cleanValue) return "";
-
-  const hasComma = cleanValue.includes(",");
-  const [integerRaw, ...decimalParts] = cleanValue.split(",");
-
-  const integerPart = integerRaw.replace(/\D/g, "");
-  const decimalPart = decimalParts.join("").replace(/\D/g, "");
-
-  const formattedInteger = integerPart
-    ? addThousandsSeparator(integerPart)
-    : "";
-
-  if (hasComma) {
-    return `${formattedInteger},${decimalPart}`;
-  }
-
-  return formattedInteger;
+  return formatLocaleNumberInput(value);
 }
 
 function formatMoney(value: number, currency: Currency) {
@@ -118,9 +96,11 @@ function InputField({
 
         <input
           type="text"
+          aria-label={label}
           inputMode="decimal"
           value={value}
           onChange={(event) => onChange(formatInputValue(event.target.value))}
+          onFocus={(event) => event.currentTarget.select()}
           placeholder="0"
           className={`w-full rounded-2xl border border-zinc-800 bg-zinc-950 py-3 pr-4 text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-emerald-300/50 ${leftPaddingClass}`}
         />
@@ -180,11 +160,27 @@ export default function CompraVentaPage() {
   const [capitalInvertido, setCapitalInvertido] = useState("");
 
   const [results, setResults] = useState<Results | null>(null);
+  const [error, setError] = useState("");
 
   const moneyPrefix = currency === "ARS" ? "$" : "US$";
 
   function handleCalculate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    const validation = validateNumericFields([
+      { name: "cost", label: "Costo de compra", value: costoCompra, required: true, min: 0 },
+      { name: "price", label: "Precio de venta", value: precioVenta, required: true, min: 0 },
+      { name: "expenses", label: "Gastos por venta", value: gastosVenta, min: 0 },
+      { name: "units", label: "Unidades vendidas por mes", value: unidadesVendidasMes, required: true, min: 0, integer: true },
+      { name: "fixed", label: "Costos fijos mensuales", value: costosFijos, min: 0 },
+      { name: "capital", label: "Capital invertido", value: capitalInvertido, min: 0 },
+    ]);
+    if (!validation.valid || validation.values.price <= 0 || validation.values.units <= 0) {
+      setError(validation.firstError || (validation.values.price <= 0 ? "El precio de venta debe ser mayor que cero." : "Las unidades mensuales deben ser mayores que cero."));
+      setResults(null);
+      return;
+    }
+    setError("");
 
     const costoCompraNumber = parseInput(costoCompra);
     const precioVentaNumber = parseInput(precioVenta);
@@ -193,58 +189,14 @@ export default function CompraVentaPage() {
     const costosFijosNumber = parseInput(costosFijos);
     const capitalInvertidoNumber = parseInput(capitalInvertido);
 
-    const gananciaPorUnidad =
-      precioVentaNumber - costoCompraNumber - gastosVentaNumber;
-
-    const margenGanancia =
-      precioVentaNumber > 0
-        ? (gananciaPorUnidad / precioVentaNumber) * 100
-        : 0;
-
-    const markup =
-      costoCompraNumber > 0
-        ? (gananciaPorUnidad / costoCompraNumber) * 100
-        : 0;
-
-    const ventasMensuales = precioVentaNumber * unidadesVendidasMesNumber;
-
-    const costoCompraMensual = costoCompraNumber * unidadesVendidasMesNumber;
-
-    const gastosVariablesMensuales =
-      gastosVentaNumber * unidadesVendidasMesNumber;
-
-    const gananciaBrutaMensual =
-      ventasMensuales - costoCompraMensual - gastosVariablesMensuales;
-
-    const gananciaNetaMensual = gananciaBrutaMensual - costosFijosNumber;
-
-    const puntoEquilibrioMensual =
-      gananciaPorUnidad > 0 ? costosFijosNumber / gananciaPorUnidad : null;
-
-    const recuperoCapital =
-      capitalInvertidoNumber > 0 && gananciaNetaMensual > 0
-        ? capitalInvertidoNumber / gananciaNetaMensual
-        : null;
-
-    const roiMensual =
-      capitalInvertidoNumber > 0
-        ? (gananciaNetaMensual / capitalInvertidoNumber) * 100
-        : null;
-
-    setResults({
-      gananciaPorUnidad,
-      margenGanancia,
-      markup,
+    setResults(calculateReventa({
+      costoCompra: costoCompraNumber,
+      precioVenta: precioVentaNumber,
+      gastosVenta: gastosVentaNumber,
       unidadesVendidasMes: unidadesVendidasMesNumber,
-      ventasMensuales,
-      costoCompraMensual,
-      gastosVariablesMensuales,
-      gananciaBrutaMensual,
-      gananciaNetaMensual,
-      puntoEquilibrioMensual,
-      recuperoCapital,
-      roiMensual,
-    });
+      costosFijos: costosFijosNumber,
+      capitalInvertido: capitalInvertidoNumber,
+    }));
   }
 
   const emptyResults: Results = {
@@ -382,6 +334,8 @@ export default function CompraVentaPage() {
                   />
                 </div>
               </div>
+
+              {error ? <p role="alert" className="rounded-xl border border-rose-300/20 bg-rose-300/[0.06] px-4 py-3 text-sm font-semibold text-rose-100">{error}</p> : null}
 
               <button
                 type="submit"

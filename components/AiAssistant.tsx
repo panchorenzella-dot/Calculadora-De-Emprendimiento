@@ -11,6 +11,7 @@ import {
   type AiChatMessage,
   type AiQuotaStatus,
 } from "@/components/ai/AiConversation";
+import { parseAiApiResponse } from "@/lib/ai/apiResponse";
 import { trackEvent } from "@/lib/analytics";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import type { ScenarioDraft } from "@/types/scenario";
@@ -18,13 +19,6 @@ import type { ScenarioDraft } from "@/types/scenario";
 type Conversation = { id: string; title: string; updated_at: string };
 type ScenarioQuotaResult = { allowed: boolean; scenario_id: string | null; resets_at: string | null };
 type RetryRequest = { mode: "analysis" | "chat"; question?: string };
-type ApiQuota = {
-  used?: number;
-  limit?: number;
-  quota_limit?: number;
-  plan?: "free" | "pro";
-};
-type ApiResponse = { text?: string; error?: string; code?: string; quota?: ApiQuota };
 type Props = {
   draft: ScenarioDraft | null;
   hasResults: boolean;
@@ -36,6 +30,27 @@ type Props = {
   scenarioHref?: string;
   onRename?: (title: string) => void | Promise<void>;
 };
+
+const AI_CLIENT_TIMEOUT_MS = 55_000;
+
+class AiRequestError extends Error {
+  retryable: boolean;
+  requestId?: string;
+
+  constructor(message: string, retryable: boolean, requestId?: string) {
+    super(message);
+    this.name = "AiRequestError";
+    this.retryable = retryable;
+    this.requestId = requestId;
+  }
+}
+
+function createClientRequestId() {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `local-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
 
 function CopyIcon() {
   return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.7"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>;
@@ -71,6 +86,7 @@ export default function AiAssistant({ draft, hasResults, initialConversationId, 
   const [scenarioId, setScenarioId] = useState<string | null>(initialScenarioId);
   const [history, setHistory] = useState<Conversation[]>([]);
   const [error, setError] = useState("");
+  const [errorRequestId, setErrorRequestId] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
   const [copied, setCopied] = useState(false);
   const [copiedMessageIndex, setCopiedMessageIndex] = useState<number | null>(null);
@@ -86,6 +102,14 @@ export default function AiAssistant({ draft, hasResults, initialConversationId, 
   const cancelConfirmRef = useRef<HTMLButtonElement>(null);
   const analysisTriggerRef = useRef<HTMLButtonElement>(null);
   const chatTitleRef = useRef<HTMLHeadingElement>(null);
+  const requestControllerRef = useRef<AbortController | null>(null);
+
+  const showError = useCallback((nextError: string, requestId?: string | null) => {
+    setError(nextError);
+    setErrorRequestId(requestId ?? null);
+  }, []);
+
+  useEffect(() => () => requestControllerRef.current?.abort(), []);
 
   useEffect(() => {
     if (!open && !confirmOpen) return;
@@ -149,19 +173,28 @@ export default function AiAssistant({ draft, hasResults, initialConversationId, 
     setLoadingHistory(true);
     void supabase.from("ai_messages").select("role,content").eq("conversation_id", initialConversationId).order("created_at").then(({ data, error: loadError }) => {
       if (!active) return;
-      if (loadError) setError("No se pudo recuperar esta conversación.");
+      if (loadError) showError("No se pudo recuperar esta conversación.");
       else setMessages((data as AiChatMessage[]) ?? []);
       setLoadingHistory(false);
     });
     return () => { active = false; };
-  }, [initialConversationId]);
+  }, [initialConversationId, showError]);
 
   async function requireSession() {
     const supabase = getSupabaseClient();
-    if (!supabase) { setError("Falta configurar Supabase."); return null; }
-    const { data } = await supabase.auth.getSession();
-    if (!data.session) { setAuthOpen(true); return null; }
-    return data.session;
+    if (!supabase) { showError("Falta configurar Supabase."); return null; }
+    try {
+      const { data, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        showError("No pudimos verificar tu sesión. Volvé a intentar.");
+        return null;
+      }
+      if (!data.session) { setAuthOpen(true); return null; }
+      return data.session;
+    } catch {
+      showError("No pudimos verificar tu sesión. Volvé a intentar.");
+      return null;
+    }
   }
 
   async function saveAnalysisScenario() {
@@ -205,24 +238,27 @@ export default function AiAssistant({ draft, hasResults, initialConversationId, 
     const supabase = getSupabaseClient();
     if (!supabase || !draft) return null;
     const { data, error: dbError } = await supabase.from("ai_conversations").insert({ user_id: userId, calculator_type: draft.calculatorType, calculator_name: draft.calculatorName, calculator_path: draft.calculatorPath, title: `Análisis · ${draft.calculatorName}`, context: draft, scenario_id: linkedScenarioId ?? null }).select("id").single();
-    if (dbError) { setError("No pudimos guardar esta conversación. Volvé a intentar en unos segundos."); return null; }
+    if (dbError) return null;
     setConversationId(data.id);
     return data.id as string;
   }
 
   async function persistMessage(id: string, userId: string, item: AiChatMessage) {
-    await getSupabaseClient()?.from("ai_messages").insert({ conversation_id: id, user_id: userId, ...item });
+    const supabase = getSupabaseClient();
+    if (!supabase) return false;
+    const { error: persistError } = await supabase.from("ai_messages").insert({ conversation_id: id, user_id: userId, ...item });
+    return !persistError;
   }
 
   async function ask(mode: "analysis" | "chat", question?: string) {
-    if (!draft || !hasResults) { setError("Primero completá la calculadora para generar un análisis."); return; }
+    if (!draft || !hasResults) { showError("Primero completá la calculadora para generar un análisis."); return; }
+    setRetryRequest({ mode, question });
     const session = await requireSession();
     if (!session) return;
     setOpen(true);
     setLoading(true);
-    setError("");
+    showError("");
     setNotice("");
-    setRetryRequest({ mode, question });
     setRetryAllowed(true);
     const userMessage: AiChatMessage | null = mode === "chat" && question ? { role: "user", content: question } : null;
     const previous = messages;
@@ -230,45 +266,111 @@ export default function AiAssistant({ draft, hasResults, initialConversationId, 
       setMessages([...previous, userMessage]);
       setMessage("");
     }
+
+    requestControllerRef.current?.abort();
+    const requestController = new AbortController();
+    requestControllerRef.current = requestController;
+    const clientRequestId = createClientRequestId();
+    let clientTimedOut = false;
+    const clientTimeout = window.setTimeout(() => {
+      clientTimedOut = true;
+      requestController.abort();
+    }, AI_CLIENT_TIMEOUT_MS);
+
     try {
-      const response = await fetch("/api/ai", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` }, body: JSON.stringify({ mode, context: draft, messages: previous.slice(-20), message: question }) });
-      const data = await response.json() as ApiResponse;
-      if (data.quota) {
-        const limit = data.quota.limit ?? data.quota.quota_limit;
-        if (typeof data.quota.used === "number" && typeof limit === "number") {
-          setQuota({ kind: mode, used: data.quota.used, limit, plan: data.quota.plan === "pro" ? "pro" : "free" });
-        }
+      const response = await fetch("/api/ai", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+          "X-Client-Request-Id": clientRequestId,
+        },
+        body: JSON.stringify({ mode, context: draft, messages: previous.slice(-20), message: question }),
+        cache: "no-store",
+        signal: requestController.signal,
+      });
+      const rawResponse = await response.text();
+      window.clearTimeout(clientTimeout);
+      const data = parseAiApiResponse(rawResponse);
+      const responseRequestId = data?.requestId || response.headers.get("x-request-id") || clientRequestId;
+
+      if (!data) {
+        throw new AiRequestError(
+          "El servidor devolvió una respuesta inesperada. Volvé a intentar en unos minutos.",
+          response.ok || response.status >= 500,
+          responseRequestId,
+        );
       }
-      if (response.status === 401 || response.status === 429) setRetryAllowed(false);
-      if (!response.ok || !data.text) throw new Error(data.error || "No pudimos obtener una respuesta.");
-      const linkedScenarioId = mode === "analysis" && !conversationId
-        ? await saveAnalysisScenario()
-        : scenarioId;
-      const id = await ensureConversation(session.user.id, linkedScenarioId);
-      if (!id) return;
+
+      if (data.quota) {
+        setQuota({ kind: mode, used: data.quota.used, limit: data.quota.limit, plan: data.quota.plan });
+      }
+
+      if (!response.ok || !data.text?.trim()) {
+        if (response.status === 401) setAuthOpen(true);
+        const retryable = data.retryable ?? (response.status === 408 || response.status >= 500);
+        throw new AiRequestError(data.error || "No pudimos obtener una respuesta.", retryable, responseRequestId);
+      }
+
       const assistantMessage: AiChatMessage = { role: "assistant", content: data.text };
-      setMessages((current) => [...current, assistantMessage]);
-      if (userMessage) await persistMessage(id, session.user.id, userMessage);
-      await persistMessage(id, session.user.id, assistantMessage);
-      trackEvent(mode === "analysis" ? "ai_analysis" : "ai_followup", { calculator_name: draft.calculatorName, calculator_type: draft.calculatorType });
-      await loadHistory();
+      setMessages(userMessage ? [...previous, userMessage, assistantMessage] : [...previous, assistantMessage]);
       setRetryRequest(null);
       setRetryAllowed(false);
+      showError("");
+      trackEvent(mode === "analysis" ? "ai_analysis" : "ai_followup", { calculator_name: draft.calculatorName, calculator_type: draft.calculatorType });
+
+      try {
+        const linkedScenarioId = mode === "analysis" && !conversationId
+          ? await saveAnalysisScenario()
+          : scenarioId;
+        const id = await ensureConversation(session.user.id, linkedScenarioId);
+        if (!id) {
+          setNotice((current) => current || "Recibiste la respuesta, pero no pudimos guardarla en tu historial. Podés copiarla antes de cerrar.");
+        } else {
+          const userSaved = userMessage ? await persistMessage(id, session.user.id, userMessage) : true;
+          const assistantSaved = await persistMessage(id, session.user.id, assistantMessage);
+          if (!userSaved || !assistantSaved) {
+            setNotice((current) => current || "Recibiste la respuesta, pero no pudimos guardar todo el intercambio en tu historial. Podés copiarlo antes de cerrar.");
+          }
+          await loadHistory();
+        }
+      } catch {
+        setNotice((current) => current || "Recibiste la respuesta, pero no pudimos guardarla en tu historial. Podés copiarla antes de cerrar.");
+      }
     } catch (requestError) {
       if (userMessage) {
         setMessages(previous);
         setMessage(question ?? "");
       }
-      setError(requestError instanceof Error ? requestError.message : "Ocurrió un error.");
+
+      if (requestError instanceof AiRequestError) {
+        setRetryAllowed(requestError.retryable);
+        showError(requestError.message, requestError.requestId);
+      } else if (requestController.signal.aborted) {
+        setRetryAllowed(clientTimedOut);
+        showError(
+          clientTimedOut
+            ? "La consulta tardó demasiado y se canceló. Volvé a intentar."
+            : "La consulta fue cancelada.",
+          clientRequestId,
+        );
+      } else {
+        setRetryAllowed(true);
+        showError("No pudimos conectar con la IA. Revisá tu conexión y volvé a intentar.", clientRequestId);
+      }
     } finally {
-      setLoading(false);
+      window.clearTimeout(clientTimeout);
+      if (requestControllerRef.current === requestController) {
+        requestControllerRef.current = null;
+        setLoading(false);
+      }
     }
   }
 
   function requestAnalysis() {
-    setError("");
+    showError("");
     if (!draft || !hasResults) {
-      setError("Primero completá la calculadora para generar un análisis.");
+      showError("Primero completá la calculadora para generar un análisis.");
       return;
     }
     setConfirmOpen(true);
@@ -280,11 +382,14 @@ export default function AiAssistant({ draft, hasResults, initialConversationId, 
   }
 
   function newConversation() {
+    requestControllerRef.current?.abort();
+    requestControllerRef.current = null;
+    setLoading(false);
     setMobileNavOpen(false);
     setConversationId(null);
     setScenarioId(null);
     setMessages([]);
-    setError("");
+    showError("");
     setNotice("");
     setQuota(null);
     setRetryRequest(null);
@@ -303,7 +408,7 @@ export default function AiAssistant({ draft, hasResults, initialConversationId, 
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1600);
     } catch {
-      setError("No pudimos copiar la conversación. Revisá los permisos del navegador.");
+      showError("No pudimos copiar la conversación. Revisá los permisos del navegador.");
     }
   }
 
@@ -313,7 +418,7 @@ export default function AiAssistant({ draft, hasResults, initialConversationId, 
       setCopiedMessageIndex(index);
       window.setTimeout(() => setCopiedMessageIndex((current) => current === index ? null : current), 1600);
     } catch {
-      setError("No pudimos copiar la respuesta. Revisá los permisos del navegador.");
+      showError("No pudimos copiar la respuesta. Revisá los permisos del navegador.");
     }
   }
 
@@ -339,7 +444,7 @@ export default function AiAssistant({ draft, hasResults, initialConversationId, 
     if (!nextTitle?.trim() || nextTitle.trim() === conversationTitle) return;
     setRenaming(true);
     try { await onRename(nextTitle.trim()); }
-    catch { setError("No se pudo cambiar el nombre del análisis."); }
+    catch { showError("No se pudo cambiar el nombre del análisis."); }
     finally { setRenaming(false); }
   }
 
@@ -349,7 +454,7 @@ export default function AiAssistant({ draft, hasResults, initialConversationId, 
     const supabase = getSupabaseClient();
     if (!supabase) return;
     const { error: renameError } = await supabase.from("ai_conversations").update({ title: title.trim() }).eq("id", item.id);
-    if (renameError) setError("No se pudo cambiar el nombre del análisis.");
+    if (renameError) showError("No se pudo cambiar el nombre del análisis.");
     else setHistory((current) => current.map((conversation) => conversation.id === item.id ? { ...conversation, title: title.trim() } : conversation));
     setHistoryMenuId(null);
   }
@@ -359,7 +464,7 @@ export default function AiAssistant({ draft, hasResults, initialConversationId, 
     const supabase = getSupabaseClient();
     if (!supabase) return;
     const { error: deleteError } = await supabase.from("ai_conversations").delete().eq("id", item.id);
-    if (deleteError) setError("No se pudo eliminar el análisis.");
+    if (deleteError) showError("No se pudo eliminar el análisis.");
     else {
       setHistory((current) => current.filter((conversation) => conversation.id !== item.id));
       if (item.id === conversationId) closeChat();
@@ -463,6 +568,7 @@ export default function AiAssistant({ draft, hasResults, initialConversationId, 
           loading={loading}
           loadingHistory={loadingHistory}
           error={error}
+          errorRequestId={errorRequestId}
           notice={notice}
           copiedMessageIndex={copiedMessageIndex}
           onCopyMessage={(index, content) => { void copyMessage(index, content); }}
@@ -495,6 +601,9 @@ export default function AiAssistant({ draft, hasResults, initialConversationId, 
       </section>
     </div>}
 
-    <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} returnTo={draft?.calculatorPath ?? "/perfil"} onAuthenticated={() => { setAuthOpen(false); void ask("analysis"); }}/>
+    <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} returnTo={draft?.calculatorPath ?? "/perfil"} onAuthenticated={() => {
+      setAuthOpen(false);
+      void ask(retryRequest?.mode ?? "analysis", retryRequest?.question);
+    }}/>
   </>;
 }

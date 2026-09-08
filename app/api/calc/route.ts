@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { calculateBusinessMargin } from "@/lib/calculations/business";
+
 const InputSchema = z.object({
   unidadesDia: z.number().finite().nonnegative(),
-   diasAbiertosMes: z.number().finite().int().min(0).max(31), // 👈 max 31
+  diasAbiertosMes: z.number().finite().int().min(0).max(31),
   precioUnit: z.number().finite().nonnegative(),
 
   modoCosto: z.enum(["pct", "abs"]),
@@ -13,77 +15,64 @@ const InputSchema = z.object({
   costosFijosMes: z.number().finite().nonnegative(),
   inversionInicial: z.number().finite().nonnegative(),
 
-  ivaModo: z.enum(["incluido", "no_incluido"]), // ✅ sin "no_se"
+  ivaModo: z.enum(["incluido", "no_incluido"]),
 });
-
-function ceilSafe(n: number) {
-  return Number.isFinite(n) ? Math.ceil(n) : null;
-}
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const input = InputSchema.parse(body);
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json(
+        { ok: false, error: "El cuerpo de la solicitud no es un JSON válido." },
+        { status: 400 },
+      );
+    }
 
-    const IVA_FACTOR = 1.21;
-
-    const unidadesMes = input.unidadesDia * input.diasAbiertosMes;
-
-    const ventasBrutas = unidadesMes * input.precioUnit;
-
-    const ivaIncluido = input.ivaModo === "incluido";
-    const ventasNetas = ivaIncluido ? ventasBrutas / IVA_FACTOR : ventasBrutas;
-
-    const costoUnit =
-      input.modoCosto === "pct"
-        ? input.precioUnit * ((input.costoPct ?? 0) / 100)
-        : (input.costoUnitAbs ?? 0);
-
-    const costosVarMes = unidadesMes * costoUnit;
-    const margenUnit = input.precioUnit - costoUnit;
-
-    const margenBrutoMes = ventasNetas - costosVarMes;
-    const gananciaMes = margenBrutoMes - input.costosFijosMes;
-
-    const breakEvenUnidades =
-      margenUnit > 0 ? ceilSafe(input.costosFijosMes / margenUnit) : null;
-
-    const paybackMeses =
-      gananciaMes > 0 ? input.inversionInicial / gananciaMes : null;
-
-    const roiAnualPct =
-      input.inversionInicial > 0 && gananciaMes > 0
-        ? ((gananciaMes * 12) / input.inversionInicial) * 100
-        : null;
+    const parsed = InputSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { ok: false, error: "Revisá los datos ingresados.", details: parsed.error.flatten() },
+        { status: 400 },
+      );
+    }
+    const input = parsed.data;
+    const result = calculateBusinessMargin({
+      unitsPerDay: input.unidadesDia,
+      operatingDays: input.diasAbiertosMes,
+      unitPrice: input.precioUnit,
+      costMode: input.modoCosto,
+      costPct: input.costoPct,
+      unitCost: input.costoUnitAbs,
+      monthlyFixedCosts: input.costosFijosMes,
+      initialInvestment: input.inversionInicial,
+      vatMode: input.ivaModo,
+    });
 
     return NextResponse.json({
       ok: true,
       input,
-      derived: { unidadesMes },
+      derived: { unidadesMes: result.unitsPerMonth },
       results: {
-        ventasBrutas,
-        ventasNetas,
-        costoUnit,
-        margenUnit,
-        costosVarMes,
-        margenBrutoMes,
-        gananciaMes,
-        breakEvenUnidades,
-        paybackMeses,
-        roiAnualPct,
-        ivaFactorUsado: IVA_FACTOR,
+        ventasBrutas: result.grossRevenue,
+        ventasNetas: result.netRevenue,
+        costoUnit: result.unitCost,
+        margenUnit: result.contributionPerUnit,
+        costosVarMes: result.monthlyVariableCosts,
+        margenBrutoMes: result.monthlyGrossProfit,
+        gananciaMes: result.monthlyNetProfit,
+        breakEvenUnidades: result.breakEvenUnits,
+        paybackMeses: result.paybackMonths,
+        roiAnualPct: result.annualRoiPct,
+        ivaFactorUsado: result.vatFactor,
       },
     });
   } catch (err) {
-    if (err instanceof z.ZodError) {
-      return NextResponse.json(
-        { ok: false, error: "Validación", details: err.flatten() },
-        { status: 400 }
-      );
-    }
+    console.error("Margin calculation failed", err instanceof Error ? err.message : "unknown");
     return NextResponse.json(
-      { ok: false, error: "Error inesperado" },
-      { status: 500 }
+      { ok: false, error: "No pudimos completar el cálculo. Volvé a intentar." },
+      { status: 500 },
     );
   }
 }

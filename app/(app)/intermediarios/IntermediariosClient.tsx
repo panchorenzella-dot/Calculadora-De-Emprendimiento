@@ -1,6 +1,8 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { calculateIntermediarios } from "@/lib/calculations/business";
+import { formatLocaleNumberInput, parseLocaleNumber, validateNumericFields } from "@/lib/numberInput";
 
 type Currency = "ARS" | "USD";
 
@@ -16,34 +18,11 @@ type Results = {
 };
 
 function parseInput(value: string) {
-  const normalizedValue = value
-    .replace(/\./g, "")
-    .replace(",", ".")
-    .replace(/[^0-9.]/g, "");
-
-  const parsed = Number(normalizedValue);
-  return Number.isFinite(parsed) ? parsed : 0;
+  return parseLocaleNumber(value);
 }
 
 function formatInputValue(value: string) {
-  const cleanedValue = value.replace(/\./g, "").replace(/[^0-9,]/g, "");
-  const hasDecimalComma = cleanedValue.includes(",");
-
-  const [integerPartRaw, ...decimalParts] = cleanedValue.split(",");
-  const integerPart = integerPartRaw.replace(/\D/g, "");
-  const decimalPartRaw = decimalParts.join("").replace(/\D/g, "");
-
-  const formattedInteger =
-    integerPart.length > 0
-      ? new Intl.NumberFormat("es-AR").format(Number(integerPart))
-      : "";
-
-  if (hasDecimalComma) {
-    const decimalPart = decimalPartRaw.slice(0, 2);
-    return `${formattedInteger},${decimalPart}`;
-  }
-
-  return formattedInteger;
+  return formatLocaleNumberInput(value);
 }
 
 function formatMoney(value: number, currency: Currency) {
@@ -113,9 +92,11 @@ function InputField({
 
         <input
           type="text"
+          aria-label={label}
           inputMode="decimal"
           value={value}
           onChange={(event) => onChange(formatInputValue(event.target.value))}
+          onFocus={(event) => event.currentTarget.select()}
           placeholder="0"
           className={`w-full appearance-none rounded-2xl border border-zinc-800 bg-zinc-950 py-3 text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-emerald-300/50 ${
             prefix ? "pl-16" : "pl-4"
@@ -183,11 +164,27 @@ export default function ComisionesPage() {
   const [capitalInvertido, setCapitalInvertido] = useState("");
 
   const [results, setResults] = useState<Results | null>(null);
+  const [error, setError] = useState("");
 
   const moneyPrefix = currency === "ARS" ? "$" : "US$";
 
   function handleCalculate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    const validation = validateNumericFields([
+      { name: "value", label: "Valor promedio de operación", value: valorOperacion, required: true, min: 0 },
+      { name: "commission", label: "Comisión que cobrás", value: porcentajeComision, required: true, min: 0, max: 100 },
+      { name: "expenses", label: "Gastos por operación", value: gastosOperacion, min: 0 },
+      { name: "operations", label: "Operaciones cerradas por mes", value: operacionesPorMes, required: true, min: 0, integer: true },
+      { name: "fixed", label: "Costos fijos mensuales", value: costosFijos, min: 0 },
+      { name: "capital", label: "Capital invertido", value: capitalInvertido, min: 0 },
+    ]);
+    if (!validation.valid || validation.values.value <= 0 || validation.values.commission <= 0 || validation.values.operations <= 0) {
+      setError(validation.firstError || (validation.values.value <= 0 ? "El valor de la operación debe ser mayor que cero." : validation.values.commission <= 0 ? "La comisión debe ser mayor que cero." : "Las operaciones mensuales deben ser mayores que cero."));
+      setResults(null);
+      return;
+    }
+    setError("");
 
     const valorOperacionNumber = parseInput(valorOperacion);
     const porcentajeComisionNumber = parseInput(porcentajeComision);
@@ -196,44 +193,14 @@ export default function ComisionesPage() {
     const costosFijosNumber = parseInput(costosFijos);
     const capitalInvertidoNumber = parseInput(capitalInvertido);
 
-    const comisionPorOperacion =
-      valorOperacionNumber * (porcentajeComisionNumber / 100);
-
-    const gananciaPorOperacion = comisionPorOperacion - gastosOperacionNumber;
-
-    const ingresoBrutoMensual = comisionPorOperacion * operacionesPorMesNumber;
-
-    const gastosVariablesMensuales =
-      gastosOperacionNumber * operacionesPorMesNumber;
-
-    const gananciaNetaMensual =
-      ingresoBrutoMensual - gastosVariablesMensuales - costosFijosNumber;
-
-    const puntoEquilibrioMensual =
-      gananciaPorOperacion > 0
-        ? costosFijosNumber / gananciaPorOperacion
-        : null;
-
-    const recuperoCapital =
-      capitalInvertidoNumber > 0 && gananciaNetaMensual > 0
-        ? capitalInvertidoNumber / gananciaNetaMensual
-        : null;
-
-    const roiMensual =
-      capitalInvertidoNumber > 0
-        ? (gananciaNetaMensual / capitalInvertidoNumber) * 100
-        : null;
-
-    setResults({
-      comisionPorOperacion,
-      gananciaPorOperacion,
-      ingresoBrutoMensual,
-      gastosVariablesMensuales,
-      gananciaNetaMensual,
-      puntoEquilibrioMensual,
-      recuperoCapital,
-      roiMensual,
-    });
+    setResults(calculateIntermediarios({
+      valorOperacion: valorOperacionNumber,
+      porcentajeComision: porcentajeComisionNumber,
+      gastosOperacion: gastosOperacionNumber,
+      operacionesPorMes: operacionesPorMesNumber,
+      costosFijos: costosFijosNumber,
+      capitalInvertido: capitalInvertidoNumber,
+    }));
   }
 
   const emptyResults: Results = {
@@ -367,6 +334,8 @@ export default function ComisionesPage() {
                   />
                 </div>
               </div>
+
+              {error ? <p role="alert" className="rounded-xl border border-rose-300/20 bg-rose-300/[0.06] px-4 py-3 text-sm font-semibold text-rose-100">{error}</p> : null}
 
               <button
                 type="submit"

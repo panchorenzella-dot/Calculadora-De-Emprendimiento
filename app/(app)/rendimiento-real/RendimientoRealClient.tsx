@@ -1,6 +1,8 @@
 "use client";
 
 import { type FormEvent, type ReactNode, useState } from "react";
+import { calculateRendimientoReal } from "@/lib/calculations/investments";
+import { formatLocaleNumberInput, parseLocaleNumber, validateNumericFields } from "@/lib/numberInput";
 
 type Currency = "ARS" | "USD";
 
@@ -19,35 +21,11 @@ type Results = {
 };
 
 function parseInput(value: string) {
-  const cleanValue = value.replace(/\./g, "").replace(",", ".");
-  const parsed = Number(cleanValue);
-  return Number.isFinite(parsed) ? parsed : 0;
-}
-
-function addThousandsSeparator(value: string) {
-  return value.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  return parseLocaleNumber(value);
 }
 
 function formatInputValue(value: string) {
-  const cleanValue = value.replace(/[^\d,]/g, "");
-
-  if (!cleanValue) return "";
-
-  const hasComma = cleanValue.includes(",");
-  const [integerRaw, ...decimalParts] = cleanValue.split(",");
-
-  const integerPart = integerRaw.replace(/\D/g, "");
-  const decimalPart = decimalParts.join("").replace(/\D/g, "");
-
-  const formattedInteger = integerPart
-    ? addThousandsSeparator(integerPart)
-    : "";
-
-  if (hasComma) {
-    return `${formattedInteger},${decimalPart}`;
-  }
-
-  return formattedInteger;
+  return formatLocaleNumberInput(value);
 }
 
 function formatMoney(value: number, currency: Currency) {
@@ -86,66 +64,7 @@ function calculateResults({
   costosExtra: number;
   meses: number;
 }): Results {
-  const safeMontoInicial = Math.max(0, montoInicial);
-  const safeMontoFinal = Math.max(0, montoFinal);
-  const safeInflacionPeriodo = Math.max(0, inflacionPeriodo);
-  const safeCostosExtra = Math.max(0, costosExtra);
-  const safeMeses = Math.max(0, meses);
-
-  const totalInvertidoReal = safeMontoInicial + safeCostosExtra;
-  const gananciaNominal = safeMontoFinal - totalInvertidoReal;
-
-  const rendimientoNominal =
-    totalInvertidoReal > 0 ? (gananciaNominal / totalInvertidoReal) * 100 : 0;
-
-  const rendimientoNominalDecimal = rendimientoNominal / 100;
-  const inflacionDecimal = safeInflacionPeriodo / 100;
-
-  const rendimientoRealDecimal =
-    (1 + rendimientoNominalDecimal) / (1 + inflacionDecimal) - 1;
-
-  const rendimientoReal = rendimientoRealDecimal * 100;
-
-  const montoFinalAjustado = safeMontoFinal / (1 + inflacionDecimal);
-
-  const gananciaRealAjustada = montoFinalAjustado - totalInvertidoReal;
-
-  let rendimientoMensualReal = 0;
-  let rendimientoAnualizadoReal = 0;
-
-  if (safeMeses > 0 && rendimientoRealDecimal > -1) {
-    rendimientoMensualReal =
-      (Math.pow(1 + rendimientoRealDecimal, 1 / safeMeses) - 1) * 100;
-
-    rendimientoAnualizadoReal =
-      (Math.pow(1 + rendimientoMensualReal / 100, 12) - 1) * 100;
-  }
-
-  let estado = "Cargá los datos para calcular";
-
-  if (totalInvertidoReal > 0) {
-    if (rendimientoReal > 0) {
-      estado = "Ganaste poder de compra";
-    } else if (rendimientoReal < 0) {
-      estado = "Perdiste poder de compra";
-    } else {
-      estado = "Empataste contra la inflación";
-    }
-  }
-
-  return {
-    totalInvertidoReal,
-    gananciaNominal,
-    rendimientoNominal,
-    rendimientoReal,
-    gananciaRealAjustada,
-    montoFinalAjustado,
-    inflacionCargada: safeInflacionPeriodo,
-    rendimientoMensualReal,
-    rendimientoAnualizadoReal,
-    meses: safeMeses,
-    estado,
-  };
+  return calculateRendimientoReal({ montoInicial, montoFinal, inflacionPeriodo, costosExtra, meses });
 }
 
 type InputFieldProps = {
@@ -192,9 +111,11 @@ function InputField({
 
         <input
           type="text"
+          aria-label={label}
           inputMode="decimal"
           value={value}
           onChange={(event) => onChange(formatInputValue(event.target.value))}
+          onFocus={(event) => event.currentTarget.select()}
           placeholder="0"
           className={`w-full rounded-2xl border border-zinc-800 bg-zinc-950 py-3 text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-emerald-300/50 ${leftPaddingClass} ${rightPaddingClass}`}
         />
@@ -272,11 +193,26 @@ export default function RendimientoRealPage() {
   const [meses, setMeses] = useState("");
 
   const [results, setResults] = useState<Results | null>(null);
+  const [error, setError] = useState("");
 
   const moneyPrefix = currency === "ARS" ? "$" : "US$";
 
   function handleCalculate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    const validation = validateNumericFields([
+      { name: "initial", label: "Monto inicial", value: montoInicial, required: true, min: 0 },
+      { name: "final", label: "Monto final", value: montoFinal, required: true, min: 0 },
+      { name: "inflation", label: "Inflación del período", value: inflacionPeriodo, required: true, min: 0, max: 1000000 },
+      { name: "costs", label: "Costos extra", value: costosExtra, min: 0 },
+      { name: "months", label: "Tiempo de inversión", value: meses, min: 0, max: 1200 },
+    ]);
+    if (!validation.valid || validation.values.initial <= 0) {
+      setError(validation.firstError || "El monto inicial debe ser mayor que cero.");
+      setResults(null);
+      return;
+    }
+    setError("");
 
     const calculatedResults = calculateResults({
       montoInicial: parseInput(montoInicial),
@@ -418,6 +354,8 @@ export default function RendimientoRealPage() {
                   />
                 </div>
               </div>
+
+              {error ? <p role="alert" className="rounded-xl border border-rose-300/20 bg-rose-300/[0.06] px-4 py-3 text-sm font-semibold text-rose-100">{error}</p> : null}
 
               <button
                 type="submit"

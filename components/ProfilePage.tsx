@@ -9,7 +9,7 @@ import PlanUsageDashboard, { type UsageItem } from "@/components/PlanUsageDashbo
 import ProfileOnboarding from "@/components/ProfileOnboarding";
 import { trackEvent } from "@/lib/analytics";
 import { PLAN_GRACE_DAYS } from "@/lib/plans";
-import { getCalculatorInfo, getScenarioMetrics, getScenarioPreview } from "@/lib/scenarios";
+import { getCalculatorInfo, getScenarioMetrics, getScenarioPreview, SAVED_SCENARIO_COLUMNS } from "@/lib/scenarios";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import type { SavedScenario } from "@/types/scenario";
 
@@ -135,6 +135,7 @@ export default function ProfilePage({ initialAuthMode = "login", continueToPro =
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [scenarioQuery, setScenarioQuery] = useState("");
+  const [selectedScenarioIds, setSelectedScenarioIds] = useState<string[]>([]);
   const [profile, setProfile] = useState<ProfileData>(EMPTY_PROFILE);
   const [message, setMessage] = useState(configured ? "" : "Falta configurar Supabase para habilitar el perfil.");
   const paypalReturnHandled = useRef(false);
@@ -146,35 +147,45 @@ export default function ProfilePage({ initialAuthMode = "login", continueToPro =
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (userId: string) => {
     const supabase = getSupabaseClient();
     if (!supabase) return;
     setDataLoading(true);
-    const [scenarioResponse, conversationResponse, planResponse, usageResponse] = await Promise.all([
-      supabase.from("saved_scenarios").select("*").order("created_at", { ascending: false }),
-      supabase.from("ai_conversations").select("id,title,calculator_name,calculator_path,scenario_id,created_at,updated_at").order("updated_at", { ascending: false }),
-      supabase.from("user_plans").select("plan,status,current_period_start,current_period_end,cancel_at_period_end,provider").maybeSingle(),
-      supabase.rpc("get_my_usage_summary"),
-    ]);
-    if (scenarioResponse.error) setMessage("No pudimos cargar los escenarios guardados.");
-    else setScenarios((scenarioResponse.data as SavedScenario[]) ?? []);
-    if (conversationResponse.error) {
-      setConversations([]);
-      setAnalysisLoadError(true);
-    } else {
-      setConversations((conversationResponse.data as Conversation[]) ?? []);
-      setAnalysisLoadError(false);
-    }
+    try {
+      const [scenarioResponse, conversationResponse, planResponse, usageResponse] = await Promise.all([
+        supabase.from("saved_scenarios").select(SAVED_SCENARIO_COLUMNS).eq("user_id", userId).order("created_at", { ascending: false }).limit(100),
+        supabase.from("ai_conversations").select("id,title,calculator_name,calculator_path,scenario_id,created_at,updated_at").eq("user_id", userId).order("updated_at", { ascending: false }).limit(100),
+        supabase.from("user_plans").select("plan,status,current_period_start,current_period_end,cancel_at_period_end,provider").eq("user_id", userId).maybeSingle(),
+        supabase.rpc("get_my_usage_summary"),
+      ]);
+      if (scenarioResponse.error) setMessage("No pudimos cargar los escenarios guardados.");
+      else {
+        const nextScenarios = (scenarioResponse.data as SavedScenario[]) ?? [];
+        setScenarios(nextScenarios);
+        setSelectedScenarioIds((current) => current.filter((id) => nextScenarios.some((scenario) => scenario.id === id)));
+      }
+      if (conversationResponse.error) {
+        setConversations([]);
+        setAnalysisLoadError(true);
+      } else {
+        setConversations((conversationResponse.data as Conversation[]) ?? []);
+        setAnalysisLoadError(false);
+      }
 
-    const planData = planResponse.data as PlanInfo | null;
-    const periodEnd = planData?.current_period_end ? new Date(planData.current_period_end).getTime() : null;
-    const hasValidEnd = periodEnd === null || (!Number.isNaN(periodEnd) && Date.now() <= periodEnd + PLAN_GRACE_DAYS * 86_400_000);
-    const hasValidStatus = planData?.status === "active" || planData?.status === "trialing" || (planData?.status === "past_due" && periodEnd !== null);
-    const effectivePlan = planData?.plan === "pro" && hasValidStatus && hasValidEnd && planData ? planData : FREE_PLAN;
-    setPlan(effectivePlan);
-    const usageData = usageResponse.data as UsageItem[] | null;
-    setUsage(!usageResponse.error && usageData?.length ? usageData : defaultUsage(effectivePlan.plan));
-    setDataLoading(false);
+      const planData = planResponse.data as PlanInfo | null;
+      const periodEnd = planData?.current_period_end ? new Date(planData.current_period_end).getTime() : null;
+      const hasValidEnd = periodEnd === null || (!Number.isNaN(periodEnd) && Date.now() <= periodEnd + PLAN_GRACE_DAYS * 86_400_000);
+      const hasValidStatus = planData?.status === "active" || planData?.status === "trialing" || (planData?.status === "past_due" && periodEnd !== null);
+      const effectivePlan = planData?.plan === "pro" && hasValidStatus && hasValidEnd && planData ? planData : FREE_PLAN;
+      setPlan(effectivePlan);
+      const usageData = usageResponse.data as UsageItem[] | null;
+      setUsage(!usageResponse.error && usageData?.length ? usageData : defaultUsage(effectivePlan.plan));
+    } catch {
+      setMessage("No pudimos actualizar tu historial. Revisá la conexión y volvé a intentar.");
+      setAnalysisLoadError(true);
+    } finally {
+      setDataLoading(false);
+    }
   }, []);
 
   const handlePayPalReturn = useCallback(async (activeSession: Session) => {
@@ -205,7 +216,7 @@ export default function ProfilePage({ initialAuthMode = "login", continueToPro =
           items: [{ item_id: "calculadora_pro", item_name: "Calculadora Emprendedora Pro", item_variant: data.interval, price: data.value, quantity: 1 }],
         });
         sessionStorage.removeItem("calculadora-emprendedora:pending-plan");
-        await loadData();
+        await loadData(activeSession.user.id);
       }
     } catch {
       setMessage("El plan se activará cuando llegue la confirmación automática de PayPal.");
@@ -224,7 +235,7 @@ export default function ProfilePage({ initialAuthMode = "login", continueToPro =
       setProfile(profileFromUser(data.session?.user));
       setLoading(false);
       if (data.session) {
-        void loadData();
+        void loadData(data.session.user.id);
         void handlePayPalReturn(data.session);
       }
     });
@@ -234,10 +245,11 @@ export default function ProfilePage({ initialAuthMode = "login", continueToPro =
       setProfile(profileFromUser(nextSession?.user));
       setLoading(false);
       if (nextSession) {
-        void loadData();
+        void loadData(nextSession.user.id);
         void handlePayPalReturn(nextSession);
       } else {
         setScenarios([]);
+        setSelectedScenarioIds([]);
         setConversations([]);
         setPlan(FREE_PLAN);
         setUsage(defaultUsage());
@@ -299,8 +311,16 @@ export default function ProfilePage({ initialAuthMode = "login", continueToPro =
   async function renameScenario(scenario: SavedScenario) {
     const title = window.prompt("Nuevo nombre para el escenario", scenario.title || "Escenario");
     if (!title?.trim()) return;
-    const { error } = await getSupabaseClient()!.from("saved_scenarios").update({ title: title.trim() }).eq("id", scenario.id);
-    if (error) setMessage("No pudimos cambiar el nombre.");
+    const supabase = getSupabaseClient();
+    if (!supabase || !session) return;
+    const { data, error } = await supabase
+      .from("saved_scenarios")
+      .update({ title: title.trim() })
+      .eq("id", scenario.id)
+      .eq("user_id", session.user.id)
+      .select("id")
+      .maybeSingle();
+    if (error || !data) setMessage("No pudimos cambiar el nombre.");
     else setScenarios((current) => current.map((item) => item.id === scenario.id ? { ...item, title: title.trim() } : item));
   }
 
@@ -314,9 +334,20 @@ export default function ProfilePage({ initialAuthMode = "login", continueToPro =
 
   async function removeScenario(id: string) {
     if (!window.confirm("¿Eliminar definitivamente este escenario?")) return;
-    const { error } = await getSupabaseClient()!.from("saved_scenarios").delete().eq("id", id);
-    if (error) setMessage("No pudimos eliminar el escenario.");
-    else setScenarios((current) => current.filter((item) => item.id !== id));
+    const supabase = getSupabaseClient();
+    if (!supabase || !session) return;
+    const { data, error } = await supabase
+      .from("saved_scenarios")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", session.user.id)
+      .select("id")
+      .maybeSingle();
+    if (error || !data) setMessage("No pudimos eliminar el escenario.");
+    else {
+      setScenarios((current) => current.filter((item) => item.id !== id));
+      setSelectedScenarioIds((current) => current.filter((scenarioId) => scenarioId !== id));
+    }
   }
 
   async function removeAnalysis(id: string) {
@@ -335,6 +366,29 @@ export default function ProfilePage({ initialAuthMode = "login", continueToPro =
     });
   }, [scenarioQuery, scenarios]);
 
+  const selectedScenarios = useMemo(
+    () => selectedScenarioIds.map((id) => scenarios.find((scenario) => scenario.id === id)).filter((scenario): scenario is SavedScenario => Boolean(scenario)),
+    [scenarios, selectedScenarioIds],
+  );
+  const selectedCalculatorType = selectedScenarios[0]?.calculator_type;
+
+  function toggleScenarioSelection(scenario: SavedScenario) {
+    if (selectedScenarioIds.includes(scenario.id)) {
+      setSelectedScenarioIds((current) => current.filter((id) => id !== scenario.id));
+      return;
+    }
+    if (selectedScenarioIds.length >= 3) {
+      setMessage("Podés comparar hasta 3 escenarios a la vez.");
+      return;
+    }
+    if (selectedCalculatorType && selectedCalculatorType !== scenario.calculator_type) {
+      setMessage("Elegí escenarios de una misma calculadora para comparar resultados equivalentes.");
+      return;
+    }
+    setSelectedScenarioIds((current) => [...current, scenario.id]);
+    setMessage("");
+  }
+
   if (loading) return <div className="grid min-h-[65vh] place-items-center text-sm text-white/40">Preparando tu espacio...</div>;
   if (!session) return <main><AuthModal open returnTo={continueToPro ? "/perfil?continuar=pro" : "/perfil"} initialMode={initialAuthMode} /></main>;
 
@@ -350,7 +404,79 @@ export default function ProfilePage({ initialAuthMode = "login", continueToPro =
   function renderScenarioCard(scenario: SavedScenario, compact = false) {
     const calculator = getCalculatorInfo(scenario.calculator_type);
     const metrics = getScenarioMetrics(scenario).slice(0, compact ? 2 : 3);
-    return <article key={scenario.id} className="group rounded-3xl border border-white/[0.08] bg-white/[0.025] p-5 transition hover:border-white/[0.14] hover:bg-white/[0.035] sm:p-6"><div className="flex items-start gap-4"><span className="grid size-11 shrink-0 place-items-center rounded-2xl border border-emerald-200/15 bg-emerald-200/[0.07] text-sm font-black text-emerald-100">{calculator.icon}</span><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><span className="text-[10px] font-bold uppercase tracking-[.12em] text-emerald-200/55">{calculator.name}</span><span className="text-[10px] text-white/25">{formatRelativeDate(scenario.created_at)}</span></div><h3 className="mt-2 truncate text-lg font-semibold text-white/90">{scenario.title || "Escenario sin nombre"}</h3><p className="mt-2 line-clamp-2 text-xs leading-5 text-white/35">{getScenarioPreview(scenario)}</p></div></div>{metrics.length > 0 && <div className="mt-5 grid gap-2 sm:grid-cols-3">{metrics.map((metric) => <div key={metric.label} className="min-w-0 rounded-xl border border-white/[0.06] bg-black/20 px-3 py-3"><p className="truncate text-[10px] text-white/30">{metric.label}</p><p className="mt-1 truncate text-sm font-semibold text-white/75">{metric.value}</p></div>)}</div>}<div className="mt-5 flex flex-wrap items-center gap-2"><Link href={`/perfil/escenarios/${scenario.id}`} className="app-dark-action rounded-full px-4 py-2.5 text-sm transition">Abrir escenario</Link>{!compact && <><button type="button" onClick={() => void renameScenario(scenario)} className="rounded-full border border-white/10 px-3.5 py-2 text-xs font-semibold text-white/50 hover:bg-white/5 hover:text-white">Renombrar</button><button type="button" onClick={() => void removeScenario(scenario.id)} className="ml-auto rounded-full px-3 py-2 text-xs font-semibold text-red-300/55 hover:bg-red-500/10 hover:text-red-200">Eliminar</button></>}</div></article>;
+    const selected = selectedScenarioIds.includes(scenario.id);
+    const incompatible = !selected && Boolean(selectedCalculatorType) && selectedCalculatorType !== scenario.calculator_type;
+    const limitReached = !selected && selectedScenarioIds.length >= 3;
+    return (
+      <article key={scenario.id} className={`group rounded-3xl border p-5 transition sm:p-6 ${selected ? "border-emerald-300/35 bg-emerald-300/[0.065] shadow-[0_18px_45px_rgba(16,185,129,.08)]" : "border-white/[0.08] bg-white/[0.025] hover:border-white/[0.14] hover:bg-white/[0.035]"}`}>
+        <div className="flex items-start gap-4">
+          <span className="grid size-11 shrink-0 place-items-center rounded-2xl border border-emerald-200/15 bg-emerald-200/[0.07] text-sm font-black text-emerald-100">{calculator.icon}</span>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2"><span className="text-[10px] font-bold uppercase tracking-[.12em] text-emerald-200/55">{calculator.name}</span><span className="text-[10px] text-white/25">{formatRelativeDate(scenario.created_at)}</span></div>
+            <h3 className="mt-2 truncate text-lg font-semibold text-white/90">{scenario.title || "Escenario sin nombre"}</h3>
+            <p className="mt-2 line-clamp-2 text-xs leading-5 text-white/35">{getScenarioPreview(scenario)}</p>
+          </div>
+          {!compact && (
+            <button
+              type="button"
+              onClick={() => toggleScenarioSelection(scenario)}
+              disabled={incompatible || limitReached}
+              aria-pressed={selected}
+              aria-label={`${selected ? "Quitar de la comparación" : "Agregar a la comparación"}: ${scenario.title || calculator.name}`}
+              title={incompatible ? "Solo podés comparar escenarios de la misma calculadora" : limitReached ? "Ya elegiste el máximo de 3 escenarios" : undefined}
+              className={`shrink-0 rounded-full border px-3 py-2 text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-30 ${selected ? "border-emerald-200/35 bg-emerald-300 text-[#052e21]" : "border-white/10 text-white/55 hover:border-emerald-200/25 hover:text-emerald-100"}`}
+            >
+              {selected ? "✓ Elegido" : "Comparar"}
+            </button>
+          )}
+        </div>
+        {metrics.length > 0 && <div className="mt-5 grid gap-2 sm:grid-cols-3">{metrics.map((metric) => <div key={metric.label} className="min-w-0 rounded-xl border border-white/[0.06] bg-black/20 px-3 py-3"><p className="truncate text-[10px] text-white/30">{metric.label}</p><p className="mt-1 truncate text-sm font-semibold text-white/75">{metric.value}</p></div>)}</div>}
+        <div className="mt-5 flex flex-wrap items-center gap-2"><Link href={`/perfil/escenarios/${scenario.id}`} className="app-dark-action rounded-full px-4 py-2.5 text-sm transition">Abrir escenario</Link>{!compact && <><button type="button" onClick={() => void renameScenario(scenario)} className="rounded-full border border-white/10 px-3.5 py-2 text-xs font-semibold text-white/50 hover:bg-white/5 hover:text-white">Renombrar</button><button type="button" onClick={() => void removeScenario(scenario.id)} className="ml-auto rounded-full px-3 py-2 text-xs font-semibold text-red-300/55 hover:bg-red-500/10 hover:text-red-200">Eliminar</button></>}</div>
+      </article>
+    );
+  }
+
+  function renderScenarioLibrary() {
+    const readyToCompare = selectedScenarioIds.length >= 2;
+    const compareHref = `/perfil/escenarios/comparar?ids=${selectedScenarioIds.join(",")}`;
+    return (
+      <>
+        <header className="flex min-w-0 flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0">
+            <p className="text-xs font-bold text-emerald-200/70">Biblioteca de cálculos</p>
+            <h1 className="mt-2 break-words text-3xl font-bold tracking-tight">Escenarios guardados</h1>
+            <p className="mt-2 text-sm font-medium text-white/60">Revisá tu historial o compará entre 2 y 3 alternativas de una misma calculadora.</p>
+          </div>
+          <Link href="/calculadoras" className="profile-primary-action w-full rounded-full px-4 py-2.5 text-center text-sm transition sm:w-auto">Crear escenario</Link>
+        </header>
+
+        {scenarios.length > 0 && (
+          <section aria-label="Selección para comparar" className="mt-7 rounded-3xl border border-emerald-300/[0.14] bg-[linear-gradient(125deg,rgba(110,231,183,.07),rgba(255,255,255,.02))] p-4 sm:p-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-sm font-bold text-white/85">Comparador de escenarios</p>
+                  <span className="rounded-full border border-white/[0.08] bg-black/20 px-2.5 py-1 text-[10px] font-bold text-white/45">{selectedScenarioIds.length}/3 elegidos</span>
+                </div>
+                <p aria-live="polite" className="mt-1.5 text-xs leading-5 text-white/42">{selectedScenarioIds.length === 0 ? "Marcá Comparar en una tarjeta; las opciones incompatibles se desactivan automáticamente." : selectedScenarioIds.length === 1 ? "Elegí al menos una alternativa más de la misma calculadora." : "Selección lista. Podés sumar una tercera alternativa o abrir la comparación."}</p>
+              </div>
+              <div className="flex shrink-0 flex-wrap items-center gap-2">
+                {selectedScenarioIds.length > 0 && <button type="button" onClick={() => setSelectedScenarioIds([])} className="rounded-full border border-white/10 px-3.5 py-2.5 text-xs font-bold text-white/50 transition hover:bg-white/5 hover:text-white">Limpiar</button>}
+                {readyToCompare ? (
+                  <Link href={compareHref} onClick={() => trackEvent("open_scenario_comparison", { calculator_type: selectedCalculatorType, scenario_count: selectedScenarioIds.length })} className="rounded-full bg-emerald-300 px-5 py-2.5 text-sm font-black text-[#052e21] transition hover:bg-emerald-200">Comparar ahora →</Link>
+                ) : (
+                  <span aria-disabled="true" className="cursor-not-allowed rounded-full bg-white/[0.07] px-5 py-2.5 text-sm font-black text-white/30">Comparar ahora</span>
+                )}
+              </div>
+            </div>
+            {selectedScenarios.length > 0 && <div className="mt-4 flex flex-wrap gap-2 border-t border-white/[0.07] pt-4">{selectedScenarios.map((scenario, index) => <button key={scenario.id} type="button" onClick={() => toggleScenarioSelection(scenario)} className="inline-flex max-w-full items-center gap-2 rounded-full border border-emerald-200/15 bg-emerald-300/[0.07] px-3 py-2 text-xs font-semibold text-emerald-50/70"><span className="shrink-0 text-emerald-200/45">{index + 1}</span><span className="truncate">{scenario.title || getCalculatorInfo(scenario.calculator_type).name}</span><span aria-hidden="true" className="shrink-0 text-white/35">×</span></button>)}</div>}
+          </section>
+        )}
+
+        <div className="mt-5 flex min-w-0 items-center gap-3 rounded-2xl border border-white/[0.07] bg-black/35 px-4"><span aria-hidden="true" className="text-white/60">⌕</span><input aria-label="Buscar escenarios por nombre o calculadora" value={scenarioQuery} onChange={(event) => setScenarioQuery(event.target.value)} placeholder="Buscar por nombre o calculadora" className="min-w-0 flex-1 bg-transparent py-3.5 text-sm font-semibold text-white outline-none placeholder:text-white/40"/><span className="hidden text-xs text-white/60 sm:inline">{filteredScenarios.length} resultados</span></div>
+        <section className="mt-5 grid gap-4 2xl:grid-cols-2">{filteredScenarios.length ? filteredScenarios.map((item) => renderScenarioCard(item)) : <p className="rounded-3xl border border-dashed border-white/10 p-8 text-center text-sm font-medium text-white/60 sm:p-10 2xl:col-span-2">{scenarios.length ? "No encontramos escenarios con esa búsqueda." : "No hay escenarios guardados todavía."}</p>}</section>
+      </>
+    );
   }
 
   function renderAnalysisRow(conversation: Conversation) {
@@ -378,7 +504,7 @@ export default function ProfilePage({ initialAuthMode = "login", continueToPro =
 
         {view === "analisis" && <><header className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div className="min-w-0"><p className="text-xs font-bold text-emerald-200/70">Historial inteligente</p><h1 className="mt-2 break-words text-3xl font-bold tracking-tight">Análisis con IA</h1><p className="mt-2 text-sm font-medium text-white/60">Abrí una conversación exactamente donde la dejaste.</p></div><Link href="/calculadoras" className="profile-primary-action w-full rounded-full px-4 py-2.5 text-center text-sm transition sm:w-auto">Nuevo análisis</Link></header><section className="mt-8 space-y-3">{analysisLoadError ? <p className="rounded-3xl border border-amber-300/20 bg-amber-300/[0.06] p-5 text-sm font-semibold text-amber-50/90">El historial no está disponible temporalmente. Tus calculadoras y escenarios siguen funcionando con normalidad.</p> : conversations.length ? conversations.map(renderAnalysisRow) : <p className="rounded-3xl border border-dashed border-white/10 p-8 text-center text-sm font-medium text-white/60 sm:p-10">No hay análisis guardados todavía.</p>}</section></>}
 
-        {view === "escenarios" && <><header className="flex min-w-0 flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"><div className="min-w-0"><p className="text-xs font-bold text-emerald-200/70">Biblioteca de cálculos</p><h1 className="mt-2 break-words text-3xl font-bold tracking-tight">Escenarios guardados</h1><p className="mt-2 text-sm font-medium text-white/60">Resultados claros, notas y acceso rápido para volver a calcular.</p></div><Link href="/calculadoras" className="profile-primary-action w-full rounded-full px-4 py-2.5 text-center text-sm transition sm:w-auto">Crear escenario</Link></header><div className="mt-7 flex min-w-0 items-center gap-3 rounded-2xl border border-white/[0.07] bg-black/35 px-4"><span className="text-white/60">⌕</span><input value={scenarioQuery} onChange={(event) => setScenarioQuery(event.target.value)} placeholder="Buscar por nombre o calculadora" className="min-w-0 flex-1 bg-transparent py-3.5 text-sm font-semibold text-white outline-none placeholder:text-white/40"/><span className="hidden text-xs text-white/60 sm:inline">{filteredScenarios.length} resultados</span></div><section className="mt-5 grid gap-4 2xl:grid-cols-2">{filteredScenarios.length ? filteredScenarios.map((item) => renderScenarioCard(item)) : <p className="rounded-3xl border border-dashed border-white/10 p-8 text-center text-sm font-medium text-white/60 sm:p-10 2xl:col-span-2">{scenarios.length ? "No encontramos escenarios con esa búsqueda." : "No hay escenarios guardados todavía."}</p>}</section></>}
+        {view === "escenarios" && renderScenarioLibrary()}
 
         {view === "plan" && <><header><p className="text-xs font-semibold text-emerald-200/60">Suscripción compartida</p><h1 className="mt-2 text-3xl font-semibold tracking-tight">Mi plan</h1><p className="mt-2 text-sm text-white/40">Tus beneficios y consumos para todo el ecosistema Growtella.</p></header><section className="relative mt-8 overflow-hidden rounded-[1.7rem] border border-emerald-300/20 bg-[linear-gradient(145deg,rgba(16,185,129,.12),rgba(255,255,255,.025)_55%,rgba(0,0,0,.12))] p-6 sm:p-8"><div className="pointer-events-none absolute -right-16 -top-20 size-64 rounded-full bg-emerald-300/[0.08] blur-3xl"/><div className="relative flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between"><div><div className="flex items-center gap-2"><span className="rounded-full border border-emerald-200/20 bg-emerald-200/[0.08] px-3 py-1 text-xs font-semibold uppercase tracking-[.14em] text-emerald-100">{plan.plan === "pro" ? "Growtella Pro" : "Plan Gratis"}</span>{plan.plan === "pro" && <span className="text-xs text-white/35">Activo</span>}</div><h2 className="mt-5 text-3xl font-semibold tracking-tight">{plan.plan === "pro" ? "Más capacidad para decidir mejor" : "Todo lo esencial para empezar"}</h2><p className="mt-3 max-w-xl text-sm leading-6 text-white/45">{plan.plan === "pro" ? "Tu cuenta tiene el modelo avanzado y cupos ampliados en las herramientas compatibles." : "Usá las calculadoras, guardá escenarios y probá la IA con límites gratuitos."}</p></div>{plan.plan === "free" && <Link href="/precios" className="relative shrink-0 rounded-full bg-emerald-300 px-5 py-2.5 text-center text-sm font-black text-[#052e21]">Conocer Pro</Link>}</div></section><PlanUsageDashboard plan={plan} usage={usage}/><section className="mt-8 grid gap-4 sm:grid-cols-3">{[["Tus datos siguen siendo tuyos","Cambiar de plan no elimina escenarios ni conversaciones."],["Renovación clara","Siempre ves cuándo se habilita nuevamente cada cupo."],["Una sola membresía","Pro se reconoce en Growtella y sus aplicaciones."]].map(([titleText,copy]) => <div key={titleText} className="rounded-2xl border border-white/[0.07] p-5"><p className="text-sm font-semibold text-white/75">{titleText}</p><p className="mt-2 text-xs leading-5 text-white/35">{copy}</p></div>)}</section></>}
 

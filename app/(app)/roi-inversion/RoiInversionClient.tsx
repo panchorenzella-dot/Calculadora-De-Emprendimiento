@@ -1,6 +1,8 @@
 "use client";
 
 import { type FormEvent, type ReactNode, useState } from "react";
+import { calculateRoiInversion } from "@/lib/calculations/investments";
+import { formatLocaleNumberInput, parseLocaleNumber, validateNumericFields } from "@/lib/numberInput";
 
 type Currency = "ARS" | "USD";
 
@@ -15,35 +17,11 @@ type Results = {
 };
 
 function parseInput(value: string) {
-  const cleanValue = value.replace(/\./g, "").replace(",", ".");
-  const parsed = Number(cleanValue);
-  return Number.isFinite(parsed) ? parsed : 0;
-}
-
-function addThousandsSeparator(value: string) {
-  return value.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  return parseLocaleNumber(value);
 }
 
 function formatInputValue(value: string) {
-  const cleanValue = value.replace(/[^\d,]/g, "");
-
-  if (!cleanValue) return "";
-
-  const hasComma = cleanValue.includes(",");
-  const [integerRaw, ...decimalParts] = cleanValue.split(",");
-
-  const integerPart = integerRaw.replace(/\D/g, "");
-  const decimalPart = decimalParts.join("").replace(/\D/g, "");
-
-  const formattedInteger = integerPart
-    ? addThousandsSeparator(integerPart)
-    : "";
-
-  if (hasComma) {
-    return `${formattedInteger},${decimalPart}`;
-  }
-
-  return formattedInteger;
+  return formatLocaleNumberInput(value);
 }
 
 function formatMoney(value: number, currency: Currency) {
@@ -80,47 +58,7 @@ function calculateResults({
   costosExtra: number;
   meses: number;
 }): Results {
-  const safeInversionInicial = Math.max(0, inversionInicial);
-  const safeValorFinal = Math.max(0, valorFinal);
-  const safeCostosExtra = Math.max(0, costosExtra);
-  const safeMeses = Math.max(0, meses);
-
-  const totalInvertidoReal = safeInversionInicial + safeCostosExtra;
-  const gananciaNeta = safeValorFinal - totalInvertidoReal;
-
-  const roiTotal =
-    totalInvertidoReal > 0 ? (gananciaNeta / totalInvertidoReal) * 100 : 0;
-
-  let rendimientoMensual = 0;
-  let rendimientoAnualizado = 0;
-
-  if (totalInvertidoReal > 0 && safeMeses > 0) {
-    const ratio = safeValorFinal / totalInvertidoReal;
-
-    rendimientoMensual = (Math.pow(ratio, 1 / safeMeses) - 1) * 100;
-    rendimientoAnualizado =
-      (Math.pow(1 + rendimientoMensual / 100, 12) - 1) * 100;
-  }
-
-  let estado = "Saliste empatado";
-
-  if (gananciaNeta > 0) {
-    estado = "Ganaste plata";
-  }
-
-  if (gananciaNeta < 0) {
-    estado = "Perdiste plata";
-  }
-
-  return {
-    totalInvertidoReal,
-    gananciaNeta,
-    roiTotal,
-    rendimientoMensual,
-    rendimientoAnualizado,
-    meses: safeMeses,
-    estado,
-  };
+  return calculateRoiInversion({ inversionInicial, valorFinal, costosExtra, meses });
 }
 
 type InputFieldProps = {
@@ -167,9 +105,11 @@ function InputField({
 
         <input
           type="text"
+          aria-label={label}
           inputMode="decimal"
           value={value}
           onChange={(event) => onChange(formatInputValue(event.target.value))}
+          onFocus={(event) => event.currentTarget.select()}
           placeholder="0"
           className={`w-full rounded-2xl border border-zinc-800 bg-zinc-950 py-3 text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-emerald-300/50 ${leftPaddingClass} ${rightPaddingClass}`}
         />
@@ -246,11 +186,25 @@ export default function RoiDeInversionPage() {
   const [meses, setMeses] = useState("");
 
   const [results, setResults] = useState<Results | null>(null);
+  const [error, setError] = useState("");
 
   const moneyPrefix = currency === "ARS" ? "$" : "US$";
 
   function handleCalculate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    const validation = validateNumericFields([
+      { name: "initial", label: "Inversión inicial", value: inversionInicial, required: true, min: 0 },
+      { name: "final", label: "Valor final de la inversión", value: valorFinal, required: true, min: 0 },
+      { name: "costs", label: "Costos extra", value: costosExtra, min: 0 },
+      { name: "months", label: "Tiempo de inversión", value: meses, min: 0, max: 1200 },
+    ]);
+    if (!validation.valid || validation.values.initial <= 0) {
+      setError(validation.firstError || "La inversión inicial debe ser mayor que cero.");
+      setResults(null);
+      return;
+    }
+    setError("");
 
     const inversionInicialNumber = parseInput(inversionInicial);
     const valorFinalNumber = parseInput(valorFinal);
@@ -378,6 +332,8 @@ export default function RoiDeInversionPage() {
                   helper="Sirve para estimar el rendimiento mensual y anualizado. Si no lo sabés, podés dejarlo en 0."
                 />
               </div>
+
+              {error ? <p role="alert" className="rounded-xl border border-rose-300/20 bg-rose-300/[0.06] px-4 py-3 text-sm font-semibold text-rose-100">{error}</p> : null}
 
               <button
                 type="submit"

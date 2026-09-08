@@ -1,6 +1,8 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { calculateProduccion } from "@/lib/calculations/business";
+import { formatLocaleNumberInput, parseLocaleNumber, validateNumericFields } from "@/lib/numberInput";
 
 type Currency = "ARS" | "USD";
 
@@ -21,34 +23,11 @@ type Results = {
 };
 
 function parseInput(value: string) {
-  const normalizedValue = value
-    .replace(/\./g, "")
-    .replace(",", ".")
-    .replace(/[^0-9.]/g, "");
-
-  const parsed = Number(normalizedValue);
-  return Number.isFinite(parsed) ? parsed : 0;
+  return parseLocaleNumber(value);
 }
 
 function formatInputValue(value: string) {
-  const cleanedValue = value.replace(/\./g, "").replace(/[^0-9,]/g, "");
-  const hasDecimalComma = cleanedValue.includes(",");
-
-  const [integerPartRaw, ...decimalParts] = cleanedValue.split(",");
-  const integerPart = integerPartRaw.replace(/\D/g, "");
-  const decimalPartRaw = decimalParts.join("").replace(/\D/g, "");
-
-  const formattedInteger =
-    integerPart.length > 0
-      ? new Intl.NumberFormat("es-AR").format(Number(integerPart))
-      : "";
-
-  if (hasDecimalComma) {
-    const decimalPart = decimalPartRaw.slice(0, 2);
-    return `${formattedInteger},${decimalPart}`;
-  }
-
-  return formattedInteger;
+  return formatLocaleNumberInput(value);
 }
 
 function formatMoney(value: number, currency: Currency) {
@@ -104,9 +83,11 @@ function InputField({
 
         <input
           type="text"
+          aria-label={label}
           inputMode="decimal"
           value={value}
           onChange={(event) => onChange(formatInputValue(event.target.value))}
+          onFocus={(event) => event.currentTarget.select()}
           placeholder="0"
           className={`w-full appearance-none rounded-2xl border border-zinc-800 bg-zinc-950 py-3 text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-emerald-300/50 ${
             prefix ? "pl-16 pr-4" : "px-4"
@@ -167,11 +148,28 @@ export default function ProduccionPage() {
   const [costosFijos, setCostosFijos] = useState("");
 
   const [results, setResults] = useState<Results | null>(null);
+  const [error, setError] = useState("");
 
   const moneyPrefix = currency === "ARS" ? "$" : "US$";
 
   function handleCalculate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    const validation = validateNumericFields([
+      { name: "cost", label: "Costo de producción por unidad", value: costoProduccion, required: true, min: 0 },
+      { name: "packaging", label: "Packaging por unidad", value: packaging, min: 0 },
+      { name: "other", label: "Otros gastos por unidad", value: otrosGastos, min: 0 },
+      { name: "price", label: "Precio de venta por unidad", value: precioVenta, required: true, min: 0 },
+      { name: "units", label: "Unidades producidas por día", value: unidadesPorDia, required: true, min: 0, integer: true },
+      { name: "days", label: "Días de producción por mes", value: diasProduccion, required: true, min: 1, max: 31, integer: true },
+      { name: "fixed", label: "Costos fijos mensuales", value: costosFijos, min: 0 },
+    ]);
+    if (!validation.valid || validation.values.price <= 0 || validation.values.units <= 0) {
+      setError(validation.firstError || (validation.values.price <= 0 ? "El precio de venta debe ser mayor que cero." : "Las unidades por día deben ser mayores que cero."));
+      setResults(null);
+      return;
+    }
+    setError("");
 
     const costoProduccionNumber = parseInput(costoProduccion);
     const packagingNumber = parseInput(packaging);
@@ -181,45 +179,15 @@ export default function ProduccionPage() {
     const diasProduccionNumber = parseInput(diasProduccion);
     const costosFijosNumber = parseInput(costosFijos);
 
-    const costoTotalUnitario =
-      costoProduccionNumber + packagingNumber + otrosGastosNumber;
-
-    const gananciaPorUnidad = precioVentaNumber - costoTotalUnitario;
-
-    const margenGanancia =
-      precioVentaNumber > 0
-        ? (gananciaPorUnidad / precioVentaNumber) * 100
-        : 0;
-
-    const unidadesPorMes = unidadesPorDiaNumber * diasProduccionNumber;
-    const ventasMensuales = precioVentaNumber * unidadesPorMes;
-    const costoVariableMensual = costoTotalUnitario * unidadesPorMes;
-    const gananciaBrutaMensual = ventasMensuales - costoVariableMensual;
-    const gananciaNetaMensual = gananciaBrutaMensual - costosFijosNumber;
-
-    const puntoEquilibrioMensual =
-      gananciaPorUnidad > 0 ? costosFijosNumber / gananciaPorUnidad : null;
-
-    const puntoEquilibrioDiario =
-      puntoEquilibrioMensual !== null && diasProduccionNumber > 0
-        ? puntoEquilibrioMensual / diasProduccionNumber
-        : null;
-
-    setResults({
+    setResults(calculateProduccion({
       costoProduccion: costoProduccionNumber,
       packaging: packagingNumber,
       otrosGastos: otrosGastosNumber,
-      costoTotalUnitario,
-      gananciaPorUnidad,
-      margenGanancia,
-      unidadesPorMes,
-      ventasMensuales,
-      costoVariableMensual,
-      gananciaBrutaMensual,
-      gananciaNetaMensual,
-      puntoEquilibrioMensual,
-      puntoEquilibrioDiario,
-    });
+      precioVenta: precioVentaNumber,
+      unidadesPorDia: unidadesPorDiaNumber,
+      diasProduccion: diasProduccionNumber,
+      costosFijos: costosFijosNumber,
+    }));
   }
 
   const emptyResults: Results = {
@@ -370,6 +338,8 @@ export default function ProduccionPage() {
                   helper="Incluye alquiler, sueldos, luz, gas, agua, maquinaria, mantenimiento, contador, marketing y otros gastos mensuales."
                 />
               </div>
+
+              {error ? <p role="alert" className="rounded-xl border border-rose-300/20 bg-rose-300/[0.06] px-4 py-3 text-sm font-semibold text-rose-100">{error}</p> : null}
 
               <button
                 type="submit"

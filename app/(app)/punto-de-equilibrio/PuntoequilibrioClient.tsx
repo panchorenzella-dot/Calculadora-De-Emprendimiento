@@ -3,8 +3,9 @@
 import { type FormEvent, useMemo, useState } from "react";
 import Card from "@/components/Card";
 import MoneyInput, { Currency } from "@/components/MoneyInput";
+import { calculateBreakEven } from "@/lib/calculations/business";
 import { fmtMoney, fmtNum } from "@/lib/format";
-import { onlyDigits, parseDigitsToNumber } from "@/lib/numberInput";
+import { formatLocaleNumberInput, parseDigitsToNumber, validateNumericFields } from "@/lib/numberInput";
 
 type Results = {
   CF: number;
@@ -27,6 +28,7 @@ export default function PuntoEquilibrioPage() {
   const [costoVariable, setCostoVariable] = useState("");
   const [ventasEstimadas, setVentasEstimadas] = useState("");
   const [calc, setCalc] = useState<Results | null>(null);
+  const [error, setError] = useState("");
 
   const draftCalc = useMemo<Results>(() => {
     const CF = parseDigitsToNumber(costosFijos);
@@ -34,37 +36,41 @@ export default function PuntoEquilibrioPage() {
     const CV = parseDigitsToNumber(costoVariable);
     const ventas = parseDigitsToNumber(ventasEstimadas);
 
-    const margenContribucionUnit = PV - CV;
-    const margenContribucionPct =
-      PV > 0 ? (margenContribucionUnit / PV) * 100 : 0;
-
-    const unidadesEquilibrio =
-      margenContribucionUnit > 0 ? CF / margenContribucionUnit : 0;
-
-    const facturacionEquilibrio =
-      margenContribucionUnit > 0 ? unidadesEquilibrio * PV : 0;
-
-    const gananciaEstimada =
-      ventas > 0 ? ventas * margenContribucionUnit - CF : 0;
-
-    const rentable = margenContribucionUnit > 0;
+    const result = calculateBreakEven({
+      fixedCosts: CF,
+      unitPrice: PV,
+      unitVariableCost: CV,
+      estimatedUnits: ventas,
+    });
 
     return {
       CF,
       PV,
       CV,
       ventas,
-      margenContribucionUnit,
-      margenContribucionPct,
-      unidadesEquilibrio,
-      facturacionEquilibrio,
-      gananciaEstimada,
-      rentable,
+      margenContribucionUnit: result.contributionPerUnit,
+      margenContribucionPct: result.contributionMarginPct,
+      unidadesEquilibrio: result.breakEvenUnits,
+      facturacionEquilibrio: result.breakEvenRevenue,
+      gananciaEstimada: result.estimatedProfit,
+      rentable: result.profitable,
     };
   }, [costosFijos, precioVenta, costoVariable, ventasEstimadas]);
 
   function handleCalculate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const validation = validateNumericFields([
+      { name: "fixed", label: "Costos fijos mensuales", value: costosFijos, required: true, min: 0 },
+      { name: "price", label: "Precio de venta por unidad", value: precioVenta, required: true, min: 0 },
+      { name: "variable", label: "Costo variable por unidad", value: costoVariable, required: true, min: 0 },
+      { name: "units", label: "Unidades estimadas por mes", value: ventasEstimadas, min: 0, integer: true },
+    ]);
+    if (!validation.valid || validation.values.price <= 0) {
+      setError(validation.firstError || "El precio de venta debe ser mayor que cero.");
+      setCalc(null);
+      return;
+    }
+    setError("");
     setCalc(draftCalc);
   }
 
@@ -114,7 +120,7 @@ export default function PuntoEquilibrioPage() {
               <MoneyInput
                 label="Costos fijos mensuales"
                 valueDigits={costosFijos}
-                onChangeDigits={(v) => setCostosFijos(onlyDigits(v))}
+                onChangeDigits={setCostosFijos}
                 hint="alquiler, sueldos, servicios, etc."
                 currency={currency}
               />
@@ -122,14 +128,14 @@ export default function PuntoEquilibrioPage() {
               <MoneyInput
                 label="Precio de venta por unidad"
                 valueDigits={precioVenta}
-                onChangeDigits={(v) => setPrecioVenta(onlyDigits(v))}
+                onChangeDigits={setPrecioVenta}
                 currency={currency}
               />
 
               <MoneyInput
                 label="Costo variable por unidad"
                 valueDigits={costoVariable}
-                onChangeDigits={(v) => setCostoVariable(onlyDigits(v))}
+                onChangeDigits={setCostoVariable}
                 hint="materia prima, packaging, comisión, etc."
                 currency={currency}
               />
@@ -140,17 +146,17 @@ export default function PuntoEquilibrioPage() {
                   <span className="text-xs text-white/40">(opcional)</span>
                 </span>
                 <input
+                  aria-label="Unidades estimadas por mes"
                   inputMode="numeric"
-                  value={ventasEstimadas ? fmtNum(parseDigitsToNumber(ventasEstimadas)) : ""}
-                  onChange={(e) =>
-                    setVentasEstimadas(onlyDigits(e.target.value))
-                  }
+                  value={formatLocaleNumberInput(ventasEstimadas, { maxDecimals: 0 })}
+                  onChange={(e) => setVentasEstimadas(formatLocaleNumberInput(e.target.value, { maxDecimals: 0 }))}
                   onFocus={(e) => e.currentTarget.select()}
                   placeholder="0"
                   className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 font-semibold text-white outline-none placeholder:text-white/35"
                 />
               </label>
             </div>
+            {error ? <p role="alert" className="mt-5 rounded-xl border border-rose-300/20 bg-rose-300/[0.06] px-4 py-3 text-sm font-semibold text-rose-100">{error}</p> : null}
             <button type="submit" className="mt-5 w-full rounded-full bg-white px-4 py-3 text-sm font-black text-zinc-950 transition hover:bg-zinc-200">
               Calcular
             </button>

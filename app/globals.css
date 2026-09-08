@@ -54,6 +54,34 @@ textarea {
   background: rgba(255, 255, 255, 0.18);
 }
 
+@page scenario-detail {
+  size: A4 portrait;
+  margin: 12mm;
+}
+
+@page scenario-comparison {
+  size: A4 landscape;
+  margin: 10mm;
+}
+
+@media print {
+  html,
+  body {
+    background: #fff !important;
+    color: #18181b !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .scenario-print-document {
+    page: scenario-detail;
+  }
+
+  .comparison-print-document {
+    page: scenario-comparison;
+  }
+}
+
 .calculator-theme {
   background:
     radial-gradient(circle at 12% 8%, rgba(52, 211, 153, 0.12), transparent 24rem),

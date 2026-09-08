@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import AuthModal from "@/components/AuthModal";
+import PrintPdfButton from "@/components/PrintPdfButton";
 import {
   getCalculatorInfo,
   getScenarioFields,
   getScenarioMetrics,
   getScenarioResultNarrative,
+  SAVED_SCENARIO_COLUMNS,
 } from "@/lib/scenarios";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import type { SavedScenario } from "@/types/scenario";
@@ -34,35 +36,45 @@ export default function ScenarioDetail({ id }: { id: string }) {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
+    let active = true;
     async function load() {
       const supabase = getSupabaseClient();
       if (!supabase) {
-        setError("Falta configurar la conexión de la cuenta.");
-        setLoading(false);
+        if (active) {
+          setError("Falta configurar la conexión de la cuenta.");
+          setLoading(false);
+        }
         return;
       }
-      const { data: auth } = await supabase.auth.getSession();
-      if (!auth.session) {
-        setNeedsAuth(true);
-        setLoading(false);
-        return;
+      try {
+        const { data: auth, error: authError } = await supabase.auth.getSession();
+        if (authError) throw authError;
+        if (!auth.session) {
+          if (active) setNeedsAuth(true);
+          return;
+        }
+        const { data, error: queryError } = await supabase
+          .from("saved_scenarios")
+          .select(SAVED_SCENARIO_COLUMNS)
+          .eq("id", id)
+          .eq("user_id", auth.session.user.id)
+          .maybeSingle();
+        if (queryError || !data) {
+          if (active) setError("No encontramos este escenario o no pertenece a tu cuenta.");
+        } else if (active) {
+          const loaded = data as SavedScenario;
+          setScenario(loaded);
+          setTitle(loaded.title || "Escenario guardado");
+          setNotes(loaded.notes || "");
+        }
+      } catch {
+        if (active) setError("No pudimos cargar el escenario. Revisá la conexión y volvé a intentar.");
+      } finally {
+        if (active) setLoading(false);
       }
-      const { data, error: queryError } = await supabase
-        .from("saved_scenarios")
-        .select("*")
-        .eq("id", id)
-        .single();
-      if (queryError || !data) {
-        setError("No encontramos este escenario o no pertenece a tu cuenta.");
-      } else {
-        const loaded = data as SavedScenario;
-        setScenario(loaded);
-        setTitle(loaded.title || "Escenario guardado");
-        setNotes(loaded.notes || "");
-      }
-      setLoading(false);
     }
     void load();
+    return () => { active = false; };
   }, [id]);
 
   const metrics = useMemo(() => scenario ? getScenarioMetrics(scenario) : [], [scenario]);
@@ -76,30 +88,42 @@ export default function ScenarioDetail({ id }: { id: string }) {
 
     setSaving(true);
     setMessage("");
-    const { error: updateError } = await supabase
-      .from("saved_scenarios")
-      .update({ title: title.trim(), notes: notes.trim() || null })
-      .eq("id", scenario.id);
-    setSaving(false);
-    if (updateError) {
+    try {
+      const { data, error: updateError } = await supabase
+        .from("saved_scenarios")
+        .update({ title: title.trim(), notes: notes.trim() || null })
+        .eq("id", scenario.id)
+        .eq("user_id", scenario.user_id)
+        .select(SAVED_SCENARIO_COLUMNS)
+        .maybeSingle();
+      if (updateError || !data) throw updateError || new Error("Scenario not updated");
+      setScenario(data as SavedScenario);
+      setEditing(false);
+      setMessage("Escenario actualizado.");
+    } catch {
       setMessage("No pudimos guardar los cambios.");
-      return;
+    } finally {
+      setSaving(false);
     }
-    setScenario({ ...scenario, title: title.trim(), notes: notes.trim() || null });
-    setEditing(false);
-    setMessage("Escenario actualizado.");
   }
 
   async function removeScenario() {
     if (!scenario || !window.confirm("¿Eliminar definitivamente este escenario?")) return;
     const supabase = getSupabaseClient();
     if (!supabase) return;
-    const { error: removeError } = await supabase.from("saved_scenarios").delete().eq("id", scenario.id);
-    if (removeError) {
+    try {
+      const { data, error: removeError } = await supabase
+        .from("saved_scenarios")
+        .delete()
+        .eq("id", scenario.id)
+        .eq("user_id", scenario.user_id)
+        .select("id")
+        .maybeSingle();
+      if (removeError || !data) throw removeError || new Error("Scenario not deleted");
+      router.push("/perfil?view=escenarios");
+    } catch {
       setMessage("No pudimos eliminar el escenario.");
-      return;
     }
-    router.push("/perfil?view=escenarios");
   }
 
   if (loading) {
@@ -110,11 +134,12 @@ export default function ScenarioDetail({ id }: { id: string }) {
     return <main className="mx-auto min-h-[60vh] max-w-4xl px-4 py-16"><p className="text-white/70">{error}</p><Link href="/perfil?view=escenarios" className="mt-5 inline-flex text-sm font-semibold text-emerald-200">← Volver a escenarios</Link></main>;
   }
 
-  const calculatorPath = String(scenario.inputs.calculator_path || "/calculadoras");
+  const savedCalculatorPath = String(scenario.inputs.calculator_path || "");
+  const calculatorPath = savedCalculatorPath.startsWith("/") ? savedCalculatorPath : "/calculadoras";
   const calculator = getCalculatorInfo(scenario.calculator_type);
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-8 sm:py-12 print:max-w-none print:px-0">
+    <main className="scenario-print-document mx-auto max-w-6xl px-4 py-8 sm:py-12 print:max-w-none print:px-0">
       <div className="print:hidden">
         <Link href="/perfil?view=escenarios" className="inline-flex items-center gap-2 text-sm font-semibold text-white/55 transition hover:text-white">← Volver a escenarios</Link>
       </div>
@@ -130,10 +155,13 @@ export default function ScenarioDetail({ id }: { id: string }) {
                 <p className="mt-3 text-sm text-white/42 print:text-zinc-500">Guardado el {formatDate(scenario.created_at)} · {calculator.description}</p>
               </div>
             </div>
-            <div className="flex shrink-0 flex-wrap gap-2 print:hidden">
-              <button type="button" onClick={() => setEditing((current) => !current)} className="rounded-full border border-white/12 bg-white/[0.04] px-4 py-2.5 text-sm font-semibold text-white/70 transition hover:bg-white/[0.08] hover:text-white">Editar</button>
-              <button type="button" onClick={() => window.print()} className="rounded-full border border-white/12 bg-white/[0.04] px-4 py-2.5 text-sm font-semibold text-white/70 transition hover:bg-white/[0.08] hover:text-white">Guardar PDF</button>
-              <Link href={calculatorPath} className="rounded-full bg-emerald-300 px-5 py-2.5 text-sm font-black text-[#062d20] shadow-[0_10px_30px_rgba(110,231,183,.2)] transition hover:bg-emerald-200">Abrir calculadora</Link>
+            <div className="shrink-0 print:hidden sm:text-right">
+              <div className="flex flex-wrap gap-2 sm:justify-end">
+                <button type="button" onClick={() => setEditing((current) => !current)} className="rounded-full border border-white/12 bg-white/[0.04] px-4 py-2.5 text-sm font-semibold text-white/70 transition hover:bg-white/[0.08] hover:text-white">Editar</button>
+                <PrintPdfButton filename={scenario.title || `${calculator.name}-escenario`} source="scenario_detail" className="rounded-full border border-white/12 bg-white/[0.04] px-4 py-2.5 text-sm font-semibold text-white/70 transition hover:bg-white/[0.08] hover:text-white" />
+                <Link href={calculatorPath} className="rounded-full bg-emerald-300 px-5 py-2.5 text-sm font-black text-[#062d20] shadow-[0_10px_30px_rgba(110,231,183,.2)] transition hover:bg-emerald-200">Abrir calculadora</Link>
+              </div>
+              <p className="mt-2 text-[11px] text-white/32">Exportar abre el diálogo para elegir “Guardar como PDF”.</p>
             </div>
           </div>
         </header>
@@ -176,6 +204,7 @@ export default function ScenarioDetail({ id }: { id: string }) {
               <article className="rounded-2xl border border-white/[0.07] p-5 print:border-zinc-200"><span className="font-mono text-xs font-black text-emerald-200/65 print:text-emerald-700">03</span><h3 className="mt-4 font-semibold">Guardá la conclusión</h3><p className="mt-2 text-xs leading-5 text-white/38 print:text-zinc-500">Usá las notas para recordar por qué elegiste este escenario.</p></article>
             </div>
           </section>
+          <footer className="mt-6 hidden items-center justify-between border-t border-zinc-200 pt-3 text-[10px] text-zinc-500 print:flex"><span>Calculadora Emprendedora · Growtella</span><span>Generado el {formatDate(new Date().toISOString())}</span></footer>
         </div>
       </section>
     </main>

@@ -12,7 +12,7 @@ import {
   SeoSection,
 } from "@/components/CalculatorPrimitives";
 import { calculateIvaMonthly, IVA_RATES } from "@/lib/argentinaCalculators";
-import { parseDigitsToNumber } from "@/lib/numberInput";
+import { parseDigitsToNumber, validateNumericFields } from "@/lib/numberInput";
 
 type Amounts = Record<string, string>;
 const emptyRates = () => Object.fromEntries(IVA_RATES.map((rate) => [String(rate), ""]));
@@ -26,6 +26,7 @@ export default function IvaMensualClient() {
   const [paymentsOnAccount, setPaymentsOnAccount] = useState("");
   const [previousFreeBalance, setPreviousFreeBalance] = useState("");
   const [results, setResults] = useState<ReturnType<typeof calculateIvaMonthly> | null>(null);
+  const [error, setError] = useState("");
 
   const draft = useMemo(() => calculateIvaMonthly({
     sales: Object.fromEntries(Object.entries(sales).map(([rate, amount]) => [rate, parseDigitsToNumber(amount)])),
@@ -39,6 +40,26 @@ export default function IvaMensualClient() {
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const validation = validateNumericFields([
+      ...IVA_RATES.flatMap((rate) => {
+        const displayRate = String(rate).replace(".", ",");
+        return [
+          { name: `sales-${rate}`, label: `Ventas netas al ${displayRate}%`, value: sales[String(rate)], min: 0 },
+          { name: `purchases-${rate}`, label: `Compras netas al ${displayRate}%`, value: purchases[String(rate)], min: 0 },
+        ];
+      }),
+      { name: "technical", label: "Saldo técnico anterior", value: previousTechnicalBalance, min: 0 },
+      { name: "withholdings", label: "Retenciones de IVA", value: withholdings, min: 0 },
+      { name: "perceptions", label: "Percepciones de IVA", value: perceptions, min: 0 },
+      { name: "payments", label: "Pagos a cuenta", value: paymentsOnAccount, min: 0 },
+      { name: "free", label: "Saldo de libre disponibilidad anterior", value: previousFreeBalance, min: 0 },
+    ]);
+    if (!validation.valid) {
+      setError(validation.firstError || "Revisá los importes ingresados.");
+      setResults(null);
+      return;
+    }
+    setError("");
     setResults(draft);
   }
 
@@ -46,7 +67,7 @@ export default function IvaMensualClient() {
     <CalculatorHeader eyebrow="Impuestos · Argentina" title="Calculadora de IVA mensual" description="Estimá el IVA a pagar del mes a partir del débito fiscal de tus ventas, el crédito fiscal computable de tus compras y los saldos a favor." />
 
     <div className="grid gap-6 lg:grid-cols-[1.12fr_0.88fr]">
-      <CalculatorForm onSubmit={submit}>
+      <CalculatorForm onSubmit={submit} error={error}>
         <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
           <p className="text-sm font-semibold text-white">Montos netos gravados por alícuota</p>
           <p className="mt-1 text-xs leading-5 text-white/45">Ingresá importes sin IVA. Si no usaste una alícuota, dejala en cero.</p>

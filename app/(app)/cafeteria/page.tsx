@@ -1,6 +1,8 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { calculateCafeteria } from "@/lib/calculations/business";
+import { formatLocaleNumberInput, parseLocaleNumber, validateNumericFields } from "@/lib/numberInput";
 
 type Currency = "ARS" | "USD";
 
@@ -19,21 +21,11 @@ type Results = {
 };
 
 function parseInput(value: string) {
-  const parsed = Number(value.replace(/\./g, "").replace(",", "."));
-  return Number.isFinite(parsed) ? parsed : 0;
+  return parseLocaleNumber(value);
 }
 
 function formatInputValue(value: string) {
-  const cleanedValue = value.replace(/[^0-9,]/g, "");
-  const hasDecimalComma = cleanedValue.includes(",");
-  const [integerPartRaw, decimalPartRaw = ""] = cleanedValue.split(",");
-  const integerPart = integerPartRaw.replace(/\D/g, "");
-  const formattedInteger = integerPart
-    ? new Intl.NumberFormat("es-AR").format(Number(integerPart))
-    : "";
-
-  if (!hasDecimalComma) return formattedInteger;
-  return `${formattedInteger},${decimalPartRaw.replace(/\D/g, "").slice(0, 2)}`;
+  return formatLocaleNumberInput(value);
 }
 
 function formatMoney(value: number, currency: Currency) {
@@ -155,11 +147,27 @@ export default function CafeteriaPage() {
   const [costosFijos, setCostosFijos] = useState("");
 
   const [results, setResults] = useState<Results | null>(null);
+  const [error, setError] = useState("");
 
   const moneyPrefix = currency === "ARS" ? "$" : "US$";
 
   function handleCalculate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    const validation = validateNumericFields([
+      { name: "cost", label: "Costo promedio por pedido", value: costoPedido, required: true, min: 0 },
+      { name: "other", label: "Otros gastos por pedido", value: otrosGastos, min: 0 },
+      { name: "ticket", label: "Ticket promedio por cliente", value: ticketPromedio, required: true, min: 0 },
+      { name: "customers", label: "Clientes por día", value: clientesPorDia, required: true, min: 0, integer: true },
+      { name: "days", label: "Días abiertos por mes", value: diasAbiertos, required: true, min: 1, max: 31, integer: true },
+      { name: "fixed", label: "Costos fijos mensuales", value: costosFijos, min: 0 },
+    ]);
+    if (!validation.valid || validation.values.ticket <= 0 || validation.values.customers <= 0) {
+      setError(validation.firstError || (validation.values.ticket <= 0 ? "El ticket promedio debe ser mayor que cero." : "Los clientes por día deben ser mayores que cero."));
+      setResults(null);
+      return;
+    }
+    setError("");
 
     const costoPedidoNumber = parseInput(costoPedido);
     const otrosGastosNumber = parseInput(otrosGastos);
@@ -168,46 +176,14 @@ export default function CafeteriaPage() {
     const diasAbiertosNumber = parseInput(diasAbiertos);
     const costosFijosNumber = parseInput(costosFijos);
 
-    const costoTotalPedido = costoPedidoNumber + otrosGastosNumber;
-
-    const gananciaPorPedido = ticketPromedioNumber - costoTotalPedido;
-
-    const margenGanancia =
-      ticketPromedioNumber > 0
-        ? (gananciaPorPedido / ticketPromedioNumber) * 100
-        : 0;
-
-    const clientesPorMes = clientesPorDiaNumber * diasAbiertosNumber;
-
-    const ventasMensuales = ticketPromedioNumber * clientesPorMes;
-
-    const costoVariableMensual = costoTotalPedido * clientesPorMes;
-
-    const gananciaBrutaMensual = ventasMensuales - costoVariableMensual;
-
-    const gananciaNetaMensual = gananciaBrutaMensual - costosFijosNumber;
-
-    const puntoEquilibrioMensual =
-      gananciaPorPedido > 0 ? costosFijosNumber / gananciaPorPedido : null;
-
-    const puntoEquilibrioDiario =
-      puntoEquilibrioMensual !== null && diasAbiertosNumber > 0
-        ? puntoEquilibrioMensual / diasAbiertosNumber
-        : null;
-
-    setResults({
+    setResults(calculateCafeteria({
       costoPedido: costoPedidoNumber,
-      costoTotalPedido,
-      gananciaPorPedido,
-      margenGanancia,
-      clientesPorMes,
-      ventasMensuales,
-      costoVariableMensual,
-      gananciaBrutaMensual,
-      gananciaNetaMensual,
-      puntoEquilibrioMensual,
-      puntoEquilibrioDiario,
-    });
+      otrosGastos: otrosGastosNumber,
+      ticketPromedio: ticketPromedioNumber,
+      clientesPorDia: clientesPorDiaNumber,
+      diasAbiertos: diasAbiertosNumber,
+      costosFijos: costosFijosNumber,
+    }));
   }
 
   const emptyResults: Results = {
@@ -347,6 +323,8 @@ export default function CafeteriaPage() {
                   helper="Incluye alquiler, sueldos, luz, gas, agua, internet, contador, marketing, mantenimiento y otros gastos del local."
                 />
               </div>
+
+              {error ? <p role="alert" className="rounded-xl border border-rose-300/20 bg-rose-300/[0.06] px-4 py-3 text-sm font-semibold text-rose-100">{error}</p> : null}
 
               <button
                 type="submit"

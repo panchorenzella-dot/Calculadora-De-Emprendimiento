@@ -1,4 +1,4 @@
-import { formatARIntFromDigits, onlyDigits } from "@/lib/numberInput";
+import { formatLocaleNumberInput } from "@/lib/numberInput";
 
 export type Currency = "ARS" | "USD";
 
@@ -8,12 +8,14 @@ export default function MoneyInput({
   onChangeDigits,
   hint,
   currency,
+  maxDecimals = 2,
 }: {
   label: string;
   valueDigits: string;
   onChangeDigits: (v: string) => void;
   hint?: string;
   currency: Currency;
+  maxDecimals?: number;
 }) {
   const isEmpty = valueDigits.trim() === "";
   const prefix = currency === "USD" ? "US$" : "$";
@@ -31,9 +33,9 @@ export default function MoneyInput({
         <input
           aria-label={label}
           className="w-full bg-transparent font-semibold text-white outline-none placeholder:text-white/35"
-          inputMode="numeric"
-          value={formatARIntFromDigits(valueDigits)}
-          onChange={(e) => onChangeDigits(onlyDigits(e.target.value))}
+          inputMode="decimal"
+          value={formatLocaleNumberInput(valueDigits, { maxDecimals })}
+          onChange={(e) => onChangeDigits(formatLocaleNumberInput(e.target.value, { maxDecimals }))}
           onFocus={(e) => {
             if (!isEmpty) e.currentTarget.select();
           }}

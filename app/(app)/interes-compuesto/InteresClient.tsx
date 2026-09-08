@@ -1,6 +1,8 @@
 "use client";
 
 import { type FormEvent, type ReactNode, useState } from "react";
+import { calculateInteresCompuesto } from "@/lib/calculations/investments";
+import { formatLocaleNumberInput, parseLocaleNumber, validateNumericFields } from "@/lib/numberInput";
 
 type Currency = "ARS" | "USD";
 type Frequency = "annual" | "monthly" | "daily";
@@ -45,34 +47,11 @@ const frequencies: Record<
 };
 
 function parseInput(value: string) {
-  const normalizedValue = value
-    .replace(/\./g, "")
-    .replace(",", ".")
-    .replace(/[^0-9.]/g, "");
-
-  const parsed = Number(normalizedValue);
-  return Number.isFinite(parsed) ? parsed : 0;
+  return parseLocaleNumber(value);
 }
 
 function formatInputValue(value: string) {
-  const cleanedValue = value.replace(/\./g, "").replace(/[^0-9,]/g, "");
-  const hasDecimalComma = cleanedValue.includes(",");
-
-  const [integerPartRaw, ...decimalParts] = cleanedValue.split(",");
-  const integerPart = integerPartRaw.replace(/\D/g, "");
-  const decimalPartRaw = decimalParts.join("").replace(/\D/g, "");
-
-  const formattedInteger =
-    integerPart.length > 0
-      ? new Intl.NumberFormat("es-AR").format(Number(integerPart))
-      : "";
-
-  if (hasDecimalComma) {
-    const decimalPart = decimalPartRaw.slice(0, 2);
-    return `${formattedInteger},${decimalPart}`;
-  }
-
-  return formattedInteger;
+  return formatLocaleNumberInput(value);
 }
 
 function formatMoney(value: number, currency: Currency) {
@@ -96,110 +75,6 @@ function formatNumber(value: number) {
 function formatPercent(value: number) {
   const safeValue = Number.isFinite(value) ? value : 0;
   return `${safeValue.toFixed(2)} %`;
-}
-
-function calculateCompoundInterest({
-  inversionInicial,
-  aporteMensual,
-  anos,
-  tasaAnual,
-  frecuencia,
-}: {
-  inversionInicial: number;
-  aporteMensual: number;
-  anos: number;
-  tasaAnual: number;
-  frecuencia: Frequency;
-}) {
-  const safeInversionInicial = Math.max(0, inversionInicial);
-  const safeAporteMensual = Math.max(0, aporteMensual);
-  const safeAnos = Math.max(0, anos);
-  const safeTasaAnual = Math.max(0, tasaAnual);
-
-  const mesesTotales = Math.round(safeAnos * 12);
-  const periodsPerYear = frequencies[frecuencia].periodsPerYear;
-  const tasaAnualDecimal = safeTasaAnual / 100;
-
-  const tasaPorPeriodo = tasaAnualDecimal / periodsPerYear;
-  const tasaMensualEquivalente =
-    Math.pow(1 + tasaPorPeriodo, periodsPerYear / 12) - 1;
-
-  let saldo = safeInversionInicial;
-
-  for (let mes = 1; mes <= mesesTotales; mes++) {
-    saldo = saldo * (1 + tasaMensualEquivalente);
-    saldo = saldo + safeAporteMensual;
-  }
-
-  return saldo;
-}
-
-function calculateResults({
-  inversionInicial,
-  aporteMensual,
-  anos,
-  tasaAnual,
-  frecuencia,
-}: {
-  inversionInicial: number;
-  aporteMensual: number;
-  anos: number;
-  tasaAnual: number;
-  frecuencia: Frequency;
-}): Results {
-  const safeTasaAnual = Math.max(0, tasaAnual);
-
-  const tasaConservadora = Math.max(0, safeTasaAnual - 5);
-  const tasaEstimada = safeTasaAnual;
-  const tasaOptimista = safeTasaAnual + 5;
-
-  const valorFuturo = calculateCompoundInterest({
-    inversionInicial,
-    aporteMensual,
-    anos,
-    tasaAnual: tasaEstimada,
-    frecuencia,
-  });
-
-  const escenarioConservador = calculateCompoundInterest({
-    inversionInicial,
-    aporteMensual,
-    anos,
-    tasaAnual: tasaConservadora,
-    frecuencia,
-  });
-
-  const escenarioOptimista = calculateCompoundInterest({
-    inversionInicial,
-    aporteMensual,
-    anos,
-    tasaAnual: tasaOptimista,
-    frecuencia,
-  });
-
-  const mesesTotales = Math.round(Math.max(0, anos) * 12);
-
-  const totalAportado =
-    Math.max(0, inversionInicial) + Math.max(0, aporteMensual) * mesesTotales;
-
-  const interesGanado = valorFuturo - totalAportado;
-
-  const rendimientoTotal =
-    totalAportado > 0 ? (interesGanado / totalAportado) * 100 : 0;
-
-  return {
-    valorFuturo,
-    totalAportado,
-    interesGanado,
-    rendimientoTotal,
-    mesesTotales,
-    escenarioConservador,
-    escenarioEstimado: valorFuturo,
-    escenarioOptimista,
-    tasaConservadora,
-    tasaEstimada,
-    tasaOptimista,
-  };
 }
 
 type InputFieldProps = {
@@ -234,9 +109,11 @@ function InputField({
 
         <input
           type="text"
+          aria-label={label}
           inputMode="decimal"
           value={value}
           onChange={(event) => onChange(formatInputValue(event.target.value))}
+          onFocus={(event) => event.currentTarget.select()}
           placeholder="0"
           className={`w-full appearance-none rounded-2xl border border-zinc-800 bg-zinc-950 py-3 text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-emerald-300/50 ${
             prefix ? "pl-16" : "pl-4"
@@ -359,18 +236,32 @@ export default function InteresCompuestoPage() {
   const [frecuencia, setFrecuencia] = useState<Frequency>("monthly");
 
   const [results, setResults] = useState<Results | null>(null);
+  const [error, setError] = useState("");
 
   const moneyPrefix = currency === "ARS" ? "$" : "US$";
 
   function handleCalculate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
+    const validation = validateNumericFields([
+      { name: "initial", label: "Inversión inicial", value: inversionInicial, min: 0 },
+      { name: "contribution", label: "Aporte mensual", value: aporteMensual, min: 0 },
+      { name: "years", label: "Plazo de inversión", value: anos, required: true, min: 0, max: 100 },
+      { name: "rate", label: "Tasa anual estimada", value: tasaAnual, required: true, min: 0, max: 10000 },
+    ]);
+    if (!validation.valid || validation.values.years <= 0 || (validation.values.initial <= 0 && validation.values.contribution <= 0)) {
+      setError(validation.firstError || (validation.values.years <= 0 ? "El plazo debe ser mayor que cero." : "Ingresá una inversión inicial o un aporte mensual mayor que cero."));
+      setResults(null);
+      return;
+    }
+    setError("");
+
     const inversionInicialNumber = parseInput(inversionInicial);
     const aporteMensualNumber = parseInput(aporteMensual);
     const anosNumber = parseInput(anos);
     const tasaAnualNumber = parseInput(tasaAnual);
 
-    const calculatedResults = calculateResults({
+    const calculatedResults = calculateInteresCompuesto({
       inversionInicial: inversionInicialNumber,
       aporteMensual: aporteMensualNumber,
       anos: anosNumber,
@@ -525,6 +416,8 @@ export default function InteresCompuestoPage() {
                   </div>
                 </div>
               </div>
+
+              {error ? <p role="alert" className="rounded-xl border border-rose-300/20 bg-rose-300/[0.06] px-4 py-3 text-sm font-semibold text-rose-100">{error}</p> : null}
 
               <button
                 type="submit"

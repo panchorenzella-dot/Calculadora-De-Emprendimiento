@@ -17,7 +17,7 @@ import {
   parseDecimalInput,
 } from "@/components/CalculatorPrimitives";
 import { calculateProductIva } from "@/lib/argentinaCalculators";
-import { parseDigitsToNumber } from "@/lib/numberInput";
+import { parseDigitsToNumber, validateNumericFields } from "@/lib/numberInput";
 
 export default function IvaProductoClient() {
   const [mode, setMode] = useState<"add" | "extract">("add");
@@ -26,6 +26,7 @@ export default function IvaProductoClient() {
   const [rateChoice, setRateChoice] = useState("21");
   const [customRate, setCustomRate] = useState("");
   const [results, setResults] = useState<ReturnType<typeof calculateProductIva> | null>(null);
+  const [error, setError] = useState("");
   const rate = rateChoice === "custom" ? parseDecimalInput(customRate) : Number(rateChoice);
 
   const draft = useMemo(() => calculateProductIva({
@@ -37,13 +38,24 @@ export default function IvaProductoClient() {
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const validation = validateNumericFields([
+      { name: "amount", label: mode === "add" ? "Precio neto sin IVA" : "Precio final con IVA", value: amount, required: true, min: 0 },
+      { name: "quantity", label: "Cantidad de unidades", value: quantity, required: true, min: 1, integer: true },
+      ...(rateChoice === "custom" ? [{ name: "rate", label: "Alícuota personalizada", value: customRate, required: true, min: 0, max: 100 }] : []),
+    ]);
+    if (!validation.valid || validation.values.amount <= 0) {
+      setError(validation.firstError || "El precio debe ser mayor que cero.");
+      setResults(null);
+      return;
+    }
+    setError("");
     setResults(draft);
   }
 
   return <main>
     <CalculatorHeader eyebrow="Impuestos · Ventas" title="Calculadora de IVA por producto o servicio" description="Agregá IVA a un precio neto o separá el impuesto incluido en un precio final. También podés calcular varias unidades." />
     <div className="grid gap-6 lg:grid-cols-2">
-      <CalculatorForm onSubmit={submit}>
+      <CalculatorForm onSubmit={submit} error={error}>
         <SegmentedControl label="¿Qué querés hacer?" value={mode} onChange={(value) => setMode(value as "add" | "extract")} options={[{ value: "add", label: "Agregar IVA" }, { value: "extract", label: "Separar IVA incluido" }]} />
         <MoneyField label={mode === "add" ? "Precio neto sin IVA" : "Precio final con IVA"} value={amount} onChange={setAmount} />
         <SelectField label="Alícuota de IVA" value={rateChoice} onChange={setRateChoice}>

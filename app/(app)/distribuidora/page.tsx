@@ -1,6 +1,8 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { calculateDistribuidora } from "@/lib/calculations/business";
+import { formatLocaleNumberInput, parseLocaleNumber, validateNumericFields } from "@/lib/numberInput";
 
 type Currency = "ARS" | "USD";
 
@@ -21,21 +23,11 @@ type Results = {
 };
 
 function parseInput(value: string) {
-  const parsed = Number(value.replace(/\./g, "").replace(",", "."));
-  return Number.isFinite(parsed) ? parsed : 0;
+  return parseLocaleNumber(value);
 }
 
 function formatInputValue(value: string) {
-  const cleanedValue = value.replace(/[^0-9,]/g, "");
-  const hasDecimalComma = cleanedValue.includes(",");
-  const [integerPartRaw, decimalPartRaw = ""] = cleanedValue.split(",");
-  const integerPart = integerPartRaw.replace(/\D/g, "");
-  const formattedInteger = integerPart
-    ? new Intl.NumberFormat("es-AR").format(Number(integerPart))
-    : "";
-
-  if (!hasDecimalComma) return formattedInteger;
-  return `${formattedInteger},${decimalPartRaw.replace(/\D/g, "").slice(0, 2)}`;
+  return formatLocaleNumberInput(value);
 }
 
 function formatMoney(value: number, currency: Currency) {
@@ -166,11 +158,28 @@ export default function DistribuidoraPage() {
   const [capitalInvertido, setCapitalInvertido] = useState("");
 
   const [results, setResults] = useState<Results | null>(null);
+  const [error, setError] = useState("");
 
   const moneyPrefix = currency === "ARS" ? "$" : "US$";
 
   function handleCalculate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    const validation = validateNumericFields([
+      { name: "cost", label: "Costo de compra por unidad", value: costoCompra, required: true, min: 0 },
+      { name: "price", label: "Precio de venta por unidad", value: precioVenta, required: true, min: 0 },
+      { name: "other", label: "Otros gastos por unidad", value: otrosGastos, min: 0 },
+      { name: "units", label: "Unidades vendidas por día", value: unidadesPorDia, required: true, min: 0, integer: true },
+      { name: "days", label: "Días de venta por mes", value: diasVenta, required: true, min: 1, max: 31, integer: true },
+      { name: "fixed", label: "Costos fijos mensuales", value: costosFijos, min: 0 },
+      { name: "capital", label: "Capital invertido en mercadería", value: capitalInvertido, min: 0 },
+    ]);
+    if (!validation.valid || validation.values.price <= 0 || validation.values.units <= 0) {
+      setError(validation.firstError || (validation.values.price <= 0 ? "El precio de venta debe ser mayor que cero." : "Las unidades por día deben ser mayores que cero."));
+      setResults(null);
+      return;
+    }
+    setError("");
 
     const costoCompraNumber = parseInput(costoCompra);
     const precioVentaNumber = parseInput(precioVenta);
@@ -180,65 +189,15 @@ export default function DistribuidoraPage() {
     const costosFijosNumber = parseInput(costosFijos);
     const capitalInvertidoNumber = parseInput(capitalInvertido);
 
-    const gananciaPorUnidad =
-      precioVentaNumber - costoCompraNumber - otrosGastosNumber;
-
-    const margenGanancia =
-      precioVentaNumber > 0
-        ? (gananciaPorUnidad / precioVentaNumber) * 100
-        : 0;
-
-    const markup =
-      costoCompraNumber > 0
-        ? (gananciaPorUnidad / costoCompraNumber) * 100
-        : 0;
-
-    const unidadesPorMes = unidadesPorDiaNumber * diasVentaNumber;
-
-    const ventasMensuales = precioVentaNumber * unidadesPorMes;
-
-    const costoMercaderiaMensual = costoCompraNumber * unidadesPorMes;
-
-    const otrosGastosMensuales = otrosGastosNumber * unidadesPorMes;
-
-    const gananciaBrutaMensual =
-      ventasMensuales - costoMercaderiaMensual - otrosGastosMensuales;
-
-    const gananciaNetaMensual = gananciaBrutaMensual - costosFijosNumber;
-
-    const puntoEquilibrioMensual =
-      gananciaPorUnidad > 0 ? costosFijosNumber / gananciaPorUnidad : null;
-
-    const puntoEquilibrioDiario =
-      puntoEquilibrioMensual !== null && diasVentaNumber > 0
-        ? puntoEquilibrioMensual / diasVentaNumber
-        : null;
-
-    const recuperoCapital =
-      capitalInvertidoNumber > 0 && gananciaNetaMensual > 0
-        ? capitalInvertidoNumber / gananciaNetaMensual
-        : null;
-
-    const roiMensual =
-      capitalInvertidoNumber > 0
-        ? (gananciaNetaMensual / capitalInvertidoNumber) * 100
-        : null;
-
-    setResults({
-      gananciaPorUnidad,
-      margenGanancia,
-      markup,
-      unidadesPorMes,
-      ventasMensuales,
-      costoMercaderiaMensual,
-      otrosGastosMensuales,
-      gananciaBrutaMensual,
-      gananciaNetaMensual,
-      puntoEquilibrioMensual,
-      puntoEquilibrioDiario,
-      recuperoCapital,
-      roiMensual,
-    });
+    setResults(calculateDistribuidora({
+      costoCompra: costoCompraNumber,
+      precioVenta: precioVentaNumber,
+      otrosGastos: otrosGastosNumber,
+      unidadesPorDia: unidadesPorDiaNumber,
+      diasVenta: diasVentaNumber,
+      costosFijos: costosFijosNumber,
+      capitalInvertido: capitalInvertidoNumber,
+    }));
   }
 
   const emptyResults: Results = {
@@ -392,6 +351,8 @@ export default function DistribuidoraPage() {
                   />
                 </div>
               </div>
+
+              {error ? <p role="alert" className="rounded-xl border border-rose-300/20 bg-rose-300/[0.06] px-4 py-3 text-sm font-semibold text-rose-100">{error}</p> : null}
 
               <button
                 type="submit"

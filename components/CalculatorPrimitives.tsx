@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import Card from "@/components/Card";
 import MoneyInput from "@/components/MoneyInput";
 import { fmtMoney } from "@/lib/format";
-import { formatARIntFromDigits, onlyDigits } from "@/lib/numberInput";
+import { formatLocaleNumberInput, parseLocaleNumber } from "@/lib/numberInput";
 
 export function CalculatorHeader({ eyebrow, title, description }: { eyebrow: string; title: string; description: string }) {
   return <header className="calculator-hero mb-8">
@@ -14,10 +14,11 @@ export function CalculatorHeader({ eyebrow, title, description }: { eyebrow: str
   </header>;
 }
 
-export function CalculatorForm({ children, onSubmit }: { children: ReactNode; onSubmit: (event: React.FormEvent<HTMLFormElement>) => void }) {
+export function CalculatorForm({ children, onSubmit, error }: { children: ReactNode; onSubmit: (event: React.FormEvent<HTMLFormElement>) => void; error?: string | null }) {
   return <form onSubmit={onSubmit} className="rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
     <h2 className="text-xl font-semibold">Datos</h2>
     <div className="mt-5 grid gap-4">{children}</div>
+    {error ? <p role="alert" className="mt-5 rounded-xl border border-rose-300/20 bg-rose-300/[0.06] px-4 py-3 text-sm font-semibold text-rose-100">{error}</p> : null}
     <button type="submit" className="mt-6 w-full rounded-full bg-white px-4 py-3 text-sm font-black text-zinc-950 transition hover:bg-emerald-100">Calcular</button>
   </form>;
 }
@@ -26,23 +27,15 @@ export function MoneyField(props: { label: string; value: string; onChange: (val
   return <MoneyInput label={props.label} valueDigits={props.value} onChangeDigits={props.onChange} hint={props.hint} currency="ARS" />;
 }
 
-function normalizeDecimalInput(value: string) {
-  const cleaned = value.replace(/[^\d,.]/g, "").replace(/\./g, ",");
-  const [whole = "", ...decimalParts] = cleaned.split(",");
-  const decimal = decimalParts.join("").slice(0, 3);
-  return decimalParts.length ? `${whole},${decimal}` : whole;
-}
-
 export function parseDecimalInput(value: string) {
-  const number = Number(value.replace(",", "."));
-  return Number.isFinite(number) ? number : 0;
+  return parseLocaleNumber(value);
 }
 
 export function PercentField({ label, value, onChange, hint, disabled = false }: { label: string; value: string; onChange: (value: string) => void; hint?: string; disabled?: boolean }) {
   return <label className="grid gap-2">
     <span className="text-sm font-semibold text-white/80">{label}</span>
     <div className="flex items-center gap-2 rounded-xl bg-zinc-900 px-4 py-3 ring-1 ring-white/10 focus-within:ring-white/30">
-      <input aria-label={label} disabled={disabled} inputMode="decimal" value={value} onChange={(event) => onChange(normalizeDecimalInput(event.target.value))} onFocus={(event) => event.currentTarget.select()} placeholder="0" className="w-full bg-transparent font-semibold text-white outline-none placeholder:text-white/35 disabled:text-white/45" />
+      <input aria-label={label} disabled={disabled} inputMode="decimal" value={value} onChange={(event) => onChange(formatLocaleNumberInput(event.target.value, { maxDecimals: 3 }))} onFocus={(event) => event.currentTarget.select()} placeholder="0" className="w-full bg-transparent font-semibold text-white outline-none placeholder:text-white/35 disabled:text-white/45" />
       <span className="font-semibold text-white/45">%</span>
     </div>
     {hint ? <span className="text-xs leading-5 text-white/45">{hint}</span> : null}
@@ -52,7 +45,7 @@ export function PercentField({ label, value, onChange, hint, disabled = false }:
 export function IntegerField({ label, value, onChange, hint }: { label: string; value: string; onChange: (value: string) => void; hint?: string }) {
   return <label className="grid gap-2">
     <span className="text-sm font-semibold text-white/80">{label}</span>
-    <input aria-label={label} inputMode="numeric" value={formatARIntFromDigits(value)} onChange={(event) => onChange(onlyDigits(event.target.value))} onFocus={(event) => event.currentTarget.select()} placeholder="0" className="rounded-xl bg-zinc-900 px-4 py-3 font-semibold text-white outline-none ring-1 ring-white/10 placeholder:text-white/35 focus:ring-white/30" />
+    <input aria-label={label} inputMode="numeric" value={formatLocaleNumberInput(value, { maxDecimals: 0 })} onChange={(event) => onChange(formatLocaleNumberInput(event.target.value, { maxDecimals: 0 }))} onFocus={(event) => event.currentTarget.select()} placeholder="0" className="rounded-xl bg-zinc-900 px-4 py-3 font-semibold text-white outline-none ring-1 ring-white/10 placeholder:text-white/35 focus:ring-white/30" />
     {hint ? <span className="text-xs leading-5 text-white/45">{hint}</span> : null}
   </label>;
 }
