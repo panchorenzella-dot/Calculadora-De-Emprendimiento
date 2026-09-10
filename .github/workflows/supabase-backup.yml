@@ -1,0 +1,146 @@
+name: Supabase encrypted backup
+
+on:
+  schedule:
+    # 06:17 UTC avoids the busiest top-of-hour window (03:17 in Argentina).
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: supabase-production-backup
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    name: Backup production database
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      BACKUP_ENCRYPTION_PASSPHRASE: ${{ secrets.BACKUP_ENCRYPTION_PASSPHRASE }}
+    steps:
+      - name: Validate required secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${SUPABASE_DB_URL:-}" ]]; then
+            echo "::error::Missing repository secret SUPABASE_DB_URL."
+            exit 1
+          fi
+          if [[ ! "$SUPABASE_DB_URL" =~ ^postgres(ql)?:// ]]; then
+            echo "::error::SUPABASE_DB_URL must be a percent-encoded PostgreSQL connection string."
+            exit 1
+          fi
+          if [[ -z "${BACKUP_ENCRYPTION_PASSPHRASE:-}" || ${#BACKUP_ENCRYPTION_PASSPHRASE} -lt 32 ]]; then
+            echo "::error::BACKUP_ENCRYPTION_PASSPHRASE must contain at least 32 characters."
+            exit 1
+          fi
+          echo "::add-mask::$SUPABASE_DB_URL"
+          echo "::add-mask::$BACKUP_ENCRYPTION_PASSPHRASE"
+
+      - name: Install pinned Supabase CLI
+        uses: supabase/setup-cli@46f7f98c7f948ad727d22c1e67fab04c223a0520 # v3.0.0
+        with:
+          version: 2.117.0
+
+      - name: Export roles, schema and data
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          backup_dir="$RUNNER_TEMP/supabase-backup"
+          mkdir -p "$backup_dir"
+
+          supabase db dump \
+            --db-url "$SUPABASE_DB_URL" \
+            --file "$backup_dir/roles.sql" \
+            --role-only
+          supabase db dump \
+            --db-url "$SUPABASE_DB_URL" \
+            --file "$backup_dir/schema.sql"
+          supabase db dump \
+            --db-url "$SUPABASE_DB_URL" \
+            --file "$backup_dir/data.sql" \
+            --data-only \
+            --use-copy \
+            --exclude storage.buckets_vectors \
+            --exclude storage.vector_indexes
+
+          for sql_file in roles.sql schema.sql data.sql; do
+            if [[ ! -s "$backup_dir/$sql_file" ]]; then
+              echo "::error::$sql_file was not created or is empty."
+              exit 1
+            fi
+          done
+
+          # This table is the core of user calculation history. Its absence
+          # normally means the workflow connected to the wrong database.
+          if ! grep -q 'saved_scenarios' "$backup_dir/schema.sql"; then
+            echo "::error::The dump does not contain public.saved_scenarios. Check SUPABASE_DB_URL."
+            exit 1
+          fi
+          if ! grep -Eq '(COPY|INSERT INTO).*auth.*users' "$backup_dir/data.sql"; then
+            echo "::error::The data dump does not contain auth.users. Refusing to publish an incomplete user backup."
+            exit 1
+          fi
+
+          {
+            echo "created_at_utc=$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            echo "repository=$GITHUB_REPOSITORY"
+            echo "workflow_run_id=$GITHUB_RUN_ID"
+            echo "supabase_cli=$(supabase --version)"
+          } > "$backup_dir/BACKUP-METADATA.txt"
+
+          (
+            cd "$backup_dir"
+            sha256sum roles.sql schema.sql data.sql BACKUP-METADATA.txt > MANIFEST.sha256
+          )
+
+      - name: Encrypt backup
+        id: encrypt
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          timestamp="$(date -u +'%Y%m%dT%H%M%SZ')"
+          archive="supabase-${timestamp}-${GITHUB_RUN_ID}.tar.gz"
+          encrypted="${archive}.gpg"
+          passphrase_file="$RUNNER_TEMP/backup-passphrase"
+
+          tar -C "$RUNNER_TEMP/supabase-backup" -czf "$RUNNER_TEMP/$archive" .
+          printf '%s' "$BACKUP_ENCRYPTION_PASSPHRASE" > "$passphrase_file"
+          gpg --batch --yes --pinentry-mode loopback \
+            --cipher-algo AES256 \
+            --passphrase-file "$passphrase_file" \
+            --symmetric \
+            --output "$RUNNER_TEMP/$encrypted" \
+            "$RUNNER_TEMP/$archive"
+
+          sha256sum "$RUNNER_TEMP/$encrypted" | sed 's#  .*/#  #' \
+            > "$RUNNER_TEMP/$encrypted.sha256"
+          rm -f "$RUNNER_TEMP/$archive" "$passphrase_file"
+          echo "encrypted_file=$RUNNER_TEMP/$encrypted" >> "$GITHUB_OUTPUT"
+          echo "checksum_file=$RUNNER_TEMP/$encrypted.sha256" >> "$GITHUB_OUTPUT"
+          echo "artifact_name=supabase-backup-$timestamp" >> "$GITHUB_OUTPUT"
+
+      - name: Upload encrypted off-site artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ${{ steps.encrypt.outputs.artifact_name }}
+          path: |
+            ${{ steps.encrypt.outputs.encrypted_file }}
+            ${{ steps.encrypt.outputs.checksum_file }}
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0
+
+      - name: Remove plaintext workspace
+        if: always()
+        shell: bash
+        run: |
+          rm -rf "${RUNNER_TEMP:?}/supabase-backup"
+          rm -f "${RUNNER_TEMP:?}"/supabase-*.tar.gz
+          rm -f "${RUNNER_TEMP:?}/backup-passphrase"
