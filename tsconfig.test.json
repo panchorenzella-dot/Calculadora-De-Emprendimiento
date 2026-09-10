@@ -19,6 +19,7 @@
     "lib/argentinaCalculators.ts",
     "lib/calculations/**/*.ts",
     "lib/ai/apiResponse.ts",
-    "lib/ai/providerResponse.ts"
+    "lib/ai/providerResponse.ts",
+    "lib/ai/telemetry.ts"
   ]
 }

@@ -15,7 +15,7 @@ export function CalculatorHeader({ eyebrow, title, description }: { eyebrow: str
 }
 
 export function CalculatorForm({ children, onSubmit, error }: { children: ReactNode; onSubmit: (event: React.FormEvent<HTMLFormElement>) => void; error?: string | null }) {
-  return <form onSubmit={onSubmit} className="rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
+  return <form data-calculator-form onSubmit={onSubmit} className="rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
     <h2 className="text-xl font-semibold">Datos</h2>
     <div className="mt-5 grid gap-4">{children}</div>
     {error ? <p role="alert" className="mt-5 rounded-xl border border-rose-300/20 bg-rose-300/[0.06] px-4 py-3 text-sm font-semibold text-rose-100">{error}</p> : null}
@@ -76,7 +76,7 @@ export function SegmentedControl({ label, value, options, onChange }: { label: s
 }
 
 export function ResultsPanel({ children, hasResults, status }: { children: ReactNode; hasResults: boolean; status?: ReactNode }) {
-  return <section aria-live="polite" className="self-start rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
+  return <section data-calculator-results aria-live="polite" aria-atomic="false" className="self-start rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
     <h2 className="text-xl font-semibold">Resultados</h2>
     {!hasResults ? <p className="mt-4 text-sm font-medium text-white/60">Cargá tus datos y tocá <strong>Calcular</strong>.</p> : <>{status}{children}</>}
   </section>;

@@ -57,6 +57,10 @@ test("provider errors are normalized without exposing provider messages", () => 
   assert.equal(auth.code, "AI_PROVIDER_AUTH");
   assert.equal(auth.status, 503);
 
+  const unavailableModel = describeProviderFailure({ error: { code: "model_not_found" } }, 403, true);
+  assert.equal(unavailableModel.code, "AI_MODEL_UNAVAILABLE");
+  assert.equal(unavailableModel.status, 503);
+
   const rate = describeProviderFailure({}, 429, true);
   assert.equal(rate.code, "AI_PROVIDER_RATE_LIMIT");
   assert.equal(rate.retryable, true);

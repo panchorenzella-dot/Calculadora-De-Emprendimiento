@@ -80,19 +80,19 @@ export function describeProviderFailure(payload: unknown, providerStatus: number
     };
   }
 
-  if (providerCode === "invalid_api_key" || providerStatus === 401 || providerStatus === 403) {
+  if (providerCode === "model_not_found" || providerStatus === 404) {
     return {
-      code: "AI_PROVIDER_AUTH",
-      message: `La conexión con la IA necesita una actualización.${suffix}`,
+      code: "AI_MODEL_UNAVAILABLE",
+      message: `El modelo de IA configurado no está disponible en este momento.${suffix}`,
       retryable: false,
       status: 503,
     };
   }
 
-  if (providerCode === "model_not_found" || providerStatus === 404) {
+  if (providerCode === "invalid_api_key" || providerStatus === 401 || providerStatus === 403) {
     return {
-      code: "AI_MODEL_UNAVAILABLE",
-      message: `El modelo de IA configurado no está disponible en este momento.${suffix}`,
+      code: "AI_PROVIDER_AUTH",
+      message: `La conexión con la IA necesita una actualización.${suffix}`,
       retryable: false,
       status: 503,
     };

@@ -48,6 +48,12 @@ npm run start
 npm run lint
 ```
 
+## Operaciones
+
+- [Costos, límites y monitoreo de la IA](docs/operations/ai-costs.md)
+- [Backups cifrados de Supabase y simulacro de restauración](docs/operations/supabase-backups.md)
+- [Política segura de caché](docs/operations/caching.md)
+
 ## Objetivo del proyecto
 
 El objetivo de Calculadora Emprendedora es ofrecer herramientas gratuitas y faciles de usar para que una persona pueda tomar mejores decisiones antes de vender, invertir o proyectar un negocio.

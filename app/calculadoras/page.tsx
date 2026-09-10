@@ -8,6 +8,9 @@ const pageTitle = "Calculadoras para emprendedores";
 const pageDescription =
   "Calculá precios, margen, punto de equilibrio, inversiones e impuestos con herramientas gratuitas para emprendedores y negocios de Argentina.";
 
+// The catalog is local source data and changes only with a deployment.
+export const revalidate = false;
+
 export const metadata: Metadata = {
   title: pageTitle,
   description: pageDescription,

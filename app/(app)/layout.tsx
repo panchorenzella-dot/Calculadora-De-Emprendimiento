@@ -1,6 +1,10 @@
 import CalculatorEnhancementsLoader from "@/components/CalculatorEnhancementsLoader";
 import CalculatorTemplates from "@/components/CalculatorTemplates";
 
+// Calculator markup and formulas ship with the deployment, so Next can keep
+// these routes statically generated instead of scheduling needless ISR writes.
+export const revalidate = false;
+
 export default function AppLayout({
   children,
 }: {

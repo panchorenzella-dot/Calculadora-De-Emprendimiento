@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
@@ -67,6 +67,11 @@ export const metadata: Metadata = {
       "Calculadoras online para emprendedores, negocios, inversión y ahorro.",
     images: ["/opengraph-image"],
   },
+};
+
+export const viewport: Viewport = {
+  colorScheme: "dark",
+  themeColor: "#09090b",
 };
 
 export default function RootLayout({

@@ -11,6 +11,13 @@ import {
   parseJsonPayload,
   type ProviderFailure,
 } from "@/lib/ai/providerResponse";
+import {
+  estimateOpenAICostUsd,
+  extractOpenAIResponseMetadata,
+  extractOpenAIUsage,
+  resolveOpenAIModel,
+  type OpenAIUsage,
+} from "@/lib/ai/telemetry";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -49,6 +56,9 @@ type QuotaResult = {
   resets_at: string;
   plan?: "free" | "pro";
   usage_event_id?: number | string | null;
+  denial_reason?: "quota" | "burst" | null;
+  burst_limit?: number | null;
+  burst_retry_after_seconds?: number | null;
 };
 
 type ErrorOptions = {
@@ -58,6 +68,26 @@ type ErrorOptions = {
     resetsAt: string;
     plan: "free" | "pro";
   };
+  headers?: Record<string, string>;
+};
+
+type AiTelemetry = {
+  eventId: number | string | null;
+  mode: "analysis" | "chat";
+  model: string;
+  plan: "free" | "pro";
+  startedAt: number;
+};
+
+type AiTelemetryCompletion = {
+  status: "succeeded" | "failed" | "cancelled";
+  providerRequestId?: string | null;
+  providerResponseId?: string | null;
+  providerModel?: string | null;
+  providerStatus?: number | null;
+  errorCode?: string | null;
+  usage?: OpenAIUsage | null;
+  estimatedCostUsd?: number | null;
 };
 
 const instructions = `Sos el Asistente IA de Calculadora Emprendedora, especializado en negocios, costos, precios, rentabilidad, inversiones y planificación financiera para usuarios de Argentina y Latinoamérica. Respondé en español rioplatense natural, claro y respetuoso.
@@ -73,10 +103,11 @@ function resolveRequestId(request: Request) {
   return provided && UUID_PATTERN.test(provided) ? provided : randomUUID();
 }
 
-function responseHeaders(requestId: string) {
+function responseHeaders(requestId: string, additionalHeaders?: Record<string, string>) {
   return {
     "Cache-Control": "no-store",
     "X-Request-Id": requestId,
+    ...additionalHeaders,
   };
 }
 
@@ -90,7 +121,7 @@ function errorResponse(
 ) {
   return NextResponse.json(
     { error: message, code, retryable, requestId, ...(options?.quota ? { quota: options.quota } : {}) },
-    { status, headers: responseHeaders(requestId) },
+    { status, headers: responseHeaders(requestId, options?.headers) },
   );
 }
 
@@ -117,7 +148,137 @@ function isQuotaResult(value: unknown): value is QuotaResult {
     && Number.isFinite(quota.used)
     && typeof quota.quota_limit === "number"
     && Number.isFinite(quota.quota_limit)
-    && typeof quota.resets_at === "string";
+    && typeof quota.resets_at === "string"
+    && (quota.denial_reason == null || quota.denial_reason === "quota" || quota.denial_reason === "burst")
+    && (quota.burst_limit == null || (typeof quota.burst_limit === "number" && Number.isFinite(quota.burst_limit)))
+    && (quota.burst_retry_after_seconds == null || (
+      typeof quota.burst_retry_after_seconds === "number"
+      && Number.isFinite(quota.burst_retry_after_seconds)
+    ));
+}
+
+function logAiEvent(
+  level: "info" | "warn" | "error",
+  event: string,
+  fields: Record<string, unknown>,
+) {
+  const entry = { scope: "ai", event, timestamp: new Date().toISOString(), ...fields };
+  if (level === "error") console.error(entry);
+  else if (level === "warn") console.warn(entry);
+  else console.info(entry);
+}
+
+async function createAiTelemetryEvent(input: {
+  userId: string;
+  usageEventId: number | string | null | undefined;
+  requestId: string;
+  mode: "analysis" | "chat";
+  plan: "free" | "pro";
+  model: string;
+}) {
+  try {
+    const admin = createSupabaseAdmin();
+    const { data, error } = await admin
+      .from("ai_provider_events")
+      .insert({
+        user_id: input.userId,
+        usage_event_id: input.usageEventId ?? null,
+        request_id: input.requestId,
+        provider: "openai",
+        mode: input.mode,
+        plan: input.plan,
+        requested_model: input.model,
+        status: "started",
+      })
+      .select("id")
+      .single();
+
+    if (error || !data?.id) {
+      logAiEvent("error", "ai.telemetry.create_failed", {
+        requestId: input.requestId,
+        databaseCode: error?.code ?? "missing_id",
+      });
+      return null;
+    }
+
+    return data.id as number | string;
+  } catch (error) {
+    logAiEvent("error", "ai.telemetry.create_failed", {
+      requestId: input.requestId,
+      errorType: error instanceof Error ? error.name : "unknown",
+    });
+    return null;
+  }
+}
+
+async function completeAiTelemetryEvent(
+  telemetry: AiTelemetry,
+  requestId: string,
+  completion: AiTelemetryCompletion,
+) {
+  const latencyMs = Math.max(0, Date.now() - telemetry.startedAt);
+  const logFields = {
+    requestId,
+    providerRequestId: completion.providerRequestId ?? null,
+    providerResponseId: completion.providerResponseId ?? null,
+    mode: telemetry.mode,
+    plan: telemetry.plan,
+    requestedModel: telemetry.model,
+    providerModel: completion.providerModel ?? null,
+    providerStatus: completion.providerStatus ?? null,
+    errorCode: completion.errorCode ?? null,
+    inputTokens: completion.usage?.inputTokens ?? null,
+    cachedInputTokens: completion.usage?.cachedInputTokens ?? null,
+    outputTokens: completion.usage?.outputTokens ?? null,
+    totalTokens: completion.usage?.totalTokens ?? null,
+    estimatedCostUsd: completion.estimatedCostUsd ?? null,
+    latencyMs,
+  };
+
+  logAiEvent(
+    completion.status === "succeeded" ? "info" : completion.status === "cancelled" ? "warn" : "error",
+    `ai.request.${completion.status}`,
+    logFields,
+  );
+
+  if (telemetry.eventId == null) return;
+
+  try {
+    const admin = createSupabaseAdmin();
+    const { data, error } = await admin
+      .from("ai_provider_events")
+      .update({
+        status: completion.status,
+        provider_request_id: completion.providerRequestId ?? null,
+        provider_response_id: completion.providerResponseId ?? null,
+        provider_model: completion.providerModel ?? null,
+        provider_status: completion.providerStatus ?? null,
+        error_code: completion.errorCode?.slice(0, 160) ?? null,
+        input_tokens: completion.usage?.inputTokens ?? null,
+        cached_input_tokens: completion.usage?.cachedInputTokens ?? null,
+        output_tokens: completion.usage?.outputTokens ?? null,
+        total_tokens: completion.usage?.totalTokens ?? null,
+        estimated_cost_usd: completion.estimatedCostUsd ?? null,
+        latency_ms: latencyMs,
+        completed_at: new Date().toISOString(),
+      })
+      .eq("id", telemetry.eventId)
+      .eq("request_id", requestId)
+      .select("id")
+      .maybeSingle();
+
+    if (error || !data?.id) {
+      logAiEvent("error", "ai.telemetry.update_failed", {
+        requestId,
+        databaseCode: error?.code ?? "missing_id",
+      });
+    }
+  } catch (error) {
+    logAiEvent("error", "ai.telemetry.update_failed", {
+      requestId,
+      errorType: error instanceof Error ? error.name : "unknown",
+    });
+  }
 }
 
 async function readRequestPayload(request: Request) {
@@ -193,11 +354,19 @@ export async function POST(request: Request) {
   let reservation: { eventId: number | string | null | undefined; userId: string } | null = null;
   let reservationCommitted = false;
   let releaseStarted = false;
+  let telemetry: AiTelemetry | null = null;
+  let telemetryCompleted = false;
 
   const releaseReservation = async () => {
     if (!reservation || reservationCommitted || releaseStarted) return false;
     releaseStarted = true;
     return releaseQuotaReservation(reservation.eventId, reservation.userId, requestId);
+  };
+
+  const finishTelemetry = async (completion: AiTelemetryCompletion) => {
+    if (!telemetry || telemetryCompleted) return;
+    telemetryCompleted = true;
+    await completeAiTelemetryEvent(telemetry, requestId, completion);
   };
 
   try {
@@ -261,6 +430,31 @@ export async function POST(request: Request) {
       plan,
     };
 
+    if (!quota.allowed && quota.denial_reason === "burst") {
+      const retryAfterSeconds = Number.isInteger(quota.burst_retry_after_seconds)
+        ? Math.max(1, quota.burst_retry_after_seconds ?? 60)
+        : 60;
+      logAiEvent("warn", "ai.request.rejected", {
+        requestId,
+        mode: payload.body.mode,
+        plan,
+        reason: "burst",
+        burstLimit: quota.burst_limit ?? null,
+        retryAfterSeconds,
+      });
+      return errorResponse(
+        requestId,
+        429,
+        "AI_BURST_LIMIT_REACHED",
+        `Estás enviando consultas muy rápido. Esperá ${retryAfterSeconds} segundos y volvé a intentar.`,
+        true,
+        {
+          quota: publicQuota,
+          headers: { "Retry-After": String(retryAfterSeconds) },
+        },
+      );
+    }
+
     if (!quota.allowed) {
       const reset = formatResetDate(quota.resets_at);
       const errorMessage = plan === "pro"
@@ -274,6 +468,32 @@ export async function POST(request: Request) {
     }
 
     reservation = { eventId: quota.usage_event_id, userId: user.id };
+    const model = resolveOpenAIModel(plan, {
+      freeModel: process.env.OPENAI_FREE_MODEL,
+      proModel: process.env.OPENAI_PRO_MODEL,
+      sharedModel: process.env.OPENAI_MODEL,
+    });
+    telemetry = {
+      eventId: null,
+      mode: payload.body.mode,
+      model,
+      plan,
+      startedAt: Date.now(),
+    };
+    logAiEvent("info", "ai.request.started", {
+      requestId,
+      mode: payload.body.mode,
+      plan,
+      requestedModel: model,
+    });
+    telemetry.eventId = await createAiTelemetryEvent({
+      userId: user.id,
+      usageEventId: quota.usage_event_id,
+      requestId,
+      mode: payload.body.mode,
+      plan,
+      model,
+    });
 
     const context = `CALCULADORA Y ESCENARIO ACTUAL:\n${JSON.stringify(payload.body.context, null, 2)}`;
     const input = [
@@ -297,6 +517,8 @@ export async function POST(request: Request) {
       timedOut = true;
       providerController.abort();
     }, OPENAI_TIMEOUT_MS);
+    let providerRequestId: string | null = null;
+    let providerStatus: number | null = null;
 
     try {
       const aiResponse = await fetch("https://api.openai.com/v1/responses", {
@@ -307,9 +529,7 @@ export async function POST(request: Request) {
           "X-Client-Request-Id": requestId,
         },
         body: JSON.stringify({
-          model: plan === "pro"
-            ? process.env.OPENAI_PRO_MODEL || process.env.OPENAI_MODEL || "gpt-5.4-mini"
-            : process.env.OPENAI_FREE_MODEL || "gpt-5-mini",
+          model,
           input,
           max_output_tokens: payload.body.mode === "analysis" ? 4500 : 2200,
         }),
@@ -317,46 +537,69 @@ export async function POST(request: Request) {
         signal: providerController.signal,
       });
 
-      const providerRequestId = aiResponse.headers.get("x-request-id");
+      providerRequestId = aiResponse.headers.get("x-request-id");
+      providerStatus = aiResponse.status;
       const rawProviderBody = await aiResponse.text();
       const providerPayload = parseJsonPayload(rawProviderBody);
+      const providerMetadata = extractOpenAIResponseMetadata(providerPayload);
 
       if (!aiResponse.ok) {
-        const released = await releaseReservation();
         const details = extractOpenAIError(providerPayload);
-        console.error("OpenAI API error", {
-          requestId,
+        await finishTelemetry({
+          status: "failed",
           providerRequestId,
-          status: aiResponse.status,
-          code: details.code || details.type,
+          providerResponseId: providerMetadata.responseId,
+          providerModel: providerMetadata.model,
+          providerStatus,
+          errorCode: details.code || details.type || "provider_rejected",
         });
+        const released = await releaseReservation();
         return providerErrorResponse(requestId, describeProviderFailure(providerPayload, aiResponse.status, released));
       }
 
       const text = extractOpenAIText(providerPayload);
       if (!text) {
-        const released = await releaseReservation();
-        console.error("OpenAI response invalid", {
-          requestId,
+        await finishTelemetry({
+          status: "failed",
           providerRequestId,
-          contentType: aiResponse.headers.get("content-type"),
+          providerResponseId: providerMetadata.responseId,
+          providerModel: providerMetadata.model,
+          providerStatus,
+          errorCode: "invalid_response",
         });
+        const released = await releaseReservation();
         return providerErrorResponse(requestId, describeInvalidProviderResponse(released));
       }
 
       reservationCommitted = true;
+      const usage = extractOpenAIUsage(providerPayload);
+      const billedModel = providerMetadata.model || model;
+      const estimatedCostUsd = usage ? estimateOpenAICostUsd(billedModel, usage) : null;
+      await finishTelemetry({
+        status: "succeeded",
+        providerRequestId,
+        providerResponseId: providerMetadata.responseId,
+        providerModel: providerMetadata.model,
+        providerStatus,
+        usage,
+        estimatedCostUsd,
+      });
       return NextResponse.json(
         { text, quota: publicQuota, requestId },
         { status: 200, headers: responseHeaders(requestId) },
       );
     } catch (error) {
-      const released = await releaseReservation();
-      const suffix = released
-        ? " No descontamos este intento de tu plan."
-        : " Si el intento aparece consumido, escribinos desde Contacto para revisarlo.";
-
       if (timedOut) {
-        console.error("OpenAI request timed out", { requestId, timeoutMs: OPENAI_TIMEOUT_MS });
+        await finishTelemetry({
+          status: "failed",
+          providerRequestId,
+          providerStatus,
+          errorCode: "timeout",
+        });
+        const released = await releaseReservation();
+        const suffix = released
+          ? " No descontamos este intento de tu plan."
+          : " Si el intento aparece consumido, escribinos desde Contacto para revisarlo.";
         return errorResponse(
           requestId,
           504,
@@ -367,14 +610,29 @@ export async function POST(request: Request) {
       }
 
       if (request.signal.aborted) {
-        console.info("AI request cancelled by client", { requestId });
+        await finishTelemetry({
+          status: "cancelled",
+          providerRequestId,
+          providerStatus,
+          errorCode: "client_cancelled",
+        });
+        const released = await releaseReservation();
+        const suffix = released
+          ? " No descontamos este intento de tu plan."
+          : " Si el intento aparece consumido, escribinos desde Contacto para revisarlo.";
         return errorResponse(requestId, 408, "AI_REQUEST_CANCELLED", `La consulta fue cancelada.${suffix}`, true);
       }
 
-      console.error("OpenAI request failed", {
-        requestId,
-        error: error instanceof Error ? error.message : "unknown",
+      await finishTelemetry({
+        status: "failed",
+        providerRequestId,
+        providerStatus,
+        errorCode: error instanceof Error ? error.name : "connection_error",
       });
+      const released = await releaseReservation();
+      const suffix = released
+        ? " No descontamos este intento de tu plan."
+        : " Si el intento aparece consumido, escribinos desde Contacto para revisarlo.";
       return errorResponse(
         requestId,
         502,
@@ -387,10 +645,14 @@ export async function POST(request: Request) {
       request.signal.removeEventListener("abort", abortFromClient);
     }
   } catch (error) {
+    await finishTelemetry({
+      status: "failed",
+      errorCode: error instanceof Error ? error.name : "internal_error",
+    });
     const released = await releaseReservation();
-    console.error("AI route error", {
+    logAiEvent("error", "ai.route.failed", {
       requestId,
-      error: error instanceof Error ? error.message : "unknown",
+      errorType: error instanceof Error ? error.name : "unknown",
     });
     const suffix = released ? " No descontamos este intento de tu plan." : "";
     return errorResponse(

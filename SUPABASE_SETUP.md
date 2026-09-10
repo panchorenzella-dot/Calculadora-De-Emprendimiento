@@ -6,5 +6,6 @@
 4. En **Authentication → Providers → Email**, mantener activada la opción **Confirm email**. De esta manera, una cuenta creada con email solo se activa después de abrir el enlace de verificación.
 5. Habilitar Google en **Authentication → Providers** con su Client ID y Client Secret. Google ya entrega la dirección de email verificada.
 6. Agregar `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` en las variables de entorno de Vercel y volver a desplegar.
+7. Configurar el backup diario cifrado de GitHub Actions siguiendo [`docs/operations/supabase-backups.md`](docs/operations/supabase-backups.md). Los dos secretos requeridos son `SUPABASE_DB_URL` y `BACKUP_ENCRYPTION_PASSPHRASE`.
 
 La tabla `saved_scenarios` tiene Row Level Security. Cada usuario solo puede consultar y modificar sus propios escenarios.
