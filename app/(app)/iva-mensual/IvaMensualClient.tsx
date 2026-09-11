@@ -66,7 +66,7 @@ export default function IvaMensualClient() {
   return <main>
     <CalculatorHeader eyebrow="Impuestos · Argentina" title="Calculadora de IVA mensual" description="Estimá el IVA a pagar del mes a partir del débito fiscal de tus ventas, el crédito fiscal computable de tus compras y los saldos a favor." />
 
-    <div className="grid gap-6 lg:grid-cols-[1.12fr_0.88fr]">
+    <div className="grid items-start gap-6 lg:grid-cols-[1.12fr_0.88fr]">
       <CalculatorForm onSubmit={submit} error={error}>
         <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
           <p className="text-sm font-semibold text-white">Montos netos gravados por alícuota</p>

@@ -44,11 +44,13 @@ function CalculatorTemplatePortal({
     const calculatorForm = document.querySelector<HTMLElement>(
       ".calculator-page-shell form",
     );
-    if (!calculatorForm?.parentElement) return;
+    const calculatorWorkspace = calculatorForm?.parentElement;
+    const workspaceParent = calculatorWorkspace?.parentElement;
+    if (!calculatorWorkspace || !workspaceParent) return;
 
     const anchor = document.createElement("div");
     anchor.dataset.calculatorTemplates = "true";
-    calculatorForm.parentElement.insertBefore(anchor, calculatorForm);
+    workspaceParent.insertBefore(anchor, calculatorWorkspace);
     queueMicrotask(() => setPortalTarget(anchor));
 
     return () => {
@@ -102,37 +104,43 @@ function CalculatorTemplatePortal({
   if (!portalTarget || templates.length === 0) return null;
 
   return createPortal(
-    <section className="mb-4 overflow-hidden rounded-2xl border border-emerald-300/[0.14] bg-[linear-gradient(135deg,rgba(16,185,129,.08),rgba(255,255,255,.025))] p-4 sm:p-5">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+    <section
+      aria-labelledby="calculator-templates-title"
+      className="mb-5 overflow-hidden rounded-2xl border border-emerald-300/[0.16] bg-[linear-gradient(135deg,rgba(16,185,129,.08),rgba(255,255,255,.025))] p-3.5 sm:p-4"
+    >
+      <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[.16em] text-emerald-200/55">
             Empezá más rápido
           </p>
-          <h2 className="mt-1 text-base font-semibold text-white">
+          <h2
+            id="calculator-templates-title"
+            className="mt-0.5 text-base font-semibold text-white"
+          >
             Plantillas editables del rubro
           </h2>
         </div>
-        <p className="max-w-sm text-xs leading-5 text-white/35 sm:text-right">
+        <p className="max-w-md text-xs leading-5 text-white/60 sm:text-right">
           Son ejemplos ilustrativos en pesos argentinos, no valores recomendados.
         </p>
       </div>
-      <div className="mt-4 grid gap-2 sm:grid-cols-2">
+      <div className="mt-3 grid gap-2 md:grid-cols-2">
         {templates.map((template) => (
           <button
             key={template.id}
             type="button"
             aria-pressed={selectedId === template.id}
             onClick={() => applyTemplate(template)}
-            className={`rounded-xl border px-4 py-3 text-left transition ${
+            className={`rounded-xl border px-3.5 py-2.5 text-left transition sm:flex sm:items-center sm:gap-3 ${
               selectedId === template.id
                 ? "border-emerald-300/35 bg-emerald-300/[0.09]"
                 : "border-white/[0.08] bg-black/20 hover:border-white/15 hover:bg-white/[0.035]"
             }`}
           >
-            <span className="block text-sm font-semibold text-white/85">
+            <span className="block shrink-0 text-sm font-semibold text-white/90">
               {template.title}
             </span>
-            <span className="mt-1 block text-xs leading-5 text-white/38">
+            <span className="mt-1 block text-xs leading-5 text-white/60 sm:mt-0 sm:border-l sm:border-white/10 sm:pl-3">
               {template.description}
             </span>
           </button>

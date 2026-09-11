@@ -68,7 +68,7 @@ export default function IngresosBrutosClient() {
 
   return <main>
     <CalculatorHeader eyebrow="Impuestos provinciales · Argentina" title="Calculadora de Ingresos Brutos" description="Estimá el anticipo de Ingresos Brutos de una jurisdicción usando tu facturación gravada, alícuota y recaudaciones sufridas." />
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="grid items-start gap-6 lg:grid-cols-2">
       <CalculatorForm onSubmit={submit} error={error}>
         <SelectField label="Jurisdicción" value={jurisdiction} onChange={setJurisdiction} hint="La selección identifica el escenario; la alícuota se carga manualmente porque depende de la actividad y la normativa local.">
           {jurisdictions.map((item) => <option key={item} value={item}>{item}</option>)}

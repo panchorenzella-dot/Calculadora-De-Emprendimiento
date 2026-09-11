@@ -77,7 +77,7 @@ export default function Page() {
         </p>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+      <div className="grid items-start gap-6 lg:grid-cols-[1.1fr_0.9fr]">
         <form onSubmit={handleCalculate} className="rounded-2xl border border-white/10 bg-white/5 p-6">
           <h2 className="text-xl font-semibold">Datos</h2>
 

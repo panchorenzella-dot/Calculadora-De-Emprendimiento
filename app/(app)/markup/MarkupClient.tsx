@@ -270,7 +270,7 @@ export default function Page() {
           />
         </section>
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <div className="mt-6 grid items-start gap-6 lg:grid-cols-2">
           <form onSubmit={handleCalculate} className="rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
             <div className="flex items-start justify-between gap-4">
               <div>

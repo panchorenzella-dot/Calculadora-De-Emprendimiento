@@ -147,7 +147,7 @@ export default function Page() {
           </div>
         </div>
 
-        <div className="mt-8 grid gap-6 lg:grid-cols-2">
+        <div className="mt-8 grid items-start gap-6 lg:grid-cols-2">
           <form onSubmit={calcular} className="rounded-2xl border border-white/10 bg-white/5 p-6">
             <h2 className="text-xl font-semibold">Inputs</h2>
 

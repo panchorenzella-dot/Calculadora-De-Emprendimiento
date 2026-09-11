@@ -251,7 +251,7 @@ export default function RoiDeInversionPage() {
           </p>
         </section>
 
-        <section className="grid gap-6 lg:grid-cols-[1fr_1.15fr]">
+        <section className="grid items-start gap-6 lg:grid-cols-[1fr_1.15fr]">
           <form
             onSubmit={handleCalculate}
             className="rounded-3xl border border-zinc-800 bg-zinc-950 p-6"
