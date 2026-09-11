@@ -1,4 +1,7 @@
-import { formatLocaleNumberInput } from "@/lib/numberInput";
+import {
+  formatLocaleNumberInput,
+  formatLocaleNumberInputChange,
+} from "@/lib/numberInput";
 
 export type Currency = "ARS" | "USD";
 
@@ -35,7 +38,16 @@ export default function MoneyInput({
           className="w-full bg-transparent font-semibold text-white outline-none placeholder:text-white/35"
           inputMode="decimal"
           value={formatLocaleNumberInput(valueDigits, { maxDecimals })}
-          onChange={(e) => onChangeDigits(formatLocaleNumberInput(e.target.value, { maxDecimals }))}
+          onChange={(event) =>
+            onChangeDigits(
+              formatLocaleNumberInputChange(
+                valueDigits,
+                event.target.value,
+                { maxDecimals },
+                (event.nativeEvent as InputEvent).inputType,
+              ),
+            )
+          }
           onFocus={(e) => {
             if (!isEmpty) e.currentTarget.select();
           }}

@@ -10,6 +10,7 @@ import SeoContent from "@/components/SeoContent";
 import { fmtMoney, fmtNum } from "@/lib/format";
 import {
   formatLocaleNumberInput,
+  formatLocaleNumberInputChange,
   parseDigitsToNumber,
   validateNumericFields,
 } from "@/lib/numberInput";
@@ -159,7 +160,7 @@ export default function Page() {
                   className="rounded-xl bg-zinc-900 px-4 py-3 font-semibold text-white outline-none ring-1 ring-white/10 placeholder:text-white/35 focus:ring-white/30"
                   inputMode="numeric"
                   value={formatLocaleNumberInput(unidadesDia, { maxDecimals: 0 })}
-                  onChange={(e) => setUnidadesDia(formatLocaleNumberInput(e.target.value, { maxDecimals: 0 }))}
+                  onChange={(event) => setUnidadesDia(formatLocaleNumberInputChange(unidadesDia, event.target.value, { maxDecimals: 0 }, (event.nativeEvent as InputEvent).inputType))}
                   onFocus={(e) => e.currentTarget.select()}
                   placeholder="0"
                 />
@@ -174,7 +175,7 @@ export default function Page() {
                   className="rounded-xl bg-zinc-900 px-4 py-3 font-semibold text-white outline-none ring-1 ring-white/10 placeholder:text-white/35 focus:ring-white/30"
                   inputMode="numeric"
                   value={formatLocaleNumberInput(diasAbiertosMes, { maxDecimals: 0 })}
-                  onChange={(e) => setDiasAbiertosMes(formatLocaleNumberInput(e.target.value, { maxDecimals: 0 }))}
+                  onChange={(event) => setDiasAbiertosMes(formatLocaleNumberInputChange(diasAbiertosMes, event.target.value, { maxDecimals: 0 }, (event.nativeEvent as InputEvent).inputType))}
                   onFocus={(e) => e.currentTarget.select()}
                   placeholder="0"
                 />
@@ -239,7 +240,7 @@ export default function Page() {
                     className="rounded-xl bg-zinc-900 px-4 py-3 font-semibold text-white outline-none ring-1 ring-white/10 placeholder:text-white/35 focus:ring-white/30"
                     inputMode="decimal"
                     value={formatLocaleNumberInput(costoPct, { maxDecimals: 2 })}
-                    onChange={(e) => setCostoPct(formatLocaleNumberInput(e.target.value, { maxDecimals: 2 }))}
+                    onChange={(event) => setCostoPct(formatLocaleNumberInputChange(costoPct, event.target.value, { maxDecimals: 2 }, (event.nativeEvent as InputEvent).inputType))}
                     onFocus={(e) => e.currentTarget.select()}
                     placeholder="0"
                   />

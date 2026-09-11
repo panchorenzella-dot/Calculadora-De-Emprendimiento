@@ -5,7 +5,7 @@ import Card from "@/components/Card";
 import MoneyInput, { Currency } from "@/components/MoneyInput";
 import { calculateMarkupPricing } from "@/lib/calculations/business";
 import { fmtMoney, fmtNum } from "@/lib/format";
-import { formatLocaleNumberInput, parseDigitsToNumber, parseLocaleNumber, validateNumericFields } from "@/lib/numberInput";
+import { formatLocaleNumberInput, formatLocaleNumberInputChange, parseDigitsToNumber, parseLocaleNumber, validateNumericFields } from "@/lib/numberInput";
 
 type ModoGanancia = "desde_ganancia" | "desde_precio";
 type NivelCalculo = "rapido" | "completo";
@@ -26,8 +26,8 @@ type Results = {
   puntoEquilibrio: number | null;
 };
 
-function normalizePercentInput(value: string) {
-  return formatLocaleNumberInput(value, { maxDecimals: 2 });
+function normalizePercentInput(previousValue: string, nextValue: string, inputType: string) {
+  return formatLocaleNumberInputChange(previousValue, nextValue, { maxDecimals: 2 }, inputType);
 }
 
 function parsePercent(value: string) {
@@ -49,7 +49,7 @@ function PercentInput({ label, value, onChange, hint }: {
           className="w-full bg-transparent font-semibold text-white outline-none placeholder:text-white/35"
           inputMode="decimal"
           value={value}
-          onChange={(event) => onChange(normalizePercentInput(event.target.value))}
+          onChange={(event) => onChange(normalizePercentInput(value, event.target.value, (event.nativeEvent as InputEvent).inputType))}
           onFocus={(event) => event.currentTarget.select()}
           placeholder="0"
         />
@@ -295,7 +295,7 @@ export default function Page() {
               )}
               <label className="grid gap-2">
                 <span className="text-sm font-semibold text-white/80">Unidades vendidas por mes</span>
-                <input aria-label="Unidades vendidas por mes" className="rounded-xl bg-zinc-900 px-4 py-3 font-semibold text-white outline-none ring-1 ring-white/10 placeholder:text-white/35 focus:ring-white/30" inputMode="numeric" value={formatLocaleNumberInput(unidadesMes, { maxDecimals: 0 })} onChange={(event) => updateField(setUnidadesMes, formatLocaleNumberInput(event.target.value, { maxDecimals: 0 }))} onFocus={(event) => event.currentTarget.select()} placeholder="0" />
+                <input aria-label="Unidades vendidas por mes" className="rounded-xl bg-zinc-900 px-4 py-3 font-semibold text-white outline-none ring-1 ring-white/10 placeholder:text-white/35 focus:ring-white/30" inputMode="numeric" value={formatLocaleNumberInput(unidadesMes, { maxDecimals: 0 })} onChange={(event) => updateField(setUnidadesMes, formatLocaleNumberInputChange(unidadesMes, event.target.value, { maxDecimals: 0 }, (event.nativeEvent as InputEvent).inputType))} onFocus={(event) => event.currentTarget.select()} placeholder="0" />
               </label>
               {nivel === "completo" ? (
                 <div className="grid gap-4 border-t border-white/[0.08] pt-4 sm:grid-cols-2">

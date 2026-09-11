@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { calculateCafeteria } from "@/lib/calculations/business";
-import { formatLocaleNumberInput, parseLocaleNumber, validateNumericFields } from "@/lib/numberInput";
+import { formatLocaleNumberInputChange, parseLocaleNumber, validateNumericFields } from "@/lib/numberInput";
 
 type Currency = "ARS" | "USD";
 
@@ -22,10 +22,6 @@ type Results = {
 
 function parseInput(value: string) {
   return parseLocaleNumber(value);
-}
-
-function formatInputValue(value: string) {
-  return formatLocaleNumberInput(value);
 }
 
 function formatMoney(value: number, currency: Currency) {
@@ -84,7 +80,7 @@ function InputField({
           aria-label={label}
           inputMode="decimal"
           value={value}
-          onChange={(event) => onChange(formatInputValue(event.target.value))}
+          onChange={(event) => onChange(formatLocaleNumberInputChange(value, event.target.value, {}, (event.nativeEvent as InputEvent).inputType))}
           onFocus={(event) => event.currentTarget.select()}
           placeholder="0"
           className={`w-full appearance-none rounded-2xl border border-zinc-800 bg-zinc-950 py-3 font-semibold text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-emerald-300/50 ${

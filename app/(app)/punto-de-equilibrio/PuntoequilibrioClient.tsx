@@ -5,7 +5,7 @@ import Card from "@/components/Card";
 import MoneyInput, { Currency } from "@/components/MoneyInput";
 import { calculateBreakEven } from "@/lib/calculations/business";
 import { fmtMoney, fmtNum } from "@/lib/format";
-import { formatLocaleNumberInput, parseDigitsToNumber, validateNumericFields } from "@/lib/numberInput";
+import { formatLocaleNumberInput, formatLocaleNumberInputChange, parseDigitsToNumber, validateNumericFields } from "@/lib/numberInput";
 
 type Results = {
   CF: number;
@@ -149,7 +149,7 @@ export default function PuntoEquilibrioPage() {
                   aria-label="Unidades estimadas por mes"
                   inputMode="numeric"
                   value={formatLocaleNumberInput(ventasEstimadas, { maxDecimals: 0 })}
-                  onChange={(e) => setVentasEstimadas(formatLocaleNumberInput(e.target.value, { maxDecimals: 0 }))}
+                  onChange={(event) => setVentasEstimadas(formatLocaleNumberInputChange(ventasEstimadas, event.target.value, { maxDecimals: 0 }, (event.nativeEvent as InputEvent).inputType))}
                   onFocus={(e) => e.currentTarget.select()}
                   placeholder="0"
                   className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 font-semibold text-white outline-none placeholder:text-white/35"

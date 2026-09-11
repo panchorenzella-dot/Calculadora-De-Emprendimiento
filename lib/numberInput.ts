@@ -99,6 +99,30 @@ export function formatLocaleNumberInput(
   return `${negative ? "-" : ""}${formattedInteger}${decimal}`;
 }
 
+/**
+ * Formats a browser input change without mistaking our own thousands dots for
+ * a decimal separator when the user types or deletes another digit.
+ */
+export function formatLocaleNumberInputChange(
+  previousValue: string,
+  nextValue: string,
+  options: { maxDecimals?: number; allowNegative?: boolean } = {},
+  inputType = "",
+) {
+  const previousDisplay = formatLocaleNumberInput(previousValue, options);
+  const previousWasGroupedInteger = /^-?\d{1,3}(?:\.\d{3})+$/.test(previousDisplay);
+  const isPaste = inputType.includes("Paste");
+
+  if (previousWasGroupedInteger && !isPaste && !nextValue.includes(",")) {
+    const negative = (options.allowNegative ?? true) && nextValue.trim().startsWith("-");
+    const digits = nextValue.replace(/\D/g, "");
+    if (!digits) return negative ? "-" : "";
+    return formatLocaleNumberInput(`${negative ? "-" : ""}${digits}`, options);
+  }
+
+  return formatLocaleNumberInput(nextValue, options);
+}
+
 export function onlyDigits(value: string) {
   return value.replace(/[^\d]/g, "");
 }

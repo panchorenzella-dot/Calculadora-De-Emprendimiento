@@ -4,7 +4,11 @@ import type { ReactNode } from "react";
 import Card from "@/components/Card";
 import MoneyInput from "@/components/MoneyInput";
 import { fmtMoney } from "@/lib/format";
-import { formatLocaleNumberInput, parseLocaleNumber } from "@/lib/numberInput";
+import {
+  formatLocaleNumberInput,
+  formatLocaleNumberInputChange,
+  parseLocaleNumber,
+} from "@/lib/numberInput";
 
 export function CalculatorHeader({ eyebrow, title, description }: { eyebrow: string; title: string; description: string }) {
   return <header className="calculator-hero mb-8">
@@ -35,7 +39,7 @@ export function PercentField({ label, value, onChange, hint, disabled = false }:
   return <label className="grid gap-2">
     <span className="text-sm font-semibold text-white/80">{label}</span>
     <div className="flex items-center gap-2 rounded-xl bg-zinc-900 px-4 py-3 ring-1 ring-white/10 focus-within:ring-white/30">
-      <input aria-label={label} disabled={disabled} inputMode="decimal" value={value} onChange={(event) => onChange(formatLocaleNumberInput(event.target.value, { maxDecimals: 3 }))} onFocus={(event) => event.currentTarget.select()} placeholder="0" className="w-full bg-transparent font-semibold text-white outline-none placeholder:text-white/35 disabled:text-white/45" />
+      <input aria-label={label} disabled={disabled} inputMode="decimal" value={value} onChange={(event) => onChange(formatLocaleNumberInputChange(value, event.target.value, { maxDecimals: 3 }, (event.nativeEvent as InputEvent).inputType))} onFocus={(event) => event.currentTarget.select()} placeholder="0" className="w-full bg-transparent font-semibold text-white outline-none placeholder:text-white/35 disabled:text-white/45" />
       <span className="font-semibold text-white/45">%</span>
     </div>
     {hint ? <span className="text-xs leading-5 text-white/45">{hint}</span> : null}
@@ -45,7 +49,7 @@ export function PercentField({ label, value, onChange, hint, disabled = false }:
 export function IntegerField({ label, value, onChange, hint }: { label: string; value: string; onChange: (value: string) => void; hint?: string }) {
   return <label className="grid gap-2">
     <span className="text-sm font-semibold text-white/80">{label}</span>
-    <input aria-label={label} inputMode="numeric" value={formatLocaleNumberInput(value, { maxDecimals: 0 })} onChange={(event) => onChange(formatLocaleNumberInput(event.target.value, { maxDecimals: 0 }))} onFocus={(event) => event.currentTarget.select()} placeholder="0" className="rounded-xl bg-zinc-900 px-4 py-3 font-semibold text-white outline-none ring-1 ring-white/10 placeholder:text-white/35 focus:ring-white/30" />
+    <input aria-label={label} inputMode="numeric" value={formatLocaleNumberInput(value, { maxDecimals: 0 })} onChange={(event) => onChange(formatLocaleNumberInputChange(value, event.target.value, { maxDecimals: 0 }, (event.nativeEvent as InputEvent).inputType))} onFocus={(event) => event.currentTarget.select()} placeholder="0" className="rounded-xl bg-zinc-900 px-4 py-3 font-semibold text-white outline-none ring-1 ring-white/10 placeholder:text-white/35 focus:ring-white/30" />
     {hint ? <span className="text-xs leading-5 text-white/45">{hint}</span> : null}
   </label>;
 }
