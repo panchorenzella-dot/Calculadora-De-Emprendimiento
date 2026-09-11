@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import CalculatorGuideLinks from "@/components/CalculatorGuideLinks";
 import CalculatorStructuredData from "@/components/CalculatorStructuredData";
 import IngresosBrutosClient from "./IngresosBrutosClient";
 
@@ -9,5 +10,5 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return <><CalculatorStructuredData path="/ingresos-brutos" /><IngresosBrutosClient /></>;
+  return <><CalculatorStructuredData path="/ingresos-brutos" /><IngresosBrutosClient /><CalculatorGuideLinks path="/ingresos-brutos" /></>;
 }

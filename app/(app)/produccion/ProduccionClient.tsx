@@ -218,7 +218,7 @@ export default function ProduccionPage() {
           </p>
 
           <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
-            Producción
+            Calculadora de costos de producción
           </h1>
 
           <p className="mt-4 max-w-3xl text-lg leading-relaxed text-zinc-400">

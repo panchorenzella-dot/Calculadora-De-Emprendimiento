@@ -3,6 +3,7 @@ import { guides } from "@/lib/guides";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = "https://www.calculadoraemprendedora.com";
+  const contentUpdatedAt = new Date("2026-09-11T00:00:00-03:00");
 
   const routes = [
     "/",
@@ -40,9 +41,44 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/politica-de-privacidad",
   ];
 
+  const updatedRoutes = new Set([
+    "/",
+    "/calculadoras",
+    "/guias",
+    ...guides.map((guide) => `/guias/${guide.slug}`),
+    "/markup",
+    "/margen",
+    "/punto-de-equilibrio",
+    "/roi",
+    "/interes-compuesto",
+    "/aporte-mensual",
+    "/roi-inversion",
+    "/recupero-capital",
+    "/meta-ahorro",
+    "/rendimiento-real",
+    "/iva-mensual",
+    "/iva-producto",
+    "/ingresos-brutos",
+    "/costo-laboral",
+    "/reventa",
+    "/produccion",
+    "/distribuidora",
+    "/intermediarios",
+    "/cafeteria",
+    "/hamburgueseria",
+  ]);
+
   return routes.map((route) => ({
     url: `${base}${route}`,
+    lastModified: updatedRoutes.has(route) ? contentUpdatedAt : undefined,
     changeFrequency: route === "/" ? "weekly" : "monthly",
-    priority: route === "/" ? 1 : route === "/calculadoras" ? 0.9 : 0.7,
+    priority:
+      route === "/"
+        ? 1
+        : route === "/calculadoras"
+          ? 0.95
+          : route === "/guias" || route.startsWith("/guias/")
+            ? 0.85
+            : 0.7,
   }));
 }

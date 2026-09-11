@@ -238,7 +238,7 @@ export default function MetaDeAhorroPage() {
           </p>
 
           <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
-            Meta de ahorro
+            Calculadora de meta de ahorro
           </h1>
 
           <p className="mt-4 max-w-3xl text-lg leading-relaxed text-zinc-400">

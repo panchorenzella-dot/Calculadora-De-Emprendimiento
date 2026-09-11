@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { getGuide, guides } from "@/lib/guides";
+import { getGuide, getRelatedGuides, guides } from "@/lib/guides";
 
 const baseUrl = "https://www.calculadoraemprendedora.com";
 
@@ -45,6 +45,7 @@ export default async function GuidePage({
   if (!guide) notFound();
 
   const guideUrl = `${baseUrl}/guias/${guide.slug}`;
+  const relatedGuides = getRelatedGuides(guide);
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
@@ -250,6 +251,33 @@ export default async function GuidePage({
                     {source.copy}
                   </span>
                 </a>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {relatedGuides.length ? (
+          <section className="mt-12" aria-labelledby="related-guides-title">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-200/75">
+              Seguí aprendiendo
+            </p>
+            <h2 id="related-guides-title" className="mt-3 text-2xl font-bold">
+              Guías relacionadas
+            </h2>
+            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+              {relatedGuides.map((relatedGuide) => (
+                <Link
+                  key={relatedGuide.slug}
+                  href={`/guias/${relatedGuide.slug}`}
+                  className="rounded-2xl border border-white/[0.08] bg-[#0a0d0b] p-4 transition hover:border-emerald-300/25"
+                >
+                  <span className="text-sm font-bold leading-6 text-white/90">
+                    {relatedGuide.title}
+                  </span>
+                  <span className="mt-3 block text-xs font-bold text-emerald-100">
+                    Leer guía →
+                  </span>
+                </Link>
               ))}
             </div>
           </section>

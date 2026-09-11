@@ -9,10 +9,10 @@ import { guides } from "@/lib/guides";
 
 export const metadata: Metadata = {
   title: {
-    absolute: "Calculadora de precio de venta y rentabilidad | Calculadora Emprendedora",
+    absolute: "Calculadora de precio de venta y margen para emprendedores",
   },
   description:
-    "Calculá cuánto cobrar, qué margen te queda y cuántas ventas necesitás para cubrir tus costos. Gratis y sin registrarte.",
+    "Calculá gratis cuánto cobrar, tu margen de ganancia y las ventas necesarias para cubrir costos. Herramientas online para emprendedores y pymes.",
   alternates: { canonical: "/" },
   openGraph: {
     title: "Definí precios rentables antes de vender",
@@ -85,6 +85,44 @@ export default function Home() {
           <HomeProfitPreview />
         </div>
       </section>
+
+      <nav aria-label="Calculadoras principales" className="pt-6 sm:pt-8">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Link
+            href="/markup"
+            className="rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 transition hover:border-emerald-300/25"
+          >
+            <span className="block text-xs font-bold uppercase tracking-[0.14em] text-emerald-200/75">
+              Precio de venta
+            </span>
+            <span className="mt-2 block text-sm font-bold text-white/90">
+              Calculá cuánto cobrar →
+            </span>
+          </Link>
+          <Link
+            href="/margen"
+            className="rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 transition hover:border-emerald-300/25"
+          >
+            <span className="block text-xs font-bold uppercase tracking-[0.14em] text-emerald-200/75">
+              Ganancia real
+            </span>
+            <span className="mt-2 block text-sm font-bold text-white/90">
+              Calculá margen y rentabilidad →
+            </span>
+          </Link>
+          <Link
+            href="/punto-de-equilibrio"
+            className="rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 transition hover:border-emerald-300/25"
+          >
+            <span className="block text-xs font-bold uppercase tracking-[0.14em] text-emerald-200/75">
+              Ventas mínimas
+            </span>
+            <span className="mt-2 block text-sm font-bold text-white/90">
+              Calculá el punto de equilibrio →
+            </span>
+          </Link>
+        </div>
+      </nav>
 
       <div className="pt-10 sm:pt-14">
         <HomeAiDecisionDemo />

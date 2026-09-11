@@ -226,7 +226,7 @@ export default function CompraVentaPage() {
           </p>
 
           <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
-            Compra/Venta
+            Calculadora de precio y margen para reventa
           </h1>
 
           <p className="mt-4 max-w-3xl text-lg leading-relaxed text-zinc-400">

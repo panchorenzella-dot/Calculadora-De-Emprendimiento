@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import CalculatorGuideLinks from "@/components/CalculatorGuideLinks";
 import CalculatorStructuredData, {
   calculatorMetadata,
 } from "@/components/CalculatorStructuredData";
@@ -16,7 +17,7 @@ export default function AporteMensualLayout({ children }: { children: ReactNode 
     <>
       <CalculatorStructuredData path="/aporte-mensual" />
       {children}
+      <CalculatorGuideLinks path="/aporte-mensual" />
     </>
   );
 }
-

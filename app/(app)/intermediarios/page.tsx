@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import CalculatorGuideLinks from "@/components/CalculatorGuideLinks";
 import IntermediariosClient from "./IntermediariosClient";
 
 const baseUrl = "https://www.calculadoraemprendedora.com";
@@ -89,6 +90,7 @@ export default function Page() {
         }}
       />
       <IntermediariosClient />
+      <CalculatorGuideLinks path="/intermediarios" />
     </>
   );
 }

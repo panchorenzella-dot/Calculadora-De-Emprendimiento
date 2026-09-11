@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
+import CalculatorGuideLinks from "@/components/CalculatorGuideLinks";
 import MarkupClient from "./MarkupClient";
 
 const baseUrl = "https://www.calculadoraemprendedora.com";
-const pageTitle = "Calculadora de precio de venta";
+const pageTitle = "Calculadora de precio de venta: cuánto cobrar";
 const pageDescription =
-  "Calculá el precio de venta de un producto o servicio con costos, margen, markup, comisiones, impuestos y gastos fijos.";
+  "Calculá cuánto cobrar por un producto o servicio según costo, margen, comisiones, impuestos y gastos fijos. Gratis y sin registro.";
 
 export const metadata: Metadata = {
   title: pageTitle,
@@ -90,6 +91,7 @@ export default function Page() {
         }}
       />
       <MarkupClient />
+      <CalculatorGuideLinks path="/markup" />
     </>
   );
 }

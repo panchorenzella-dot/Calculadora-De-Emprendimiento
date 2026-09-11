@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import CalculatorGuideLinks from "@/components/CalculatorGuideLinks";
 import CalculatorStructuredData from "@/components/CalculatorStructuredData";
 import IvaMensualClient from "./IvaMensualClient";
 
@@ -9,5 +10,5 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return <><CalculatorStructuredData path="/iva-mensual" /><IvaMensualClient /></>;
+  return <><CalculatorStructuredData path="/iva-mensual" /><IvaMensualClient /><CalculatorGuideLinks path="/iva-mensual" /></>;
 }

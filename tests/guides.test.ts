@@ -1,7 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { getGuide, guides } from "../lib/guides";
+import { calculatorSections } from "../app/calculadoras/catalog";
+import {
+  getGuide,
+  getGuidesByTopic,
+  getRelatedGuides,
+  guideTopics,
+  guides,
+} from "../lib/guides";
 
 const expandedGuideSlugs = [
   "como-calcular-roi-inversion",
@@ -15,7 +22,15 @@ const expandedGuideSlugs = [
 
 test("guide catalog has unique slugs and valid calculator links", () => {
   assert.equal(new Set(guides.map((guide) => guide.slug)).size, guides.length);
-  assert.ok(guides.length >= 12);
+  assert.equal(guides.length, 20);
+
+  const calculatorPaths = new Set(
+    calculatorSections.flatMap((section) =>
+      section.calculators
+        .filter((calculator) => !calculator.comingSoon)
+        .map((calculator) => calculator.href),
+    ),
+  );
 
   for (const guide of guides) {
     assert.match(guide.slug, /^[a-z0-9]+(?:-[a-z0-9]+)*$/);
@@ -23,8 +38,32 @@ test("guide catalog has unique slugs and valid calculator links", () => {
     assert.ok(guide.description.length > 50);
     assert.ok(guide.steps.length >= 3);
     assert.ok(guide.faqs.length >= 2);
+    assert.ok(guide.formula?.expression);
+    assert.ok((guide.pitfalls?.length ?? 0) >= 3);
     assert.match(guide.calculator.href, /^\/[a-z0-9-]+$/);
+    assert.ok(calculatorPaths.has(guide.calculator.href));
     assert.equal(getGuide(guide.slug), guide);
+  }
+});
+
+test("topic clusters cover every guide and create relevant internal links", () => {
+  assert.equal(guideTopics.length, 4);
+
+  for (const topic of guideTopics) {
+    const topicGuides = getGuidesByTopic(topic.id);
+    assert.ok(topicGuides.length >= 4);
+    assert.ok(topicGuides.every((guide) => guide.topic === topic.id));
+
+    for (const guide of topicGuides) {
+      const related = getRelatedGuides(guide);
+      assert.ok(related.length >= 3);
+      assert.ok(
+        related.every(
+          (candidate) =>
+            candidate.topic === guide.topic && candidate.slug !== guide.slug,
+        ),
+      );
+    }
   }
 });
 

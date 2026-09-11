@@ -9,7 +9,7 @@ import { siteConfig } from "@/lib/site";
 
 const baseUrl = "https://www.calculadoraemprendedora.com";
 const siteDescription =
-  "Calculadoras online para emprendedores: margen de ganancia, precio de venta, punto de equilibrio, costos, rentabilidad, inversión y ahorro.";
+  "Calculadoras online gratuitas para emprendedores y pymes de Argentina: precio de venta, margen, punto de equilibrio, costos, IVA, inversión y ahorro.";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,13 +39,16 @@ export const metadata: Metadata = {
     "punto de equilibrio",
     "rentabilidad",
     "calculadoras financieras",
+    "calculadoras para pymes",
+    "calculadora de costos",
+    "calculadora de IVA",
   ],
   robots: { index: true, follow: true },
 
   openGraph: {
     title: "Calculadora Emprendedora",
     description:
-      "Herramientas simples para calcular costos, márgenes, precios, rentabilidad, inversión y ahorro.",
+      "Calculadoras gratuitas para definir precios, cuidar el margen y ordenar costos, impuestos, inversión y ahorro.",
     url: baseUrl,
     siteName: "Calculadora Emprendedora",
     locale: "es_AR",
@@ -64,7 +67,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Calculadora Emprendedora",
     description:
-      "Calculadoras online para emprendedores, negocios, inversión y ahorro.",
+      "Calculadoras online gratuitas para emprendedores y pymes de Argentina.",
     images: ["/opengraph-image"],
   },
 };

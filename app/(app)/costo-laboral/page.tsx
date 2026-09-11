@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import CalculatorGuideLinks from "@/components/CalculatorGuideLinks";
 import CalculatorStructuredData from "@/components/CalculatorStructuredData";
 import CostoLaboralClient from "./CostoLaboralClient";
 
@@ -9,5 +10,5 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return <><CalculatorStructuredData path="/costo-laboral" /><CostoLaboralClient /></>;
+  return <><CalculatorStructuredData path="/costo-laboral" /><CostoLaboralClient /><CalculatorGuideLinks path="/costo-laboral" /></>;
 }

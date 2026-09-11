@@ -4,9 +4,9 @@ import CalculadorasClient from "./CalculadorasClient";
 import { availableCalculators } from "./catalog";
 
 const baseUrl = "https://www.calculadoraemprendedora.com";
-const pageTitle = "Calculadoras para emprendedores";
+const pageTitle = `${availableCalculators.length} calculadoras gratis para emprendedores y pymes`;
 const pageDescription =
-  "Calculá precios, margen, punto de equilibrio, inversiones e impuestos con herramientas gratuitas para emprendedores y negocios de Argentina.";
+  "Calculá precios, margen, punto de equilibrio, costos, inversiones e impuestos con herramientas online gratuitas para emprendedores de Argentina.";
 
 // The catalog is local source data and changes only with a deployment.
 export const revalidate = false;

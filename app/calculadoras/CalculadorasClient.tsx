@@ -6,7 +6,11 @@ import { useMemo, useState } from "react";
 
 import CalculatorFinder from "@/components/CalculatorFinder";
 import { trackEvent } from "@/lib/analytics";
-import { calculatorSections, type Calculator } from "./catalog";
+import {
+  availableCalculators,
+  calculatorSections,
+  type Calculator,
+} from "./catalog";
 
 function normalizeSearch(value: string) {
   return value
@@ -82,7 +86,7 @@ export default function CalculadorasPage() {
           <div className="relative mt-4 grid gap-6 lg:grid-cols-[1fr_360px] lg:items-end">
             <div>
               <h1 className="max-w-3xl text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                Calculadoras para emprendedores
+                {availableCalculators.length} calculadoras gratis para emprendedores y pymes
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-white/60 sm:text-base">
                 Empezá por precios y rentabilidad, o buscá la herramienta que

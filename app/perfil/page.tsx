@@ -5,6 +5,7 @@ import ProfilePage from "@/components/ProfilePage";
 export const metadata: Metadata = {
   title: "Mi perfil",
   description: "Consultá tus escenarios guardados en Calculadora Emprendedora.",
+  robots: { index: false, follow: false },
 };
 
 export default async function Page({ searchParams }: { searchParams: Promise<{ modo?: string; continuar?: string }> }) {

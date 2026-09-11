@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
+import CalculatorGuideLinks from "@/components/CalculatorGuideLinks";
 import CalculatorStructuredData from "@/components/CalculatorStructuredData";
 import ProduccionClient from "./ProduccionClient";
 
 export const metadata: Metadata = {
-  title: "Calculadora de Producción",
+  title: "Calculadora de costos de producción y precio de venta",
   description:
-    "Calculá el costo por unidad, la ganancia, el margen y el punto de equilibrio de un negocio de producción.",
+    "Calculá costo unitario, precio, margen, ganancia mensual y punto de equilibrio para productos fabricados.",
   alternates: { canonical: "/produccion" },
 };
 
 export default function Page() {
-  return <><CalculatorStructuredData path="/produccion" /><ProduccionClient /></>;
+  return <><CalculatorStructuredData path="/produccion" /><ProduccionClient /><CalculatorGuideLinks path="/produccion" /></>;
 }
