@@ -72,12 +72,12 @@ export default function Home() {
                 Explorar calculadoras
               </Link>
             </div>
-            <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-xs text-white/38">
+            <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-xs text-white/65">
               <span>✓ Calculá sin registrarte</span>
               <span>✓ Revisá cada resultado</span>
               <span>✓ Guardá y compará escenarios</span>
             </div>
-            <div className="mt-7 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/28">
+            <div className="mt-7 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/65">
               <span className="h-px w-8 bg-emerald-300/35" />
               Una herramienta de Growtella
             </div>
@@ -101,7 +101,7 @@ export default function Home() {
       <section className="py-12 sm:py-16">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-200/50">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-200/75">
               El criterio detrás del resultado
             </p>
             <h2 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">
@@ -119,11 +119,11 @@ export default function Home() {
               href={`/guias/${guide.slug}`}
               className="group flex min-h-52 flex-col rounded-3xl border border-white/[0.08] bg-[#090c0a] p-5 transition hover:-translate-y-0.5 hover:border-emerald-300/20"
             >
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-200/45">
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-200/75">
                 {guide.eyebrow}
               </p>
               <h3 className="mt-4 text-lg font-bold text-white/90">{guide.title}</h3>
-              <p className="mt-3 text-sm leading-6 text-white/45">{guide.description}</p>
+              <p className="mt-3 text-sm leading-6 text-white/65">{guide.description}</p>
               <span className="mt-auto pt-5 text-sm font-bold text-white/65 group-hover:text-white">
                 Ver fórmula y ejemplo →
               </span>
@@ -139,7 +139,7 @@ export default function Home() {
         <h2 className="mx-auto mt-3 max-w-2xl text-2xl font-bold tracking-tight sm:text-3xl">
           Poné a prueba un precio antes de llevarlo a tus clientes
         </h2>
-        <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-white/48">
+        <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-white/65">
           Podés calcular gratis y sin cuenta. Registrate solamente si querés guardar
           el escenario, compararlo o profundizarlo con IA.
         </p>

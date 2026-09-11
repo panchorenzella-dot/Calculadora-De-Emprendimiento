@@ -17,6 +17,7 @@
     "tests/**/*.ts",
     "lib/numberInput.ts",
     "lib/argentinaCalculators.ts",
+    "lib/guides.ts",
     "lib/calculations/**/*.ts",
     "lib/ai/apiResponse.ts",
     "lib/ai/providerResponse.ts",

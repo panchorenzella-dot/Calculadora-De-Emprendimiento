@@ -60,7 +60,7 @@ export default function HomeAiDecisionDemo() {
               </p>
               <p className="mt-1 text-sm font-bold text-white/85">Escenario · Precio de venta</p>
             </div>
-            <span className="rounded-full border border-white/10 bg-white/[0.035] px-3 py-1.5 text-[10px] font-semibold text-white/45">
+            <span className="rounded-full border border-white/10 bg-white/[0.035] px-3 py-1.5 text-[10px] font-semibold text-white/65">
               Usa los datos guardados
             </span>
           </div>
@@ -83,18 +83,18 @@ export default function HomeAiDecisionDemo() {
                 key={signal.label}
                 className="rounded-2xl border border-white/[0.08] bg-black/25 p-4"
               >
-                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-white/35">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-white/65">
                   {signal.label}
                 </p>
                 <p className="mt-2 text-xl font-bold tracking-tight text-emerald-100">
                   {signal.value}
                 </p>
-                <p className="mt-1 text-xs leading-5 text-white/38">{signal.detail}</p>
+                <p className="mt-1 text-xs leading-5 text-white/65">{signal.detail}</p>
               </div>
             ))}
           </div>
 
-          <p className="mt-4 border-t border-white/[0.07] pt-4 text-xs leading-5 text-white/38">
+          <p className="mt-4 border-t border-white/[0.07] pt-4 text-xs leading-5 text-white/65">
             <span className="font-bold text-amber-100/75">Antes de decidir:</span>{" "}
             validá si tus clientes aceptarían el nuevo precio y sumá los costos que
             todavía no estén incluidos.

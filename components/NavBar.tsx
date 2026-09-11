@@ -72,11 +72,11 @@ export default function Navbar() {
       )}
 
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
-        <Link href="/" aria-label="Calculadora Emprendedora, un producto de Growtella" className="shrink-0 font-black tracking-tight text-white">
+        <Link href="/" aria-label="CE, Calculadora Emprendedora, un producto de Growtella" className="shrink-0 font-black tracking-tight text-white">
           <span className="grid h-8 w-8 place-items-center rounded-full border border-white/15 bg-white/[0.05] text-xs text-white sm:hidden">CE</span>
           <span className="hidden sm:flex sm:flex-col">
             <span className="text-base leading-tight">Calculadora Emprendedora</span>
-            <span className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.18em] text-white/35">Originado por Growtella</span>
+            <span className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.18em] text-white/65">Originado por Growtella</span>
           </span>
         </Link>
 

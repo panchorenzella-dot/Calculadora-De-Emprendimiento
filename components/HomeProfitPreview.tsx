@@ -78,9 +78,9 @@ export default function HomeProfitPreview() {
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <label className="rounded-2xl border border-white/[0.08] bg-white/[0.025] p-3">
-          <span className="text-xs text-white/42">Costo por unidad</span>
+          <span className="text-xs text-white/65">Costo por unidad</span>
           <span className="mt-2 flex items-center gap-2">
-            <span className="text-sm text-white/30">$</span>
+            <span className="text-sm text-white/65">$</span>
             <input
               aria-label="Costo por unidad"
               type="number"
@@ -94,9 +94,9 @@ export default function HomeProfitPreview() {
           </span>
         </label>
         <label className="rounded-2xl border border-white/[0.08] bg-white/[0.025] p-3">
-          <span className="text-xs text-white/42">Precio de venta</span>
+          <span className="text-xs text-white/65">Precio de venta</span>
           <span className="mt-2 flex items-center gap-2">
-            <span className="text-sm text-white/30">$</span>
+            <span className="text-sm text-white/65">$</span>
             <input
               aria-label="Precio de venta"
               type="number"
@@ -112,23 +112,23 @@ export default function HomeProfitPreview() {
       </div>
 
       <div aria-live="polite" className="mt-3 rounded-2xl border border-emerald-300/10 bg-emerald-300/[0.045] p-4">
-        <p className="text-xs text-white/42">Ganancia bruta por unidad</p>
+        <p className="text-xs text-white/65">Ganancia bruta por unidad</p>
         <p className={`mt-1 text-3xl font-semibold tracking-tight ${result.profit >= 0 ? "text-white" : "text-red-200"}`}>
           {formatMoney(result.profit)}
         </p>
         <div className="mt-4 grid grid-cols-2 gap-3 border-t border-white/[0.07] pt-4">
           <div>
-            <p className="text-[11px] text-white/35">Margen</p>
+            <p className="text-[11px] text-white/65">Margen</p>
             <p className="mt-1 text-base font-semibold text-emerald-200">{result.margin.toFixed(1)}%</p>
           </div>
           <div>
-            <p className="text-[11px] text-white/35">Markup</p>
+            <p className="text-[11px] text-white/65">Markup</p>
             <p className="mt-1 text-base font-semibold text-white/80">{result.markup.toFixed(1)}%</p>
           </div>
         </div>
       </div>
 
-      <p className="mt-3 text-[11px] leading-5 text-white/28">
+      <p className="mt-3 text-[11px] leading-5 text-white/65">
         Vista rápida sin costos fijos ni impuestos. La calculadora completa incorpora más variables.
       </p>
       <Link

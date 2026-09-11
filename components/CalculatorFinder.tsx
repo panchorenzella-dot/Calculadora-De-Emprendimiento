@@ -83,7 +83,7 @@ export default function CalculatorFinder({ compact = false }: { compact?: boolea
           </fieldset>
           {goal === "industry" && (
             <fieldset className="mt-4">
-              <legend className="text-xs font-semibold text-white/45">Elegí el tipo de negocio</legend>
+              <legend className="text-xs font-semibold text-white/65">Elegí el tipo de negocio</legend>
               <div className="mt-2 flex flex-wrap gap-2">
                 {industries.map((item) => <label key={item.id} className={`cursor-pointer rounded-full border px-3.5 py-2 text-xs font-bold transition focus-within:ring-2 focus-within:ring-emerald-300/55 focus-within:ring-offset-2 focus-within:ring-offset-[#080c09] ${industry === item.id ? "border-emerald-300/35 bg-emerald-300/[0.08] text-white" : "border-white/10 text-white/55 hover:text-white"}`}><input type="radio" name="calculator-industry" value={item.id} checked={industry === item.id} onChange={() => { setIndustry(item.id); trackEvent("calculator_recommendation_answer", { question: "industry", answer: item.id }); }} className="sr-only" />{item.label}</label>)}
               </div>
@@ -100,7 +100,7 @@ export default function CalculatorFinder({ compact = false }: { compact?: boolea
           </> : <div className="flex min-h-[180px] flex-col justify-center">
             <span className="grid size-11 place-items-center rounded-2xl border border-emerald-300/15 bg-emerald-300/[0.055] text-lg text-emerald-200">↗</span>
             <h3 className="mt-4 text-xl font-bold text-white">Una pregunta, una herramienta concreta</h3>
-            <p className="mt-2 text-sm leading-6 text-white/45">Seleccioná un objetivo para recibir una recomendación inmediata.</p>
+            <p className="mt-2 text-sm leading-6 text-white/65">Seleccioná un objetivo para recibir una recomendación inmediata.</p>
           </div>}
         </div>
       </div>

@@ -39,13 +39,13 @@ export default function TrustSection() {
           <h2 id="trust-title" className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">
             Revisá el cálculo antes de confiar en él
           </h2>
-          <p className="mt-4 text-sm leading-7 text-white/50">
+          <p className="mt-4 text-sm leading-7 text-white/65">
             La confianza empieza por entender de dónde sale cada resultado. Por eso
             publicamos el criterio, señalamos qué falta contemplar y mantenemos un
             canal directo para consultas.
           </p>
           <div className="mt-5 rounded-2xl border border-emerald-300/12 bg-emerald-300/[0.045] p-4">
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-200/50">
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-200/75">
               Desarrollado por Growtella
             </p>
             <a
@@ -59,18 +59,18 @@ export default function TrustSection() {
         <div className="grid gap-px overflow-hidden rounded-3xl border border-white/[0.08] bg-white/[0.08] sm:grid-cols-2">
           {trustItems.map((item) => (
             <article key={item.number} className="bg-[#0a0d0b] p-5 sm:p-6">
-              <p className="text-[10px] font-bold tracking-[0.16em] text-emerald-200/45">
+              <p className="text-[10px] font-bold tracking-[0.16em] text-emerald-200/75">
                 {item.number}
               </p>
               <h3 className="mt-3 text-base font-bold text-white/90">{item.title}</h3>
-              <p className="mt-2 text-sm leading-6 text-white/45">{item.copy}</p>
+              <p className="mt-2 text-sm leading-6 text-white/65">{item.copy}</p>
             </article>
           ))}
         </div>
       </div>
       <nav
         aria-label="Información legal y contacto"
-        className="mt-6 flex flex-wrap gap-x-5 gap-y-2 border-t border-white/[0.07] pt-5 text-xs font-semibold text-white/45"
+        className="mt-6 flex flex-wrap gap-x-5 gap-y-2 border-t border-white/[0.07] pt-5 text-xs font-semibold text-white/65"
       >
         <Link href="/politica-de-privacidad" className="hover:text-white">
           Privacidad
