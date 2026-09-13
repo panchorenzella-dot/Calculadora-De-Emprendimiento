@@ -156,7 +156,6 @@ export default function CalculadorasPage({ initialSearch = "" }: { initialSearch
                           <Link
                             key={calculator.href}
                             href={calculator.href}
-                            aria-label={`${calculator.title}. Online. ${calculator.description} Ideal para: ${calculator.idealFor}. Usar calculadora.`}
                             onClick={() =>
                               trackEvent("select_calculator", {
                                 calculator_name: calculator.title,
@@ -167,7 +166,7 @@ export default function CalculadorasPage({ initialSearch = "" }: { initialSearch
                             }
                             className="group block h-full"
                           >
-                            <article className="flex h-full min-h-[250px] flex-col rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.055] to-emerald-300/[0.025] p-5 shadow-lg shadow-black/10 transition duration-200 group-hover:-translate-y-0.5 group-hover:border-emerald-300/30 group-hover:shadow-emerald-950/20">
+                            <div className="flex h-full min-h-[250px] flex-col rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.055] to-emerald-300/[0.025] p-5 shadow-lg shadow-black/10 transition duration-200 group-hover:-translate-y-0.5 group-hover:border-emerald-300/30 group-hover:shadow-emerald-950/20">
                               <div className="flex items-start justify-between gap-4">
                                 <h3
                                   className="text-xl font-semibold tracking-tight text-white"
@@ -199,7 +198,7 @@ export default function CalculadorasPage({ initialSearch = "" }: { initialSearch
                                   <span aria-hidden="true">→</span>
                                 </span>
                               </div>
-                            </article>
+                            </div>
                           </Link>
                         );
                       })}
