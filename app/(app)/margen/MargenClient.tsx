@@ -281,7 +281,7 @@ export default function Page() {
             </div>
           </form>
 
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+          <div data-calculator-results={results ? "ready" : "empty"} className="rounded-2xl border border-white/10 bg-white/5 p-6">
             <h2 className="text-xl font-semibold">Resultados</h2>
 
             {!results ? (

@@ -14,23 +14,11 @@ const RESULT_FEEDBACK_MS = 620;
 const CALCULATION_TIMEOUT_MS = 15_000;
 
 function findResultPanels() {
-  const explicitPanels = Array.from(
+  return Array.from(
     document.querySelectorAll<HTMLElement>(
       ".calculator-page-shell [data-calculator-results]",
     ),
   );
-
-  const legacyPanels = Array.from(
-    document.querySelectorAll<HTMLElement>(".calculator-page-shell h2"),
-  )
-    .filter((heading) => heading.textContent?.trim() === "Resultados")
-    .map(
-      (heading) =>
-        heading.closest<HTMLElement>("section") ?? heading.parentElement,
-    )
-    .filter((panel): panel is HTMLElement => Boolean(panel));
-
-  return Array.from(new Set([...explicitPanels, ...legacyPanels]));
 }
 
 export default function CalculatorEnhancementsLoader() {
@@ -53,7 +41,6 @@ export default function CalculatorEnhancementsLoader() {
     const resultPanels = findResultPanels();
 
     resultPanels.forEach((panel) => {
-      panel.dataset.calculatorResults = "";
       panel.setAttribute("aria-live", "polite");
       panel.setAttribute("aria-atomic", "false");
     });
@@ -93,11 +80,7 @@ export default function CalculatorEnhancementsLoader() {
           ? mutation.target
           : mutation.target.parentElement;
         const panel = target?.closest<HTMLElement>("[data-calculator-results]");
-        const copy = panel?.textContent ?? "";
-        const isEmptyState =
-          copy.includes("Cargá tus datos") ||
-          copy.includes("Completá tus datos");
-        if (panel && !isEmptyState) changedPanels.add(panel);
+        if (panel?.dataset.calculatorResults === "ready") changedPanels.add(panel);
       });
 
       if (!changedPanels.size) return;
@@ -107,6 +90,8 @@ export default function CalculatorEnhancementsLoader() {
 
     resultPanels.forEach((panel) => {
       resultObserver.observe(panel, {
+        attributes: true,
+        attributeFilter: ["data-calculator-results"],
         childList: true,
         characterData: true,
         subtree: true,

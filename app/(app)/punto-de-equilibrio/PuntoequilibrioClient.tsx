@@ -162,7 +162,7 @@ export default function PuntoEquilibrioPage() {
             </button>
           </form>
 
-          <div className="grid gap-4 self-start">
+          <div data-calculator-results={calc ? "ready" : "empty"} aria-live="polite" aria-atomic="false" className="grid gap-4 self-start">
             {!calc ? (
               <div className="rounded-2xl border border-white/10 bg-white/5 p-5 text-sm font-medium text-white/60">
                 Cargá tus datos y tocá <strong>Calcular</strong>.

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import CalculadorasClient from "./CalculadorasClient";
 import { availableCalculators } from "./catalog";
 
@@ -37,7 +36,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Page() {
+type PageProps = {
+  searchParams: Promise<{ buscar?: string | string[] }>;
+};
+
+export default async function Page({ searchParams }: PageProps) {
+  const params = await searchParams;
+  const initialSearch = typeof params.buscar === "string" ? params.buscar : "";
   const itemListId = `${baseUrl}/calculadoras#calculator-list`;
   const jsonLd = {
     "@context": "https://schema.org",
@@ -100,9 +105,7 @@ export default function Page() {
           __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
         }}
       />
-      <Suspense fallback={<div className="min-h-[70vh] bg-zinc-950" />}>
-        <CalculadorasClient />
-      </Suspense>
+      <CalculadorasClient initialSearch={initialSearch} />
     </>
   );
 }

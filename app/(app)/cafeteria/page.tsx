@@ -113,15 +113,17 @@ function ResultCard({
 }: ResultCardProps) {
   return (
     <div
+      data-scenario-metric
       className={`rounded-2xl border p-5 ${
         highlight
           ? "border-zinc-600 bg-zinc-900"
           : "border-zinc-800 bg-zinc-950"
       }`}
     >
-      <p className="text-sm text-zinc-400">{title}</p>
+      <p data-scenario-label className="text-sm text-zinc-400">{title}</p>
 
       <p
+        data-scenario-value
         className={`mt-2 text-2xl font-bold ${
           muted ? "text-zinc-600" : "text-zinc-50"
         }`}
@@ -331,7 +333,7 @@ export default function CafeteriaPage() {
             </div>
           </form>
 
-          <section className="rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
+          <section data-calculator-results={results ? "ready" : "empty"} className="rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
             <h2 className="text-2xl font-bold">Resultados</h2>
 
             {results === null && (

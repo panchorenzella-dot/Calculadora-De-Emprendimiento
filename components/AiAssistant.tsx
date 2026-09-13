@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import AuthModal from "@/components/AuthModal";
 import {
@@ -76,6 +77,7 @@ function formatContextLabel(label: string) {
 }
 
 export default function AiAssistant({ draft, hasResults, initialConversationId, initialScenarioId = null, standalone = false, onClose, conversationTitle, scenarioHref, onRename }: Props) {
+  const router = useRouter();
   const [authOpen, setAuthOpen] = useState(false);
   const [open, setOpen] = useState(standalone);
   const [loading, setLoading] = useState(false);
@@ -394,7 +396,7 @@ export default function AiAssistant({ draft, hasResults, initialConversationId, 
     setQuota(null);
     setRetryRequest(null);
     setRetryAllowed(false);
-    if (standalone) window.location.assign("/calculadoras");
+    if (standalone) router.push("/calculadoras");
     else if (onClose) onClose();
     else {
       setOpen(false);

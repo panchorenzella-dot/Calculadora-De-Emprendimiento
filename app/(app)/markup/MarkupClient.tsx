@@ -311,7 +311,7 @@ export default function Page() {
             </button>
           </form>
 
-          <section aria-live="polite" className="self-start rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
+          <section data-calculator-results={results ? "ready" : "empty"} aria-live="polite" className="self-start rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
             <div className="flex items-center justify-between gap-4">
               <h2 className="text-xl font-semibold">Resultados</h2>
               {results ? <span className="text-xs font-semibold text-emerald-200/60">Estimación actual</span> : null}

@@ -53,25 +53,12 @@ function captureMetrics(resultContainers: HTMLElement[]) {
       const value = cleanLabel(card.querySelector<HTMLElement>("[data-scenario-value]")?.innerText || "");
       if (label && value) metrics[label] = value;
     }
-
-    const candidates = Array.from(container.querySelectorAll<HTMLElement>("div, article"));
-    for (const candidate of candidates) {
-      if (candidate.matches("[data-scenario-metric]") || candidate.closest("[data-scenario-metric]")) continue;
-      const children = Array.from(candidate.children).filter((child): child is HTMLElement => child instanceof HTMLElement);
-      if (children.length < 2 || children.length > 3) continue;
-
-      const label = cleanLabel(children[0].innerText || "");
-      const value = cleanLabel(children[1].innerText || "");
-      const looksLikeMetric = /[$€£%\d]/.test(value) || /^(rentable|no rentable|positivo|negativo|sí|no)$/i.test(value);
-      if (!label || !value || label.length > 72 || value.length > 160 || !looksLikeMetric || /^resultados?$/i.test(label)) continue;
-      if (!(label in metrics)) metrics[label] = value;
-    }
   }
 
   return metrics;
 }
 
-function capture(pathname: string): { draft: ScenarioDraft; hasResults: boolean } | null {
+function capture(pathname: string, resultsAreCurrent = true): { draft: ScenarioDraft; hasResults: boolean } | null {
   const calculator = calculatorTracking[pathname];
   if (!calculator) return null;
 
@@ -97,33 +84,20 @@ function capture(pathname: string): { draft: ScenarioDraft; hasResults: boolean 
     if (value !== "") fields[labelText] = value;
   });
 
-  const resultHeadings = Array.from(document.querySelectorAll("h2, h3")).filter(
-    (heading) =>
-      !heading.closest("[data-save-scenario-anchor]") &&
-      heading.textContent?.toLowerCase().includes("resultado"),
+  const resultContainers = Array.from(
+    calculatorRoot.querySelectorAll<HTMLElement>(
+      '[data-calculator-results="ready"]',
+    ),
   );
-  const resultContainers = resultHeadings
-    .map((heading) => heading.parentElement)
-    .filter((element): element is HTMLElement => element instanceof HTMLElement);
   const resultBlocks = resultContainers
     .map((container) => cleanLabel(container.innerText || ""))
-    .filter(
-      (text) =>
-        text.length > 20 &&
-        !text.toLowerCase().includes("cargá tus datos") &&
-        !text.toLowerCase().includes("completá los datos")
-    );
-
-  const hasMeaningfulInput = Object.values(fields).some((value) => {
-    if (typeof value === "boolean") return value;
-    const normalized = String(value).replace(/[^0-9,.-]/g, "").replace(",", ".");
-    return Number(normalized) !== 0 || String(value).length > 3;
-  });
+    .filter((text) => text.length > 0);
   const metrics = captureMetrics(resultContainers);
   const fallbackSummary = resultBlocks.join("\n\n").slice(0, 12000);
+  const hasResults = resultsAreCurrent && resultContainers.length > 0 && Object.keys(metrics).length > 0;
 
   return {
-    hasResults: resultBlocks.length > 0 && hasMeaningfulInput,
+    hasResults,
     draft: {
       calculatorType: calculator.type,
       calculatorName: calculator.name,
@@ -140,6 +114,7 @@ export default function CalculatorScenarioCapture() {
   const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
   const lastSnapshot = useRef("");
   const resultTracked = useRef(false);
+  const inputsChangedSinceCalculation = useRef(false);
 
   useEffect(() => {
     resultTracked.current = false;
@@ -205,7 +180,7 @@ export default function CalculatorScenarioCapture() {
     const update = () => {
       clearTimeout(timeout);
       timeout = setTimeout(() => {
-        const next = capture(pathname);
+        const next = capture(pathname, !inputsChangedSinceCalculation.current);
         const serialized = JSON.stringify(next);
         if (serialized !== lastSnapshot.current) {
           lastSnapshot.current = serialized;
@@ -214,17 +189,33 @@ export default function CalculatorScenarioCapture() {
       }, 80);
     };
 
+    const handleInputChange = (event: Event) => {
+      if (event.target instanceof Element && event.target.closest(".calculator-page-shell form")) {
+        inputsChangedSinceCalculation.current = true;
+      }
+      update();
+    };
+    const handleSubmit = (event: Event) => {
+      if (event.target instanceof HTMLFormElement && event.target.closest(".calculator-page-shell")) {
+        inputsChangedSinceCalculation.current = false;
+      }
+      update();
+    };
+
+    inputsChangedSinceCalculation.current = false;
     update();
-    document.addEventListener("input", update);
-    document.addEventListener("change", update);
+    document.addEventListener("input", handleInputChange);
+    document.addEventListener("change", handleInputChange);
+    document.addEventListener("submit", handleSubmit);
     document.addEventListener("click", update);
     const observer = new MutationObserver(update);
     observer.observe(document.body, { childList: true, subtree: true });
 
     return () => {
       clearTimeout(timeout);
-      document.removeEventListener("input", update);
-      document.removeEventListener("change", update);
+      document.removeEventListener("input", handleInputChange);
+      document.removeEventListener("change", handleInputChange);
+      document.removeEventListener("submit", handleSubmit);
       document.removeEventListener("click", update);
       observer.disconnect();
     };

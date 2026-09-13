@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { BILLING_OPTIONS, type BillingInterval } from "@/lib/plans";
 import { trackEvent } from "@/lib/analytics";
@@ -15,6 +16,7 @@ type Props = {
 };
 
 export default function PricingSelector({ paypalReady, paypalMode }: Props) {
+  const router = useRouter();
   const [selected, setSelected] = useState<BillingInterval>("monthly");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -43,7 +45,7 @@ export default function PricingSelector({ paypalReady, paypalMode }: Props) {
       if (!session) {
         sessionStorage.setItem("calculadora-emprendedora:pending-plan", selected);
         trackEvent("checkout_login_required", { plan: "pro", interval: selected, value: option.totalUsd, currency: "USD" });
-        window.location.assign("/perfil?modo=registro&continuar=pro");
+        router.push("/perfil?modo=registro&continuar=pro");
         return;
       }
 

@@ -80,7 +80,7 @@ export function SegmentedControl({ label, value, options, onChange }: { label: s
 }
 
 export function ResultsPanel({ children, hasResults, status }: { children: ReactNode; hasResults: boolean; status?: ReactNode }) {
-  return <section data-calculator-results aria-live="polite" aria-atomic="false" className="self-start rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
+  return <section data-calculator-results={hasResults ? "ready" : "empty"} aria-live="polite" aria-atomic="false" className="self-start rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
     <h2 className="text-xl font-semibold">Resultados</h2>
     {!hasResults ? <p className="mt-4 text-sm font-medium text-white/60">Cargá tus datos y tocá <strong>Calcular</strong>.</p> : <>{status}{children}</>}
   </section>;

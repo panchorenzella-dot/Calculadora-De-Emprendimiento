@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import CalculatorFinder from "@/components/CalculatorFinder";
@@ -31,9 +30,8 @@ function matchesSearch(calculator: Calculator, query: string) {
   return normalizeSearch(searchableText).includes(query);
 }
 
-export default function CalculadorasPage() {
-  const searchParams = useSearchParams();
-  const [search, setSearch] = useState(() => searchParams.get("buscar") || "");
+export default function CalculadorasPage({ initialSearch = "" }: { initialSearch?: string }) {
+  const [search, setSearch] = useState(initialSearch);
 
   const { availableSections, comingSoonCalculators } = useMemo(() => {
     const query = normalizeSearch(search);
@@ -154,13 +152,11 @@ export default function CalculadorasPage() {
 
                     <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                       {section.calculators.map((calculator) => {
-                        const titleId = `calculator-${calculator.href.slice(1)}`;
-
                         return (
                           <Link
                             key={calculator.href}
                             href={calculator.href}
-                            aria-labelledby={titleId}
+                            aria-label={`${calculator.title}. Online. ${calculator.description} Ideal para: ${calculator.idealFor}. Usar calculadora.`}
                             onClick={() =>
                               trackEvent("select_calculator", {
                                 calculator_name: calculator.title,
@@ -174,7 +170,6 @@ export default function CalculadorasPage() {
                             <article className="flex h-full min-h-[250px] flex-col rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.055] to-emerald-300/[0.025] p-5 shadow-lg shadow-black/10 transition duration-200 group-hover:-translate-y-0.5 group-hover:border-emerald-300/30 group-hover:shadow-emerald-950/20">
                               <div className="flex items-start justify-between gap-4">
                                 <h3
-                                  id={titleId}
                                   className="text-xl font-semibold tracking-tight text-white"
                                 >
                                   {calculator.title}
@@ -216,7 +211,7 @@ export default function CalculadorasPage() {
               {comingSoonCalculators.length > 0 ? (
                 <section aria-labelledby="coming-soon-title">
                   <div className="mb-6">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/60">
                       En desarrollo
                     </p>
                     <h2
@@ -247,7 +242,7 @@ export default function CalculadorasPage() {
                         <p className="mt-4 text-sm leading-6 text-white/60">
                           {calculator.description}
                         </p>
-                        <div className="mt-auto pt-5 text-sm font-semibold text-white/40">
+                        <div className="mt-auto pt-5 text-sm font-semibold text-white/60">
                           En preparación
                         </div>
                       </article>
