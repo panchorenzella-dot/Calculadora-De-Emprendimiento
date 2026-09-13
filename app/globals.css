@@ -337,6 +337,17 @@ input:-webkit-autofill:focus {
   box-shadow: 0 0 0 3px rgba(110, 231, 183, 0.06);
 }
 
+/* Shared calculator controls already render a neutral ring on the field shell. */
+.calculator-theme [data-calculator-control]:focus {
+  border-color: transparent !important;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3);
+  outline: none;
+}
+
+.calculator-theme [data-composite-input] [data-calculator-control]:focus {
+  box-shadow: none;
+}
+
 .calculator-theme input[type="range"] {
   accent-color: #6ee7b7;
 }

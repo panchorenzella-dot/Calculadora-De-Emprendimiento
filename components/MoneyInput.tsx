@@ -30,12 +30,13 @@ export default function MoneyInput({
         {hint ? <span className="text-xs text-white/40">({hint})</span> : null}
       </span>
 
-      <div className="flex items-center gap-2 rounded-xl bg-zinc-900 px-4 py-3 ring-1 ring-white/10 focus-within:ring-white/30">
+      <div data-composite-input className="flex items-center gap-2 rounded-xl bg-zinc-900 px-4 py-3 ring-1 ring-white/10 focus-within:ring-white/30">
         <span className="font-semibold text-white/55">{prefix}</span>
 
         <input
           aria-label={label}
-          className="w-full bg-transparent font-semibold text-white outline-none placeholder:text-white/35"
+          className="w-full bg-transparent font-semibold text-white outline-none placeholder:text-white/35 focus-visible:outline-none"
+          data-calculator-control
           inputMode="decimal"
           value={formatLocaleNumberInput(valueDigits, { maxDecimals })}
           onChange={(event) =>

@@ -38,8 +38,8 @@ export function parseDecimalInput(value: string) {
 export function PercentField({ label, value, onChange, hint, disabled = false }: { label: string; value: string; onChange: (value: string) => void; hint?: string; disabled?: boolean }) {
   return <label className="grid gap-2">
     <span className="text-sm font-semibold text-white/80">{label}</span>
-    <div className="flex items-center gap-2 rounded-xl bg-zinc-900 px-4 py-3 ring-1 ring-white/10 focus-within:ring-white/30">
-      <input aria-label={label} disabled={disabled} inputMode="decimal" value={value} onChange={(event) => onChange(formatLocaleNumberInputChange(value, event.target.value, { maxDecimals: 3 }, (event.nativeEvent as InputEvent).inputType))} onFocus={(event) => event.currentTarget.select()} placeholder="0" className="w-full bg-transparent font-semibold text-white outline-none placeholder:text-white/35 disabled:text-white/45" />
+    <div data-composite-input className="flex items-center gap-2 rounded-xl bg-zinc-900 px-4 py-3 ring-1 ring-white/10 focus-within:ring-white/30">
+      <input aria-label={label} data-calculator-control disabled={disabled} inputMode="decimal" value={value} onChange={(event) => onChange(formatLocaleNumberInputChange(value, event.target.value, { maxDecimals: 3 }, (event.nativeEvent as InputEvent).inputType))} onFocus={(event) => event.currentTarget.select()} placeholder="0" className="w-full bg-transparent font-semibold text-white outline-none placeholder:text-white/35 focus-visible:outline-none disabled:text-white/45" />
       <span className="font-semibold text-white/45">%</span>
     </div>
     {hint ? <span className="text-xs leading-5 text-white/45">{hint}</span> : null}
@@ -49,7 +49,7 @@ export function PercentField({ label, value, onChange, hint, disabled = false }:
 export function IntegerField({ label, value, onChange, hint }: { label: string; value: string; onChange: (value: string) => void; hint?: string }) {
   return <label className="grid gap-2">
     <span className="text-sm font-semibold text-white/80">{label}</span>
-    <input aria-label={label} inputMode="numeric" value={formatLocaleNumberInput(value, { maxDecimals: 0 })} onChange={(event) => onChange(formatLocaleNumberInputChange(value, event.target.value, { maxDecimals: 0 }, (event.nativeEvent as InputEvent).inputType))} onFocus={(event) => event.currentTarget.select()} placeholder="0" className="rounded-xl bg-zinc-900 px-4 py-3 font-semibold text-white outline-none ring-1 ring-white/10 placeholder:text-white/35 focus:ring-white/30" />
+    <input aria-label={label} data-calculator-control inputMode="numeric" value={formatLocaleNumberInput(value, { maxDecimals: 0 })} onChange={(event) => onChange(formatLocaleNumberInputChange(value, event.target.value, { maxDecimals: 0 }, (event.nativeEvent as InputEvent).inputType))} onFocus={(event) => event.currentTarget.select()} placeholder="0" className="rounded-xl bg-zinc-900 px-4 py-3 font-semibold text-white outline-none ring-1 ring-white/10 placeholder:text-white/35 focus:ring-white/30 focus-visible:outline-none" />
     {hint ? <span className="text-xs leading-5 text-white/45">{hint}</span> : null}
   </label>;
 }
@@ -57,7 +57,7 @@ export function IntegerField({ label, value, onChange, hint }: { label: string; 
 export function TextField({ label, value, onChange, placeholder, hint }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string; hint?: string }) {
   return <label className="grid gap-2">
     <span className="text-sm font-semibold text-white/80">{label}</span>
-    <input aria-label={label} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="rounded-xl bg-zinc-900 px-4 py-3 font-semibold text-white outline-none ring-1 ring-white/10 placeholder:text-white/30 focus:ring-white/30" />
+    <input aria-label={label} data-calculator-control value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="rounded-xl bg-zinc-900 px-4 py-3 font-semibold text-white outline-none ring-1 ring-white/10 placeholder:text-white/30 focus:ring-white/30 focus-visible:outline-none" />
     {hint ? <span className="text-xs leading-5 text-white/45">{hint}</span> : null}
   </label>;
 }
@@ -65,7 +65,7 @@ export function TextField({ label, value, onChange, placeholder, hint }: { label
 export function SelectField({ label, value, onChange, children, hint }: { label: string; value: string; onChange: (value: string) => void; children: ReactNode; hint?: string }) {
   return <label className="grid gap-2">
     <span className="text-sm font-semibold text-white/80">{label}</span>
-    <select aria-label={label} value={value} onChange={(event) => onChange(event.target.value)} className="rounded-xl bg-zinc-900 px-4 py-3 font-semibold text-white outline-none ring-1 ring-white/10 focus:ring-white/30">{children}</select>
+    <select aria-label={label} data-calculator-control value={value} onChange={(event) => onChange(event.target.value)} className="rounded-xl bg-zinc-900 px-4 py-3 font-semibold text-white outline-none ring-1 ring-white/10 focus:ring-white/30 focus-visible:outline-none">{children}</select>
     {hint ? <span className="text-xs leading-5 text-white/45">{hint}</span> : null}
   </label>;
 }
