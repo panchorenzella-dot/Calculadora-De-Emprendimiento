@@ -1,3 +1,5 @@
+import type { PlanName } from "../plans";
+
 type UnknownRecord = Record<string, unknown>;
 
 export type OpenAIUsage = {
@@ -60,11 +62,11 @@ function configuredModel(value: string | undefined) {
 }
 
 export function resolveOpenAIModel(
-  plan: "free" | "pro",
+  plan: PlanName,
   environment: OpenAIModelEnvironment,
 ) {
   const sharedModel = configuredModel(environment.sharedModel);
-  const planModel = configuredModel(plan === "pro" ? environment.proModel : environment.freeModel);
+  const planModel = configuredModel(plan === "free" || plan === "basic" ? environment.freeModel : environment.proModel);
 
   return planModel || sharedModel || "gpt-5.4-mini";
 }

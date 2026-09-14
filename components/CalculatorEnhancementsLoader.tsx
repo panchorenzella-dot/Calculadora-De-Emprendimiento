@@ -1,6 +1,6 @@
 "use client";
 
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { usePathname } from "next/navigation";
 
 import { trackEvent } from "@/lib/analytics";
@@ -24,7 +24,6 @@ function findResultPanels() {
 export default function CalculatorEnhancementsLoader() {
   const pathname = usePathname();
   const calculator = calculatorTracking[pathname];
-  const [enabledPath, setEnabledPath] = useState<string | null>(null);
 
   useEffect(() => {
     if (!calculator) return;
@@ -162,8 +161,6 @@ export default function CalculatorEnhancementsLoader() {
       const target = event.target;
       if (!(target instanceof Element)) return;
       if (!target.closest(".calculator-page-shell form")) return;
-      setEnabledPath(pathname);
-
       if (event.type === "submit") {
         formSubmitted = true;
         const form = target.closest<HTMLFormElement>("form");
@@ -245,7 +242,7 @@ export default function CalculatorEnhancementsLoader() {
     };
   }, [calculator, pathname]);
 
-  if (!calculator || enabledPath !== pathname) return null;
+  if (!calculator) return null;
 
   return (
     <Suspense fallback={null}>

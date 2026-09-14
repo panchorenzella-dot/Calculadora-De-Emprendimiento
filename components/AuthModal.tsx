@@ -12,6 +12,8 @@ type Props = {
   onAuthenticated?: () => void | Promise<void>;
   returnTo?: string;
   initialMode?: "login" | "signup";
+  contextTitle?: string;
+  contextDescription?: string;
 };
 
 type AuthMode = "login" | "signup" | "reset" | "verify";
@@ -109,6 +111,8 @@ export default function AuthModal({
   onAuthenticated,
   returnTo = "/perfil",
   initialMode = "login",
+  contextTitle,
+  contextDescription,
 }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -314,14 +318,14 @@ export default function AuthModal({
     }
   }
 
-  const title = mode === "login"
+  const defaultTitle = mode === "login"
     ? "Volvé a tu espacio"
     : mode === "signup"
       ? "Creá tu cuenta gratis"
       : mode === "verify"
         ? "Revisá tu email"
         : "Recuperá tu acceso";
-  const description = mode === "login"
+  const defaultDescription = mode === "login"
     ? "Accedé a tus escenarios, análisis y herramientas desde cualquier dispositivo."
     : mode === "signup"
       ? "Empezá gratis y conservá todo el trabajo que hagas en la calculadora."
@@ -393,8 +397,8 @@ export default function AuthModal({
             Calculadora Emprendedora
           </div>
           <p className="mt-6 text-xs font-black uppercase tracking-[0.18em] text-green-500 lg:mt-0">Cuenta Growtella</p>
-          <h1 id={titleId} className="mt-2 text-3xl font-black tracking-[-0.035em] text-white sm:text-[2rem]">{title}</h1>
-          <p id={descriptionId} className="mt-3 max-w-lg text-sm font-medium leading-6 text-white/55">{description}</p>
+          <h1 id={titleId} className="mt-2 text-3xl font-black tracking-[-0.035em] text-white sm:text-[2rem]">{contextTitle && mode !== "verify" && mode !== "reset" ? contextTitle : defaultTitle}</h1>
+          <p id={descriptionId} className="mt-3 max-w-lg text-sm font-medium leading-6 text-white/55">{contextDescription && mode !== "verify" && mode !== "reset" ? contextDescription : defaultDescription}</p>
         </div>
 
         {mode !== "reset" && mode !== "verify" && (

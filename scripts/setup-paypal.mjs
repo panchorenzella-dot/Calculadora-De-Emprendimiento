@@ -45,8 +45,8 @@ async function createProduct() {
     method: "POST",
     headers: { "PayPal-Request-Id": randomUUID(), Prefer: "return=representation" },
     body: JSON.stringify({
-      name: "Calculadora Emprendedora Pro",
-      description: "Suscripción Pro para análisis, mensajes y escenarios ampliados.",
+      name: "Calculadora Emprendedora",
+      description: "Planes mensuales para análisis, escenarios y comparaciones.",
       type: "SERVICE",
       category: "SOFTWARE",
       home_url: siteUrl,
@@ -110,32 +110,32 @@ async function ensureWebhook() {
 
 const productId = process.env.PAYPAL_PRODUCT_ID || await createProduct();
 const plans = {
-  monthly: process.env.PAYPAL_PLAN_MONTHLY_ID || await createPlan(productId, {
+  basic: process.env.PAYPAL_PLAN_BASIC_MONTHLY_ID || await createPlan(productId, {
+    name: "Básico mensual",
+    description: "Calculadora Emprendedora Básico, renovación mensual.",
+    unit: "MONTH",
+    count: 1,
+    price: "7.99",
+  }),
+  pro: process.env.PAYPAL_PLAN_PRO_MONTHLY_ID || process.env.PAYPAL_PLAN_MONTHLY_ID || await createPlan(productId, {
     name: "Pro mensual",
     description: "Calculadora Emprendedora Pro, renovación mensual.",
     unit: "MONTH",
     count: 1,
     price: "19.99",
   }),
-  quarterly: process.env.PAYPAL_PLAN_QUARTERLY_ID || await createPlan(productId, {
-    name: "Pro trimestral",
-    description: "Calculadora Emprendedora Pro, renovación cada tres meses.",
+  premium: process.env.PAYPAL_PLAN_PREMIUM_MONTHLY_ID || await createPlan(productId, {
+    name: "Premium mensual",
+    description: "Calculadora Emprendedora Premium, renovación mensual.",
     unit: "MONTH",
-    count: 3,
-    price: "53.99",
-  }),
-  annual: process.env.PAYPAL_PLAN_ANNUAL_ID || await createPlan(productId, {
-    name: "Pro anual",
-    description: "Calculadora Emprendedora Pro, renovación anual.",
-    unit: "YEAR",
     count: 1,
-    price: "191.99",
+    price: "39.99",
   }),
 };
 const webhookId = await ensureWebhook();
 
 console.log(`PAYPAL_PRODUCT_ID=${productId}`);
-console.log(`PAYPAL_PLAN_MONTHLY_ID=${plans.monthly}`);
-console.log(`PAYPAL_PLAN_QUARTERLY_ID=${plans.quarterly}`);
-console.log(`PAYPAL_PLAN_ANNUAL_ID=${plans.annual}`);
+console.log(`PAYPAL_PLAN_BASIC_MONTHLY_ID=${plans.basic}`);
+console.log(`PAYPAL_PLAN_PRO_MONTHLY_ID=${plans.pro}`);
+console.log(`PAYPAL_PLAN_PREMIUM_MONTHLY_ID=${plans.premium}`);
 console.log(`PAYPAL_WEBHOOK_ID=${webhookId}`);

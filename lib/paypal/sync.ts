@@ -1,14 +1,10 @@
 import "server-only";
 
-import { BILLING_OPTIONS, PLAN_GRACE_DAYS, type BillingInterval } from "@/lib/plans";
-import { billingIntervalFromPlanId, type PayPalSubscription } from "@/lib/paypal/server";
+import { PLAN_GRACE_DAYS } from "@/lib/plans";
+import { billingMonthsFromPayPalPlanId, paidPlanFromPayPalPlanId, type PayPalSubscription } from "@/lib/paypal/server";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-function monthsFor(interval: BillingInterval) {
-  return BILLING_OPTIONS.find((item) => item.id === interval)?.months ?? 1;
-}
 
 function addMonths(value: string, months: number) {
   const date = new Date(value);
@@ -20,14 +16,14 @@ function addMonths(value: string, months: number) {
   return date.toISOString();
 }
 
-function subscriptionPeriod(subscription: PayPalSubscription, interval: BillingInterval, effectiveStatus: PayPalSubscription["status"]) {
+function subscriptionPeriod(subscription: PayPalSubscription, effectiveStatus: PayPalSubscription["status"]) {
   const start = subscription.billing_info?.last_payment?.time || subscription.start_time;
   if (!start) return null;
 
   const nextBilling = subscription.billing_info?.next_billing_time;
   const end = effectiveStatus === "ACTIVE" && nextBilling
     ? nextBilling
-    : addMonths(start, monthsFor(interval));
+    : addMonths(start, billingMonthsFromPayPalPlanId(subscription.plan_id));
   return { start, end };
 }
 
@@ -35,15 +31,15 @@ export async function syncPayPalSubscription(subscription: PayPalSubscription, o
   const userId = subscription.custom_id;
   if (!userId || !UUID_PATTERN.test(userId)) throw new Error("La suscripción de PayPal no está vinculada a un usuario válido.");
 
-  const interval = billingIntervalFromPlanId(subscription.plan_id);
-  if (!interval) throw new Error("La suscripción usa un plan de PayPal desconocido.");
+  const plan = paidPlanFromPayPalPlanId(subscription.plan_id);
+  if (!plan) throw new Error("La suscripción usa un plan de PayPal desconocido.");
 
   if (subscription.status === "APPROVAL_PENDING" || subscription.status === "APPROVED") {
     return { active: false, status: "pending" as const };
   }
 
   const effectiveStatus = options?.forcePastDue ? "SUSPENDED" : subscription.status;
-  const period = subscriptionPeriod(subscription, interval, effectiveStatus);
+  const period = subscriptionPeriod(subscription, effectiveStatus);
   if (!period) throw new Error("PayPal no informó el período pagado de la suscripción.");
 
   const now = Date.now();
@@ -61,7 +57,7 @@ export async function syncPayPalSubscription(subscription: PayPalSubscription, o
   const admin = createSupabaseAdmin();
   const { error } = await admin.from("user_plans").upsert({
     user_id: userId,
-    plan: status === "canceled" ? "free" : "pro",
+    plan: status === "canceled" ? "free" : plan,
     status,
     provider: "paypal",
     provider_customer_id: subscription.subscriber?.payer_id ?? null,
@@ -72,7 +68,7 @@ export async function syncPayPalSubscription(subscription: PayPalSubscription, o
   }, { onConflict: "user_id" });
 
   if (error) throw new Error(`Supabase no pudo actualizar el plan: ${error.message}`);
-  return { active: status === "active" || status === "past_due", status, userId, interval };
+  return { active: status === "active" || status === "past_due", status, userId, plan, interval: "monthly" as const };
 }
 
 export async function revokePayPalSubscription(subscriptionId: string) {

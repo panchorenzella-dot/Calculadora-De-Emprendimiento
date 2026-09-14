@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { BillingInterval } from "@/lib/plans";
+import type { PaidPlanName } from "@/lib/plans";
 
 type PayPalLink = { href: string; rel: string; method?: string };
 
@@ -103,26 +103,37 @@ export async function paypalRequest<T>(path: string, init: RequestInit = {}) {
   return data as T;
 }
 
-export function getPayPalPlanId(interval: BillingInterval) {
-  const variables: Record<BillingInterval, string | undefined> = {
-    monthly: process.env.PAYPAL_PLAN_MONTHLY_ID,
-    quarterly: process.env.PAYPAL_PLAN_QUARTERLY_ID,
-    annual: process.env.PAYPAL_PLAN_ANNUAL_ID,
+export function getPayPalPlanId(plan: PaidPlanName) {
+  const variables: Record<PaidPlanName, string | undefined> = {
+    basic: process.env.PAYPAL_PLAN_BASIC_MONTHLY_ID,
+    pro: process.env.PAYPAL_PLAN_PRO_MONTHLY_ID || process.env.PAYPAL_PLAN_MONTHLY_ID,
+    premium: process.env.PAYPAL_PLAN_PREMIUM_MONTHLY_ID,
   };
-  const planId = variables[interval];
+  const planId = variables[plan];
   if (!planId) throw new PayPalApiError("El plan elegido todavía no está configurado en PayPal.", 503);
   return planId;
 }
 
-export function billingIntervalFromPlanId(planId: string): BillingInterval | null {
-  if (planId === process.env.PAYPAL_PLAN_MONTHLY_ID) return "monthly";
-  if (planId === process.env.PAYPAL_PLAN_QUARTERLY_ID) return "quarterly";
-  if (planId === process.env.PAYPAL_PLAN_ANNUAL_ID) return "annual";
+export function paidPlanFromPayPalPlanId(planId: string): PaidPlanName | null {
+  if (planId === process.env.PAYPAL_PLAN_BASIC_MONTHLY_ID) return "basic";
+  if (
+    planId === process.env.PAYPAL_PLAN_PRO_MONTHLY_ID
+    || planId === process.env.PAYPAL_PLAN_MONTHLY_ID
+    || planId === process.env.PAYPAL_PLAN_QUARTERLY_ID
+    || planId === process.env.PAYPAL_PLAN_ANNUAL_ID
+  ) return "pro";
+  if (planId === process.env.PAYPAL_PLAN_PREMIUM_MONTHLY_ID) return "premium";
   return null;
 }
 
+export function billingMonthsFromPayPalPlanId(planId: string) {
+  if (planId === process.env.PAYPAL_PLAN_QUARTERLY_ID) return 3;
+  if (planId === process.env.PAYPAL_PLAN_ANNUAL_ID) return 12;
+  return 1;
+}
+
 export async function createPayPalSubscription(input: {
-  interval: BillingInterval;
+  plan: PaidPlanName;
   userId: string;
   returnUrl: string;
   cancelUrl: string;
@@ -136,7 +147,7 @@ export async function createPayPalSubscription(input: {
       Prefer: "return=representation",
     },
     body: JSON.stringify({
-      plan_id: getPayPalPlanId(input.interval),
+      plan_id: getPayPalPlanId(input.plan),
       custom_id: input.userId,
       application_context: {
         brand_name: input.brandName || "Calculadora Emprendedora",

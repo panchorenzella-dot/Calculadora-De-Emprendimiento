@@ -1,65 +1,39 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import PricingFaq, { pricingFaqSchemaEntries } from "@/components/PricingFaq";
 import PricingSelector from "@/components/PricingSelector";
-import { PLAN_LIMITS } from "@/lib/plans";
+import { PAID_PLANS, type PaidPlanName } from "@/lib/plans";
 
 export const metadata: Metadata = {
-  title: "Planes Gratis y Pro",
-  description:
-    "Compará los planes Gratis y Pro. Guardá escenarios, analizá riesgos con IA y convertí cada cálculo en una decisión más clara.",
+  title: "Planes Básico, Pro y Premium",
+  description: "Compará los planes mensuales de Calculadora Emprendedora. Guardá escenarios, compará alternativas y analizá tus números con IA.",
   alternates: { canonical: "/precios" },
   openGraph: {
-    title: "Planes Gratis y Pro | Calculadora Emprendedora",
-    description: "Compará escenarios y recibí una lectura estratégica de los números de tu negocio.",
+    title: "Planes Básico, Pro y Premium | Calculadora Emprendedora",
+    description: "Elegí cuánto acompañamiento necesitás para calcular, comparar y decidir.",
     url: "/precios",
-    images: [
-      {
-        url: "/opengraph-image",
-        width: 1200,
-        height: 630,
-        alt: "Calculadora Emprendedora — decisiones de negocio con números claros",
-      },
-    ],
+    images: [{
+      url: "/opengraph-image",
+      width: 1200,
+      height: 630,
+      alt: "Calculadora Emprendedora — planes para decidir con números claros",
+    }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Planes Gratis y Pro | Calculadora Emprendedora",
-    description: "Compará escenarios y recibí una lectura estratégica de los números de tu negocio.",
+    title: "Planes Básico, Pro y Premium | Calculadora Emprendedora",
+    description: "Elegí cuánto acompañamiento necesitás para calcular, comparar y decidir.",
     images: ["/opengraph-image"],
   },
 };
 
-const freeFeatures = [
-  "Todas las calculadoras del sitio",
-  `${PLAN_LIMITS.free.scenarios} escenarios guardados por día`,
-  `${PLAN_LIMITS.free.analysis} análisis con IA por semana`,
-  `${PLAN_LIMITS.free.chat} mensajes de seguimiento por día`,
-  "Historial de análisis y conversaciones",
-];
-
-const proFeatures = [
-  `${PLAN_LIMITS.pro.analysis} análisis con IA por mes`,
-  `${PLAN_LIMITS.pro.chat} mensajes de seguimiento por mes`,
-  "Escenarios guardados ilimitados",
-  "Modelo de IA con mayor capacidad",
-  "Todas las calculadoras y escenarios guardados",
-  "Historial completo en todos tus dispositivos",
-];
-
-const comparisons = [
-  ["Calculadoras", "Todas", "Todas"],
-  ["Escenarios guardados", "3 por día", "Ilimitados"],
-  ["Análisis con IA", "1 por semana", "30 por mes"],
-  ["Mensajes con IA", "5 por día", "300 por mes"],
-  ["Modelo de IA", "Esencial", "Mayor capacidad"],
-];
-
-const proOutcomes = [
-  { number: "01", title: "Compará antes de decidir", copy: "Guardá escenarios ilimitados y volvé a cada alternativa sin rehacer el cálculo." },
-  { number: "02", title: "Profundizá con contexto", copy: "La IA recibe los datos del escenario para explicar riesgos, oportunidades y próximos pasos." },
-  { number: "03", title: "Conservá el historial", copy: "Tus cálculos y conversaciones siguen disponibles desde cualquier dispositivo." },
-  { number: "04", title: "Una cuenta para Growtella", copy: "El mismo acceso y plan se reconocen en las herramientas compatibles del ecosistema." },
+const comparisonRows = [
+  { feature: "Calculadoras", basic: "Precio, margen y punto de equilibrio", pro: "Todas, incluidas las de rubro", premium: "Todas + acceso anticipado" },
+  { feature: "Escenarios guardados", basic: "Hasta 2", pro: "Ilimitados", premium: "Ilimitados" },
+  { feature: "Comparar escenarios", basic: "No incluido", pro: "Hasta 3 lado a lado", premium: "Sin límite simultáneo" },
+  { feature: "Análisis con IA", basic: "5 por mes", pro: "50 por mes", premium: "Ilimitados" },
+  { feature: "Soporte", basic: "Email estándar", pro: "Prioritario", premium: "Prioritario + consulta 1 a 1" },
 ];
 
 function CheckIcon() {
@@ -70,197 +44,145 @@ function CheckIcon() {
   );
 }
 
+function paypalPlanReady(plan: PaidPlanName) {
+  if (plan === "basic") return Boolean(process.env.PAYPAL_PLAN_BASIC_MONTHLY_ID);
+  if (plan === "premium") return Boolean(process.env.PAYPAL_PLAN_PREMIUM_MONTHLY_ID);
+  return Boolean(process.env.PAYPAL_PLAN_PRO_MONTHLY_ID || process.env.PAYPAL_PLAN_MONTHLY_ID);
+}
+
 export default function PricingPage() {
   const paypalMode = process.env.PAYPAL_ENV?.toLowerCase() === "live" ? "live" : "sandbox";
-  const paypalReady = Boolean(
+  const paypalBaseReady = Boolean(
     process.env.PAYPAL_CLIENT_ID
       && process.env.PAYPAL_CLIENT_SECRET
-      && process.env.PAYPAL_PLAN_MONTHLY_ID
-      && process.env.PAYPAL_PLAN_QUARTERLY_ID
-      && process.env.PAYPAL_PLAN_ANNUAL_ID
-      && (process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)
+      && (process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY),
   );
 
   return (
     <div className="pricing-surface relative isolate overflow-hidden bg-[#050805] text-white">
-      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[720px] bg-[radial-gradient(circle_at_50%_-10%,rgba(52,211,153,0.18),transparent_48%)]" />
-      <div className="pointer-events-none absolute left-[-12rem] top-[28rem] -z-10 h-96 w-96 rounded-full bg-emerald-500/[0.06] blur-3xl" />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: pricingFaqSchemaEntries,
+          }).replace(/</g, "\\u003c"),
+        }}
+      />
+      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[760px] bg-[radial-gradient(circle_at_50%_-10%,rgba(52,211,153,0.2),transparent_50%)]" />
+      <div className="pointer-events-none absolute left-[-12rem] top-[34rem] -z-10 h-96 w-96 rounded-full bg-emerald-500/[0.06] blur-3xl" />
 
-      <section className="mx-auto max-w-6xl px-4 pb-12 pt-20 text-center sm:px-6 sm:pb-16 sm:pt-28">
+      <section className="mx-auto max-w-6xl px-4 pb-14 pt-20 text-center sm:px-6 sm:pb-20 sm:pt-28">
         <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-emerald-300/15 bg-emerald-300/[0.055] px-3 py-1.5 text-xs font-medium text-emerald-100/75">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(110,231,183,0.9)]" />
-          Pro para decisiones que merecen más contexto
+          Planes simples · facturación mensual
         </div>
         <h1 className="mx-auto mt-7 max-w-4xl text-4xl font-semibold leading-[1.02] tracking-[-0.045em] sm:text-6xl lg:text-7xl">
-          Calculá, compará y decidí sin perder el hilo
+          Elegí la capacidad que necesita tu negocio hoy
         </h1>
-        <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-white/50 sm:text-lg sm:leading-8">
-          Empezá gratis. Elegí Pro cuando necesites guardar más alternativas,
-          profundizar el análisis y conservar todo tu proceso de decisión.
+        <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-white/52 sm:text-lg sm:leading-8">
+          Calculá gratis. Sumá guardado, comparación e IA cuando necesites convertir más alternativas en una decisión concreta.
         </p>
-        <div className="mx-auto mt-9 grid max-w-3xl gap-px overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.08] text-left sm:grid-cols-3">
-          {[
-            ["01", "Detectá riesgos", "Encontrá costos o supuestos que podrían cambiar el resultado."],
-            ["02", "Compará alternativas", "Volvé a cada escenario sin rehacer cuentas ni perder contexto."],
-            ["03", "Definí el próximo paso", "Convertí las métricas en una acción concreta para tu negocio."],
-          ].map(([number, title, copy]) => (
-            <div key={number} className="bg-[#070a08] p-5">
-              <p className="text-[10px] font-bold tracking-[0.16em] text-emerald-200/45">{number}</p>
-              <p className="mt-3 text-sm font-bold text-white/90">{title}</p>
-              <p className="mt-1.5 text-xs leading-5 text-white/45">{copy}</p>
-            </div>
-          ))}
+        <div className="mx-auto mt-8 flex max-w-2xl flex-col items-center justify-between gap-4 rounded-2xl border border-white/[0.08] bg-black/20 px-5 py-4 text-left sm:flex-row">
+          <div>
+            <p className="text-sm font-semibold text-white/82">Podés empezar sin pagar</p>
+            <p className="mt-1 text-xs leading-5 text-white/40">Usá las calculadoras gratuitas sin límite. La cuenta gratis permite guardar hasta 2 escenarios y probar la IA.</p>
+          </div>
+          <Link href="/perfil?modo=registro" className="w-full shrink-0 rounded-full border border-white/12 px-4 py-2.5 text-center text-sm font-semibold text-white/75 transition hover:bg-white/[0.06] hover:text-white sm:w-auto">Crear cuenta gratis</Link>
         </div>
       </section>
 
-      <section className="mx-auto max-w-5xl px-4 pb-14 sm:px-6 sm:pb-16">
-        <div className="grid gap-px overflow-hidden rounded-[28px] border border-white/[0.08] bg-white/[0.08] sm:grid-cols-2 lg:grid-cols-4">
-          {proOutcomes.map((item) => <article key={item.number} className="bg-[#080b09] p-5 sm:p-6"><p className="text-[10px] font-bold tracking-[0.16em] text-emerald-200/45">{item.number}</p><h2 className="mt-4 text-base font-bold text-white/90">{item.title}</h2><p className="mt-2 text-sm leading-6 text-white/45">{item.copy}</p></article>)}
-        </div>
-      </section>
-
-      <section aria-labelledby="ai-example-title" className="mx-auto max-w-5xl px-4 pb-20 sm:px-6">
-        <div className="overflow-hidden rounded-[30px] border border-emerald-300/15 bg-[linear-gradient(145deg,rgba(16,185,129,0.08),rgba(5,8,5,0.96)_44%)] shadow-[0_30px_100px_rgba(0,0,0,0.2)]">
-          <div className="grid border-b border-white/[0.08] lg:grid-cols-[.78fr_1.22fr]">
-            <div className="p-6 sm:p-8">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-200/55">Ejemplo realista</p>
-              <h2 id="ai-example-title" className="mt-4 text-3xl font-semibold tracking-tight">Así transforma un cálculo en una decisión</h2>
-              <p className="mt-4 text-sm leading-7 text-white/50">La IA trabaja con los datos del escenario. No reemplaza al cálculo: lo explica, marca supuestos y propone qué revisar.</p>
-              <dl className="mt-7 grid grid-cols-2 gap-3">
-                {[
-                  ["Precio", "$18.000"],
-                  ["Costo total", "$11.200"],
-                  ["Margen neto", "37,8%"],
-                  ["Ventas/mes", "100"],
-                ].map(([label, value]) => (
-                  <div key={label} className="rounded-2xl border border-white/[0.08] bg-black/20 p-4">
-                    <dt className="text-[11px] text-white/38">{label}</dt>
-                    <dd className="mt-1 text-lg font-bold text-white/90">{value}</dd>
+      <section aria-labelledby="paid-plans-title" className="mx-auto max-w-7xl px-4 pb-20 sm:px-6">
+        <div className="sr-only"><h2 id="paid-plans-title">Planes pagos mensuales</h2></div>
+        <div className="grid items-stretch gap-5 lg:grid-cols-3 lg:gap-6">
+          {PAID_PLANS.map((plan) => {
+            const recommended = "recommended" in plan && plan.recommended;
+            const ready = paypalBaseReady && paypalPlanReady(plan.id);
+            return (
+              <article
+                key={plan.id}
+                id={`plan-${plan.id}`}
+                className={`relative flex flex-col overflow-hidden rounded-[30px] p-6 sm:p-8 ${recommended
+                  ? "border border-emerald-300/40 bg-[linear-gradient(150deg,rgba(16,185,129,0.16),rgba(255,255,255,0.035)_50%,rgba(0,0,0,0.2))] shadow-[0_32px_110px_rgba(16,185,129,0.14)] lg:-my-3 lg:py-11"
+                  : "border border-white/[0.09] bg-white/[0.025]"}`}
+              >
+                {recommended ? <div className="pointer-events-none absolute -right-20 -top-20 size-64 rounded-full bg-emerald-300/10 blur-3xl" /> : null}
+                <div className="relative flex items-start justify-between gap-3">
+                  <div>
+                    <p className={`text-sm font-semibold ${recommended ? "text-emerald-200" : "text-white/55"}`}>{plan.name}</p>
+                    <p className="mt-2 text-xs leading-5 text-white/38">{plan.tagline}</p>
                   </div>
-                ))}
-              </dl>
-            </div>
-            <div className="border-t border-white/[0.08] bg-black/20 p-4 sm:p-6 lg:border-l lg:border-t-0">
-              <div className="flex items-center justify-between gap-4 border-b border-white/[0.08] pb-4">
-                <div className="flex items-center gap-3">
-                  <span className="grid h-9 w-9 place-items-center rounded-xl border border-emerald-200/20 bg-emerald-200/[0.08] text-sm font-black text-emerald-100">IA</span>
-                  <div><p className="text-sm font-bold">Lectura del escenario</p><p className="text-xs text-white/38">Usando tus números</p></div>
+                  {recommended ? <span className="rounded-full bg-emerald-300 px-3 py-1 text-[10px] font-black uppercase tracking-[0.13em] text-emerald-950">Recomendado</span> : null}
                 </div>
-                <span className="rounded-full border border-emerald-200/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-100/55">Demostración</span>
-              </div>
-              <div className="mt-5 space-y-3">
-                <article className="rounded-2xl border border-emerald-200/15 bg-emerald-200/[0.055] p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-emerald-200/55">Lectura principal</p>
-                  <p className="mt-2 text-sm leading-6 text-white/72">El negocio conserva un margen positivo, pero una comisión adicional de 5% lo reduciría a aproximadamente 32,8%.</p>
-                </article>
-                <article className="rounded-2xl border border-amber-200/15 bg-amber-200/[0.045] p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-amber-100/55">Riesgo a revisar</p>
-                  <p className="mt-2 text-sm leading-6 text-white/68">El escenario supone 100 ventas todos los meses. Probá también 70 unidades para conocer tu resultado conservador.</p>
-                </article>
-                <article className="rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/38">Próximo paso</p>
-                  <p className="mt-2 text-sm leading-6 text-white/68">Compará el precio actual contra uno que absorba la comisión sin bajar de 30% de margen neto.</p>
-                </article>
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-col gap-3 px-6 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8">
-            <p className="text-xs leading-5 text-white/38">Ejemplo ilustrativo. Cada análisis se genera con los datos reales del escenario guardado.</p>
-            <Link href="/perfil?modo=registro" className="rounded-full border border-emerald-200/20 bg-emerald-200/[0.07] px-4 py-2.5 text-center text-sm font-bold text-emerald-100 transition hover:bg-emerald-200/[0.12]">Probar gratis</Link>
-          </div>
+
+                <div className="relative mt-7 flex items-end gap-2">
+                  <p className="text-4xl font-semibold tracking-[-0.04em] text-white">US$ {plan.priceUsd.toFixed(2)}</p>
+                  <p className="pb-1 text-sm text-white/35">/ mes</p>
+                </div>
+                <p className="relative mt-5 min-h-18 text-sm leading-6 text-white/48">{plan.description}</p>
+
+                <PricingSelector plan={plan.id} paypalReady={ready} paypalMode={paypalMode} emphasized={recommended} />
+
+                <div className={`relative my-7 h-px ${recommended ? "bg-emerald-100/12" : "bg-white/[0.08]"}`} />
+                <ul className="relative space-y-4">
+                  {plan.features.map((feature) => (
+                    <li key={feature} className={`flex gap-3 text-sm leading-6 ${recommended ? "text-white/72" : "text-white/55"}`}>
+                      <span className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full ${recommended ? "bg-emerald-300 text-emerald-950" : "border border-white/12 text-white/55"}`}><CheckIcon /></span>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            );
+          })}
         </div>
-      </section>
-
-      <section className="mx-auto grid max-w-5xl gap-5 px-4 pb-20 sm:px-6 lg:grid-cols-2 lg:gap-6">
-        <article className="flex flex-col rounded-[28px] border border-white/[0.09] bg-white/[0.025] p-6 sm:p-8">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-sm font-medium text-white/45">Gratis</p>
-              <h2 className="mt-4 text-3xl font-semibold tracking-tight">$0</h2>
-              <p className="mt-1 text-sm text-white/35">Para siempre</p>
-            </div>
-            <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/40">Para empezar</span>
-          </div>
-          <p className="mt-7 max-w-md text-sm leading-6 text-white/45">
-            Calculá, guardá y probá el análisis inteligente sin pagar.
-          </p>
-          <Link href="/perfil?modo=registro" className="mt-7 rounded-full border border-white/12 bg-white/[0.04] px-4 py-3 text-center text-sm font-semibold text-white/80 transition hover:border-white/25 hover:bg-white/[0.08] hover:text-white">
-            Crear mi cuenta gratis
-          </Link>
-          <div className="my-7 h-px bg-white/[0.08]" />
-          <ul className="space-y-4">
-            {freeFeatures.map((feature) => (
-              <li key={feature} className="flex gap-3 text-sm text-white/55">
-                <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full border border-white/10 text-white/50"><CheckIcon /></span>
-                {feature}
-              </li>
-            ))}
-          </ul>
-        </article>
-
-        <article className="relative flex flex-col overflow-hidden rounded-[28px] border border-emerald-300/30 bg-[linear-gradient(145deg,rgba(16,185,129,0.13),rgba(255,255,255,0.025)_48%,rgba(0,0,0,0.18))] p-6 shadow-[0_28px_100px_rgba(16,185,129,0.08)] sm:p-8">
-          <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-emerald-300/10 blur-3xl" />
-          <div className="relative flex items-start justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-semibold text-emerald-200">Pro</p>
-                <span className="rounded-full bg-emerald-300 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-950">Recomendado</span>
-              </div>
-            </div>
-            <span className="rounded-full border border-emerald-200/20 bg-emerald-200/[0.06] px-3 py-1 text-xs text-emerald-100/70">Más contexto</span>
-          </div>
-          <p className="relative mt-7 max-w-md text-sm leading-6 text-white/55">
-            Más margen para comparar escenarios y conversar en profundidad antes de decidir.
-          </p>
-          <PricingSelector paypalReady={paypalReady} paypalMode={paypalMode} />
-          <div className="relative my-7 h-px bg-emerald-100/10" />
-          <ul className="relative space-y-4">
-            {proFeatures.map((feature) => (
-              <li key={feature} className="flex gap-3 text-sm text-white/70">
-                <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-emerald-300 text-emerald-950"><CheckIcon /></span>
-                {feature}
-              </li>
-            ))}
-          </ul>
-        </article>
+        <p className="mx-auto mt-10 max-w-3xl text-center text-xs leading-6 text-white/32">Los tres planes se renuevan mensualmente. El cobro se procesa en USD mediante PayPal y el importe final se muestra antes de confirmar.</p>
       </section>
 
       <section className="border-y border-white/[0.07] bg-white/[0.018]">
-        <div className="mx-auto max-w-5xl px-4 py-20 sm:px-6">
+        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6">
           <div className="max-w-2xl">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200/60">Comparación clara</p>
-            <h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">Todo lo que cambia con Pro</h2>
-            <p className="mt-4 text-sm leading-7 text-white/45">Sin funciones escondidas ni límites ambiguos. Estos son los cupos exactos.</p>
+            <h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">Qué incluye cada plan</h2>
+            <p className="mt-4 text-sm leading-7 text-white/45">Sin costos anuales adelantados ni límites escondidos. Pro concentra lo que necesita la mayoría de los negocios.</p>
           </div>
-          <div className="mt-10 overflow-hidden rounded-3xl border border-white/[0.08] bg-black/20">
-            <div className="grid grid-cols-[1.25fr_.75fr_.8fr] border-b border-white/[0.08] px-4 py-4 text-xs font-semibold text-white/35 sm:px-6">
-              <span>Característica</span><span>Gratis</span><span className="text-emerald-200/70">Pro</span>
-            </div>
-            {comparisons.map(([feature, free, pro]) => (
-              <div key={feature} className="grid grid-cols-[1.25fr_.75fr_.8fr] items-center border-b border-white/[0.06] px-4 py-4 text-xs last:border-0 sm:px-6 sm:text-sm">
-                <span className="pr-3 font-medium text-white/70">{feature}</span>
-                <span className="pr-3 text-white/38">{free}</span>
-                <span className="font-medium text-emerald-100/75">{pro}</span>
+
+          <div className="mt-10 overflow-x-auto rounded-3xl border border-white/[0.08] bg-black/20">
+            <div className="min-w-[760px]">
+              <div className="grid grid-cols-[1.15fr_repeat(3,1fr)] border-b border-white/[0.08] px-6 py-5 text-xs font-semibold text-white/38">
+                <span>Característica</span>
+                <span>Básico</span>
+                <span className="text-emerald-200/85">Pro · Recomendado</span>
+                <span>Premium</span>
               </div>
-            ))}
+              {comparisonRows.map((row) => (
+                <div key={row.feature} className="grid grid-cols-[1.15fr_repeat(3,1fr)] items-center border-b border-white/[0.06] px-6 py-5 text-sm last:border-0">
+                  <span className="pr-5 font-medium text-white/72">{row.feature}</span>
+                  <span className="pr-5 text-white/42">{row.basic}</span>
+                  <span className="pr-5 font-semibold text-emerald-100/82">{row.pro}</span>
+                  <span className="text-white/48">{row.premium}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-5xl px-4 py-20 sm:px-6 sm:py-24">
-        <div className="grid gap-10 lg:grid-cols-[.75fr_1.25fr] lg:gap-16">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200/60">Preguntas frecuentes</p>
-            <h2 className="mt-4 text-3xl font-semibold tracking-tight">Antes de elegir</h2>
-          </div>
-          <div className="divide-y divide-white/[0.08] border-y border-white/[0.08]">
-            <div className="py-6"><h3 className="font-medium text-white/85">¿Cuándo se renuevan los límites?</h3><p className="mt-2 text-sm leading-6 text-white/42">En Gratis, el análisis se renueva cada semana y los mensajes y escenarios cada día. En Pro, análisis y mensajes se renuevan cada mes; los escenarios son ilimitados.</p></div>
-            <div className="py-6"><h3 className="font-medium text-white/85">¿Puedo pagar varios meses por adelantado?</h3><p className="mt-2 text-sm leading-6 text-white/42">Sí. La propuesta incluye pago mensual anticipado, trimestral con 10% de ahorro y anual con 20% de ahorro.</p></div>
-            <div className="py-6"><h3 className="font-medium text-white/85">¿Qué pasa si llego al límite?</h3><p className="mt-2 text-sm leading-6 text-white/42">Tus cálculos y escenarios siguen disponibles. Solo tenés que esperar la renovación del cupo de IA.</p></div>
-            <div className="py-6"><h3 className="font-medium text-white/85">¿Ya puedo pagar Pro?</h3><p className="mt-2 text-sm leading-6 text-white/42">{paypalReady ? paypalMode === "sandbox" ? "El flujo está habilitado en modo de prueba. No se mueve dinero real hasta completar la verificación y pasar PayPal a Live." : "Sí. Elegí un período, iniciá sesión y confirmá la suscripción segura desde PayPal." : "Estamos terminando la configuración segura de PayPal antes de habilitar el botón."}</p></div>
+      <section className="mx-auto max-w-5xl px-4 pt-20 sm:px-6 sm:pt-24">
+        <div className="overflow-hidden rounded-[30px] border border-emerald-300/15 bg-[linear-gradient(145deg,rgba(16,185,129,0.1),rgba(5,8,5,0.96)_48%)] p-7 sm:p-10">
+          <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-200/55">Por qué Pro es el más elegido</p>
+              <h2 className="mt-3 text-3xl font-semibold tracking-tight">Compará antes de comprometer plata</h2>
+              <p className="mt-4 max-w-2xl text-sm leading-7 text-white/50">Guardá todas las alternativas que necesites, enfrentá hasta tres lado a lado y usá la IA para detectar qué supuesto cambia realmente la decisión.</p>
+            </div>
+            <Link href="#plan-pro" className="rounded-full bg-emerald-300 px-6 py-3 text-center text-sm font-black text-emerald-950 transition hover:bg-emerald-200">Elegir Pro · US$ 19.99</Link>
           </div>
         </div>
       </section>
+
+      <PricingFaq />
     </div>
   );
 }

@@ -10,6 +10,7 @@ import { buildScenarioResults } from "@/lib/scenarios";
 import type { ScenarioDraft, ScenarioValue } from "@/types/scenario";
 
 const SaveScenarioButton = lazy(() => import("@/components/SaveScenarioButton"));
+const CompareScenarioButton = lazy(() => import("@/components/CompareScenarioButton"));
 const AiAssistant = lazy(() => import("@/components/AiAssistant"));
 
 function cleanLabel(value: string) {
@@ -230,27 +231,28 @@ export default function CalculatorScenarioCapture() {
       <header className="grid gap-4 px-6 py-6 sm:px-8 lg:grid-cols-[1fr_auto] lg:items-end">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-200/55">Después del cálculo</p>
-          <h2 className="mt-2 text-xl font-semibold tracking-[-0.025em] text-white sm:text-2xl">Guardá el escenario o profundizá el resultado</h2>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-white/48">Las dos acciones usan los datos y resultados de esta calculadora. Elegí cómo querés continuar.</p>
+          <h2 className="mt-2 text-xl font-semibold tracking-[-0.025em] text-white sm:text-2xl">Guardá, compará o profundizá el resultado</h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-white/48">Las acciones usan los datos y resultados de esta calculadora. Elegí cómo querés continuar.</p>
         </div>
         <p className="text-xs text-white/30">Disponible con una cuenta</p>
       </header>
-      {snapshot?.hasResults ? (
+      {snapshot ? (
         <Suspense
           fallback={
             <p className="border-t border-white/[0.08] px-6 py-7 text-sm text-white/45 sm:px-8">
-              Preparando las opciones para guardar y analizar…
+              Preparando las opciones para guardar, comparar y analizar…
             </p>
           }
         >
-          <div className="grid border-t border-white/[0.08] md:grid-cols-2 md:divide-x md:divide-white/[0.08]">
-            <SaveScenarioButton draft={snapshot.draft} hasResults />
-            <AiAssistant draft={snapshot.draft} hasResults />
+          <div className="grid border-t border-white/[0.08] md:grid-cols-3 md:divide-x md:divide-white/[0.08]">
+            <SaveScenarioButton draft={snapshot.draft} hasResults={snapshot.hasResults} />
+            <CompareScenarioButton draft={snapshot.draft} hasResults={snapshot.hasResults} />
+            <AiAssistant draft={snapshot.draft} hasResults={snapshot.hasResults} />
           </div>
         </Suspense>
       ) : (
         <p className="border-t border-white/[0.08] px-6 py-7 text-sm text-white/45 sm:px-8">
-          Completá los datos y calculá para habilitar estas opciones.
+          Preparando las opciones para continuar…
         </p>
       )}
     </section>,

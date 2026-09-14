@@ -21,6 +21,9 @@ test("client parser accepts current and legacy quota shapes", () => {
 
   const legacy = parseAiApiResponse(JSON.stringify({ quota: { used: 1, quota_limit: 5, plan: "free" } }));
   assert.deepEqual(legacy?.quota, { used: 1, limit: 5, plan: "free" });
+
+  const unlimited = parseAiApiResponse(JSON.stringify({ quota: { used: 42, limit: null, plan: "premium" } }));
+  assert.deepEqual(unlimited?.quota, { used: 42, limit: null, plan: "premium" });
 });
 
 test("client and provider parsers tolerate malformed bodies", () => {

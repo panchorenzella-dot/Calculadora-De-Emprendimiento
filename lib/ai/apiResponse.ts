@@ -1,7 +1,9 @@
+import { isPlanName, type PlanName } from "../plans";
+
 export type AiApiQuota = {
   used: number;
-  limit: number;
-  plan: "free" | "pro";
+  limit: number | null;
+  plan: PlanName;
   resetsAt?: string;
 };
 
@@ -34,21 +36,24 @@ export function parseAiApiResponse(raw: string): AiApiResponse | null {
 
   let quota: AiApiQuota | undefined;
   if (isRecord(value.quota)) {
-    const limit = typeof value.quota.limit === "number"
+    const limit = value.quota.limit === null
+      ? null
+      : typeof value.quota.limit === "number"
       ? value.quota.limit
-      : typeof value.quota.quota_limit === "number"
-        ? value.quota.quota_limit
+      : value.quota.quota_limit === null
+        ? null
+        : typeof value.quota.quota_limit === "number"
+          ? value.quota.quota_limit
         : undefined;
     if (
       typeof value.quota.used === "number"
       && Number.isFinite(value.quota.used)
-      && typeof limit === "number"
-      && Number.isFinite(limit)
+      && (limit === null || (typeof limit === "number" && Number.isFinite(limit)))
     ) {
       quota = {
         used: value.quota.used,
         limit,
-        plan: value.quota.plan === "pro" ? "pro" : "free",
+        plan: isPlanName(value.quota.plan) ? value.quota.plan : "free",
         ...(typeof value.quota.resetsAt === "string" ? { resetsAt: value.quota.resetsAt } : {}),
       };
     }

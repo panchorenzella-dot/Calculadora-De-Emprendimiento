@@ -2,12 +2,14 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { createPayPalSubscription, getPayPalEnvironment, PayPalApiError } from "@/lib/paypal/server";
+import { isPaidPlanName } from "@/lib/plans";
 import { authenticateRequest } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
 const RequestSchema = z.object({
-  interval: z.enum(["monthly", "quarterly", "annual"]),
+  plan: z.enum(["basic", "pro", "premium"]).optional(),
+  interval: z.enum(["monthly", "quarterly", "annual"]).optional(),
   requestId: z.uuid(),
   checkout: z.enum(["calculator", "growtella"]).optional().default("calculator"),
 });
@@ -15,9 +17,12 @@ const RequestSchema = z.object({
 export async function POST(request: Request) {
   try {
     const authenticated = await authenticateRequest(request);
-    if (!authenticated) return NextResponse.json({ error: "Necesitás iniciar sesión para contratar Pro." }, { status: 401 });
+    if (!authenticated) return NextResponse.json({ error: "Necesitás iniciar sesión para contratar un plan." }, { status: 401 });
 
     const body = RequestSchema.parse(await request.json());
+    // Compatibilidad temporal para Growtella: sus checkouts anteriores enviaban
+    // solamente `interval`. Todos esos accesos se migran al plan Pro mensual.
+    const selectedPlan = body.plan ?? "pro";
     const { data: currentPlan } = await authenticated.supabase
       .from("user_plans")
       .select("plan,status,provider,provider_subscription_id,current_period_end")
@@ -26,8 +31,8 @@ export async function POST(request: Request) {
     const periodEnd = currentPlan?.current_period_end ? new Date(currentPlan.current_period_end).getTime() : null;
     const activeUntil = periodEnd === null || periodEnd + 2 * 86_400_000 > Date.now();
     const activeStatus = currentPlan?.status === "active" || currentPlan?.status === "trialing";
-    if (currentPlan?.plan === "pro" && activeStatus && activeUntil) {
-      return NextResponse.json({ error: "Tu cuenta ya tiene Pro activo." }, { status: 409 });
+    if (isPaidPlanName(currentPlan?.plan) && activeStatus && activeUntil) {
+      return NextResponse.json({ error: `Tu cuenta ya tiene un plan ${currentPlan.plan} activo.` }, { status: 409 });
     }
     if (currentPlan?.provider === "paypal" && currentPlan.provider_subscription_id && currentPlan.status !== "canceled") {
       return NextResponse.json({ error: "Ya existe una suscripción de PayPal vinculada a esta cuenta." }, { status: 409 });
@@ -38,7 +43,7 @@ export async function POST(request: Request) {
     const growtellaUrl = (process.env.NEXT_PUBLIC_GROWTELLA_URL || "https://www.growtella.com").replace(/\/$/, "");
     const checkoutSite = body.checkout === "growtella" ? growtellaUrl : calculatorUrl;
     const subscription = await createPayPalSubscription({
-      interval: body.interval,
+      plan: selectedPlan,
       userId: authenticated.user.id,
       requestId: body.requestId,
       returnUrl: body.checkout === "growtella" ? `${checkoutSite}/cuenta?paypal=success` : `${checkoutSite}/perfil?paypal=success`,

@@ -8,7 +8,15 @@ import AuthModal from "@/components/AuthModal";
 import PlanUsageDashboard, { type UsageItem } from "@/components/PlanUsageDashboard";
 import ProfileOnboarding from "@/components/ProfileOnboarding";
 import { trackEvent } from "@/lib/analytics";
-import { PLAN_GRACE_DAYS } from "@/lib/plans";
+import {
+  canCompareScenarios,
+  comparisonLimit,
+  effectivePlan,
+  PLAN_LABELS,
+  PLAN_LIMITS,
+  type PaidPlanName,
+  type PlanName,
+} from "@/lib/plans";
 import { getCalculatorInfo, getScenarioMetrics, getScenarioPreview, SAVED_SCENARIO_COLUMNS } from "@/lib/scenarios";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import type { SavedScenario } from "@/types/scenario";
@@ -24,7 +32,7 @@ type Conversation = {
   updated_at: string;
 };
 type PlanInfo = {
-  plan: "free" | "pro";
+  plan: PlanName;
   status: "inactive" | "trialing" | "active" | "past_due" | "canceled";
   current_period_start: string | null;
   current_period_end: string | null;
@@ -76,11 +84,12 @@ function isView(value: string | null): value is View {
   return navigation.some((item) => item.id === value);
 }
 
-function defaultUsage(plan: "free" | "pro" = "free"): UsageItem[] {
+function defaultUsage(plan: PlanName = "free"): UsageItem[] {
+  const limits = PLAN_LIMITS[plan];
   return [
-    { resource: "analysis", used: 0, quota_limit: plan === "pro" ? 30 : 1, resets_at: null, plan },
-    { resource: "chat", used: 0, quota_limit: plan === "pro" ? 300 : 5, resets_at: null, plan },
-    { resource: "scenario", used: 0, quota_limit: plan === "pro" ? null : 3, resets_at: null, plan },
+    { resource: "analysis", used: 0, quota_limit: limits.analysis, resets_at: null, plan },
+    { resource: "chat", used: 0, quota_limit: limits.chat, resets_at: null, plan },
+    { resource: "scenario", used: 0, quota_limit: limits.scenarios, resets_at: null, plan },
   ];
 }
 
@@ -120,7 +129,7 @@ function StatCard({ label, value, detail, accent = false, onClick }: { label: st
   return onClick ? <button type="button" onClick={onClick} className={className}>{content}</button> : <div className={className}>{content}</div>;
 }
 
-export default function ProfilePage({ initialAuthMode = "login", continueToPro = false }: { initialAuthMode?: "login" | "signup"; continueToPro?: boolean }) {
+export default function ProfilePage({ initialAuthMode = "login", continueToPlan = null }: { initialAuthMode?: "login" | "signup"; continueToPlan?: PaidPlanName | null }) {
   const configured = Boolean(getSupabaseClient());
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(configured);
@@ -158,9 +167,11 @@ export default function ProfilePage({ initialAuthMode = "login", continueToPro =
         supabase.from("user_plans").select("plan,status,current_period_start,current_period_end,cancel_at_period_end,provider").eq("user_id", userId).maybeSingle(),
         supabase.rpc("get_my_usage_summary"),
       ]);
+      const nextScenarios = !scenarioResponse.error
+        ? (scenarioResponse.data as SavedScenario[]) ?? []
+        : [];
       if (scenarioResponse.error) setMessage("No pudimos cargar los escenarios guardados.");
       else {
-        const nextScenarios = (scenarioResponse.data as SavedScenario[]) ?? [];
         setScenarios(nextScenarios);
         setSelectedScenarioIds((current) => current.filter((id) => nextScenarios.some((scenario) => scenario.id === id)));
       }
@@ -173,13 +184,16 @@ export default function ProfilePage({ initialAuthMode = "login", continueToPro =
       }
 
       const planData = planResponse.data as PlanInfo | null;
-      const periodEnd = planData?.current_period_end ? new Date(planData.current_period_end).getTime() : null;
-      const hasValidEnd = periodEnd === null || (!Number.isNaN(periodEnd) && Date.now() <= periodEnd + PLAN_GRACE_DAYS * 86_400_000);
-      const hasValidStatus = planData?.status === "active" || planData?.status === "trialing" || (planData?.status === "past_due" && periodEnd !== null);
-      const effectivePlan = planData?.plan === "pro" && hasValidStatus && hasValidEnd && planData ? planData : FREE_PLAN;
-      setPlan(effectivePlan);
+      const activePlanName = effectivePlan(planData);
+      const activePlan = activePlanName === "free" || !planData ? FREE_PLAN : { ...planData, plan: activePlanName };
+      setPlan(activePlan);
       const usageData = usageResponse.data as UsageItem[] | null;
-      setUsage(!usageResponse.error && usageData?.length ? usageData : defaultUsage(effectivePlan.plan));
+      setUsage(!usageResponse.error && usageData?.length ? usageData : defaultUsage(activePlan.plan));
+
+      const requestedComparison = new URLSearchParams(window.location.search).get("compare");
+      if (requestedComparison && nextScenarios.some((scenario) => scenario.id === requestedComparison)) {
+        setSelectedScenarioIds([requestedComparison]);
+      }
     } catch {
       setMessage("No pudimos actualizar tu historial. Revisá la conexión y volvé a intentar.");
       setAnalysisLoadError(true);
@@ -206,14 +220,20 @@ export default function ProfilePage({ initialAuthMode = "login", continueToPro =
         headers: { Authorization: `Bearer ${activeSession.access_token}`, "Content-Type": "application/json" },
         body: JSON.stringify({ subscriptionId }),
       });
-      const data = await response.json() as { message?: string; error?: string; active?: boolean; interval?: string; value?: number };
+      const data = await response.json() as { message?: string; error?: string; active?: boolean; plan?: PaidPlanName; interval?: string; value?: number };
       setMessage(data.message || data.error || "PayPal está procesando la suscripción.");
       if (response.ok && data.active) {
         trackEvent("purchase", {
           transaction_id: subscriptionId,
           currency: "USD",
           value: data.value,
-          items: [{ item_id: "calculadora_pro", item_name: "Calculadora Emprendedora Pro", item_variant: data.interval, price: data.value, quantity: 1 }],
+          items: [{
+            item_id: `calculadora_${data.plan ?? "pro"}`,
+            item_name: `Calculadora Emprendedora ${data.plan ? PLAN_LABELS[data.plan] : "Pro"}`,
+            item_variant: data.interval,
+            price: data.value,
+            quantity: 1,
+          }],
         });
         sessionStorage.removeItem("calculadora-emprendedora:pending-plan");
         await loadData(activeSession.user.id);
@@ -259,10 +279,10 @@ export default function ProfilePage({ initialAuthMode = "login", continueToPro =
   }, [handlePayPalReturn, loadData]);
 
   useEffect(() => {
-    if (!session || !continueToPro) return;
-    trackEvent("checkout_resume_after_login", { plan: "pro" });
-    window.location.replace("/precios");
-  }, [continueToPro, session]);
+    if (!session || !continueToPlan) return;
+    trackEvent("checkout_resume_after_login", { plan: continueToPlan });
+    window.location.replace(`/precios?plan=${continueToPlan}#plan-${continueToPlan}`);
+  }, [continueToPlan, session]);
 
   useEffect(() => {
     if (!session) return;
@@ -373,12 +393,17 @@ export default function ProfilePage({ initialAuthMode = "login", continueToPro =
   const selectedCalculatorType = selectedScenarios[0]?.calculator_type;
 
   function toggleScenarioSelection(scenario: SavedScenario) {
+    if (!canCompareScenarios(plan.plan)) {
+      setMessage("La comparación lado a lado está disponible en Pro y Premium.");
+      return;
+    }
     if (selectedScenarioIds.includes(scenario.id)) {
       setSelectedScenarioIds((current) => current.filter((id) => id !== scenario.id));
       return;
     }
-    if (selectedScenarioIds.length >= 3) {
-      setMessage("Podés comparar hasta 3 escenarios a la vez.");
+    const maximum = comparisonLimit(plan.plan);
+    if (maximum !== null && selectedScenarioIds.length >= maximum) {
+      setMessage(`Tu plan permite comparar hasta ${maximum} escenarios a la vez.`);
       return;
     }
     if (selectedCalculatorType && selectedCalculatorType !== scenario.calculator_type) {
@@ -390,7 +415,7 @@ export default function ProfilePage({ initialAuthMode = "login", continueToPro =
   }
 
   if (loading) return <div className="grid min-h-[65vh] place-items-center text-sm text-white/40">Preparando tu espacio...</div>;
-  if (!session) return <main><AuthModal open returnTo={continueToPro ? "/perfil?continuar=pro" : "/perfil"} initialMode={initialAuthMode} /></main>;
+  if (!session) return <main><AuthModal open returnTo={continueToPlan ? `/perfil?continuar=${continueToPlan}` : "/perfil"} initialMode={initialAuthMode} /></main>;
 
   const user = session.user;
   const name = String(user.user_metadata.full_name || user.user_metadata.name || "Emprendedor/a");
@@ -406,7 +431,9 @@ export default function ProfilePage({ initialAuthMode = "login", continueToPro =
     const metrics = getScenarioMetrics(scenario).slice(0, compact ? 2 : 3);
     const selected = selectedScenarioIds.includes(scenario.id);
     const incompatible = !selected && Boolean(selectedCalculatorType) && selectedCalculatorType !== scenario.calculator_type;
-    const limitReached = !selected && selectedScenarioIds.length >= 3;
+    const maximum = comparisonLimit(plan.plan);
+    const compareEnabled = canCompareScenarios(plan.plan);
+    const limitReached = !selected && maximum !== null && selectedScenarioIds.length >= maximum;
     return (
       <article key={scenario.id} className={`group rounded-3xl border p-5 transition sm:p-6 ${selected ? "border-emerald-300/35 bg-emerald-300/[0.065] shadow-[0_18px_45px_rgba(16,185,129,.08)]" : "border-white/[0.08] bg-white/[0.025] hover:border-white/[0.14] hover:bg-white/[0.035]"}`}>
         <div className="flex items-start gap-4">
@@ -420,10 +447,10 @@ export default function ProfilePage({ initialAuthMode = "login", continueToPro =
             <button
               type="button"
               onClick={() => toggleScenarioSelection(scenario)}
-              disabled={incompatible || limitReached}
+              disabled={!compareEnabled || incompatible || limitReached}
               aria-pressed={selected}
               aria-label={`${selected ? "Quitar de la comparación" : "Agregar a la comparación"}: ${scenario.title || calculator.name}`}
-              title={incompatible ? "Solo podés comparar escenarios de la misma calculadora" : limitReached ? "Ya elegiste el máximo de 3 escenarios" : undefined}
+              title={!compareEnabled ? "Disponible en Pro y Premium" : incompatible ? "Solo podés comparar escenarios de la misma calculadora" : limitReached ? `Ya elegiste el máximo de ${maximum} escenarios` : undefined}
               className={`shrink-0 rounded-full border px-3 py-2 text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-30 ${selected ? "border-emerald-200/35 bg-emerald-300 text-[#052e21]" : "border-white/10 text-white/55 hover:border-emerald-200/25 hover:text-emerald-100"}`}
             >
               {selected ? "✓ Elegido" : "Comparar"}
@@ -437,7 +464,9 @@ export default function ProfilePage({ initialAuthMode = "login", continueToPro =
   }
 
   function renderScenarioLibrary() {
-    const readyToCompare = selectedScenarioIds.length >= 2;
+    const compareEnabled = canCompareScenarios(plan.plan);
+    const maximum = comparisonLimit(plan.plan);
+    const readyToCompare = compareEnabled && selectedScenarioIds.length >= 2;
     const compareHref = `/perfil/escenarios/comparar?ids=${selectedScenarioIds.join(",")}`;
     return (
       <>
@@ -445,7 +474,7 @@ export default function ProfilePage({ initialAuthMode = "login", continueToPro =
           <div className="min-w-0">
             <p className="text-xs font-bold text-emerald-200/70">Biblioteca de cálculos</p>
             <h1 className="mt-2 break-words text-3xl font-bold tracking-tight">Escenarios guardados</h1>
-            <p className="mt-2 text-sm font-medium text-white/60">Revisá tu historial o compará entre 2 y 3 alternativas de una misma calculadora.</p>
+            <p className="mt-2 text-sm font-medium text-white/60">Revisá tu historial o compará alternativas equivalentes de una misma calculadora.</p>
           </div>
           <Link href="/calculadoras" className="profile-primary-action w-full rounded-full px-4 py-2.5 text-center text-sm transition sm:w-auto">Crear escenario</Link>
         </header>
@@ -456,17 +485,17 @@ export default function ProfilePage({ initialAuthMode = "login", continueToPro =
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="text-sm font-bold text-white/85">Comparador de escenarios</p>
-                  <span className="rounded-full border border-white/[0.08] bg-black/20 px-2.5 py-1 text-[10px] font-bold text-white/45">{selectedScenarioIds.length}/3 elegidos</span>
+                  <span className="rounded-full border border-white/[0.08] bg-black/20 px-2.5 py-1 text-[10px] font-bold text-white/45">{compareEnabled ? `${selectedScenarioIds.length}/${maximum ?? "∞"} elegidos` : `Plan ${PLAN_LABELS[plan.plan]}`}</span>
                 </div>
-                <p aria-live="polite" className="mt-1.5 text-xs leading-5 text-white/42">{selectedScenarioIds.length === 0 ? "Marcá Comparar en una tarjeta; las opciones incompatibles se desactivan automáticamente." : selectedScenarioIds.length === 1 ? "Elegí al menos una alternativa más de la misma calculadora." : "Selección lista. Podés sumar una tercera alternativa o abrir la comparación."}</p>
+                <p aria-live="polite" className="mt-1.5 text-xs leading-5 text-white/42">{!compareEnabled ? "Pasá a Pro o Premium para comparar tus escenarios lado a lado." : selectedScenarioIds.length === 0 ? "Marcá Comparar en una tarjeta; las opciones incompatibles se desactivan automáticamente." : selectedScenarioIds.length === 1 ? "Elegí al menos una alternativa más de la misma calculadora." : "Selección lista. Ya podés abrir la comparación."}</p>
               </div>
               <div className="flex shrink-0 flex-wrap items-center gap-2">
                 {selectedScenarioIds.length > 0 && <button type="button" onClick={() => setSelectedScenarioIds([])} className="rounded-full border border-white/10 px-3.5 py-2.5 text-xs font-bold text-white/50 transition hover:bg-white/5 hover:text-white">Limpiar</button>}
                 {readyToCompare ? (
                   <Link href={compareHref} onClick={() => trackEvent("open_scenario_comparison", { calculator_type: selectedCalculatorType, scenario_count: selectedScenarioIds.length })} className="rounded-full bg-emerald-300 px-5 py-2.5 text-sm font-black text-[#052e21] transition hover:bg-emerald-200">Comparar ahora →</Link>
-                ) : (
+                ) : compareEnabled ? (
                   <span aria-disabled="true" className="cursor-not-allowed rounded-full bg-white/[0.07] px-5 py-2.5 text-sm font-black text-white/30">Comparar ahora</span>
-                )}
+                ) : <Link href="/precios#plan-pro" className="rounded-full bg-emerald-300 px-5 py-2.5 text-sm font-black text-[#052e21]">Ver Pro</Link>}
               </div>
             </div>
             {selectedScenarios.length > 0 && <div className="mt-4 flex flex-wrap gap-2 border-t border-white/[0.07] pt-4">{selectedScenarios.map((scenario, index) => <button key={scenario.id} type="button" onClick={() => toggleScenarioSelection(scenario)} className="inline-flex max-w-full items-center gap-2 rounded-full border border-emerald-200/15 bg-emerald-300/[0.07] px-3 py-2 text-xs font-semibold text-emerald-50/70"><span className="shrink-0 text-emerald-200/45">{index + 1}</span><span className="truncate">{scenario.title || getCalculatorInfo(scenario.calculator_type).name}</span><span aria-hidden="true" className="shrink-0 text-white/35">×</span></button>)}</div>}
@@ -497,7 +526,7 @@ export default function ProfilePage({ initialAuthMode = "login", continueToPro =
         {view === "inicio" && <>
           <header className="flex min-w-0 flex-col gap-6 sm:flex-row sm:items-end sm:justify-between"><div className="min-w-0"><p className="text-xs font-bold text-emerald-200/70">Tu centro de decisiones</p><h1 className="mt-2 break-words text-3xl font-bold tracking-[-.035em] sm:text-4xl">Hola, {name.split(" ")[0]}</h1><p className="mt-3 max-w-xl text-sm font-medium leading-6 text-white/60">Tus cálculos, análisis y próximos pasos reunidos en un solo lugar.</p></div><div className="grid w-full gap-2 sm:w-auto sm:grid-cols-2"><a href="https://www.growtella.com/diagnostico" className="profile-secondary-action rounded-full px-4 py-2.5 text-center text-sm font-bold transition">Diagnosticar negocio</a><Link href="/calculadoras" className="profile-primary-action rounded-full px-5 py-2.5 text-center text-sm transition">Nueva consulta</Link></div></header>
           <ProfileOnboarding initialData={{ business_type: profile.business_type, main_goal: profile.main_goal, preferred_currency: profile.preferred_currency }} saving={saving} onSave={saveOnboarding} />
-          <section className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><StatCard label="Escenarios guardados" value={scenarios.length} detail={scenarios.length ? `Último: ${formatRelativeDate(latestScenario?.created_at)}` : "Creá tu primera comparación"} onClick={() => changeView("escenarios")}/><StatCard label="Análisis con IA" value={conversations.length} detail={conversations.length ? `Último: ${formatRelativeDate(latestConversation?.updated_at)}` : "Tu historial aparecerá acá"} onClick={() => changeView("analisis")}/><StatCard label="Plan actual" value={plan.plan === "pro" ? "Pro" : "Gratis"} detail={plan.plan === "pro" ? "Beneficios ampliados activos" : "Podés mejorar cuando lo necesites"} accent onClick={() => changeView("plan")}/><StatCard label="Perfil preparado" value={`${profileProgress}%`} detail={profileProgress === 100 ? "Listo para personalizar resultados" : "Completalo para mejorar la experiencia"} onClick={() => changeView("cuenta")}/></section>
+          <section className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><StatCard label="Escenarios guardados" value={scenarios.length} detail={scenarios.length ? `Último: ${formatRelativeDate(latestScenario?.created_at)}` : "Creá tu primera comparación"} onClick={() => changeView("escenarios")}/><StatCard label="Análisis con IA" value={conversations.length} detail={conversations.length ? `Último: ${formatRelativeDate(latestConversation?.updated_at)}` : "Tu historial aparecerá acá"} onClick={() => changeView("analisis")}/><StatCard label="Plan actual" value={PLAN_LABELS[plan.plan]} detail={plan.plan === "free" ? "Podés mejorar cuando lo necesites" : "Beneficios de tu membresía activos"} accent onClick={() => changeView("plan")}/><StatCard label="Perfil preparado" value={`${profileProgress}%`} detail={profileProgress === 100 ? "Listo para personalizar resultados" : "Completalo para mejorar la experiencia"} onClick={() => changeView("cuenta")}/></section>
           <section className="mt-9 grid gap-7 xl:grid-cols-[1.18fr_.82fr]"><div><div className="flex items-end justify-between gap-4"><div><p className="text-xs font-semibold text-emerald-200/55">Último escenario</p><h2 className="mt-2 text-xl font-semibold">Continuá donde lo dejaste</h2></div>{latestScenario && <button type="button" onClick={() => changeView("escenarios")} className="text-xs font-semibold text-white/35 hover:text-white">Ver todos →</button>}</div><div className="mt-4">{latestScenario ? renderScenarioCard(latestScenario, true) : <div className="rounded-3xl border border-dashed border-white/10 p-9 text-center"><p className="text-sm text-white/35">Todavía no guardaste ningún escenario.</p><Link href="/calculadoras" className="app-dark-action mt-4 inline-flex rounded-full px-4 py-2.5 text-sm transition">Elegir calculadora</Link></div>}</div></div><div><p className="text-xs font-semibold text-emerald-200/55">Actividad reciente</p><h2 className="mt-2 text-xl font-semibold">Tus análisis</h2><div className="mt-4 space-y-1">{conversations.length ? conversations.slice(0, 4).map(renderAnalysisRow) : <div className="rounded-3xl border border-dashed border-white/10 p-8 text-center text-sm text-white/35">Cuando analices un escenario con IA, la conversación aparecerá acá.</div>}</div></div></section>
           <section className="mt-9 grid gap-4 rounded-3xl border border-white/[0.07] bg-[linear-gradient(120deg,rgba(110,231,183,.065),rgba(255,255,255,.018))] p-6 sm:grid-cols-[1fr_auto] sm:items-center"><div><p className="text-xs font-semibold text-emerald-200/55">Estado de tu espacio</p><h2 className="mt-2 text-xl font-semibold">{dataLoading ? "Actualizando información..." : latestActivity ? `Última actividad: ${formatRelativeDate(latestActivity)}` : "Tu espacio está listo"}</h2><p className="mt-2 text-sm leading-6 text-white/38">Tu cuenta, plan y datos son los mismos en todo Growtella.</p></div><a href="https://www.growtella.com/cuenta" className="rounded-full border border-white/10 px-4 py-2.5 text-center text-sm font-semibold text-white/65 hover:bg-white/5 hover:text-white">Abrir cuenta Growtella</a></section>
         </>}
@@ -506,7 +535,7 @@ export default function ProfilePage({ initialAuthMode = "login", continueToPro =
 
         {view === "escenarios" && renderScenarioLibrary()}
 
-        {view === "plan" && <><header><p className="text-xs font-semibold text-emerald-200/60">Suscripción compartida</p><h1 className="mt-2 text-3xl font-semibold tracking-tight">Mi plan</h1><p className="mt-2 text-sm text-white/40">Tus beneficios y consumos para todo el ecosistema Growtella.</p></header><section className="relative mt-8 overflow-hidden rounded-[1.7rem] border border-emerald-300/20 bg-[linear-gradient(145deg,rgba(16,185,129,.12),rgba(255,255,255,.025)_55%,rgba(0,0,0,.12))] p-6 sm:p-8"><div className="pointer-events-none absolute -right-16 -top-20 size-64 rounded-full bg-emerald-300/[0.08] blur-3xl"/><div className="relative flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between"><div><div className="flex items-center gap-2"><span className="rounded-full border border-emerald-200/20 bg-emerald-200/[0.08] px-3 py-1 text-xs font-semibold uppercase tracking-[.14em] text-emerald-100">{plan.plan === "pro" ? "Growtella Pro" : "Plan Gratis"}</span>{plan.plan === "pro" && <span className="text-xs text-white/35">Activo</span>}</div><h2 className="mt-5 text-3xl font-semibold tracking-tight">{plan.plan === "pro" ? "Más capacidad para decidir mejor" : "Todo lo esencial para empezar"}</h2><p className="mt-3 max-w-xl text-sm leading-6 text-white/45">{plan.plan === "pro" ? "Tu cuenta tiene el modelo avanzado y cupos ampliados en las herramientas compatibles." : "Usá las calculadoras, guardá escenarios y probá la IA con límites gratuitos."}</p></div>{plan.plan === "free" && <Link href="/precios" className="relative shrink-0 rounded-full bg-emerald-300 px-5 py-2.5 text-center text-sm font-black text-[#052e21]">Conocer Pro</Link>}</div></section><PlanUsageDashboard plan={plan} usage={usage}/><section className="mt-8 grid gap-4 sm:grid-cols-3">{[["Tus datos siguen siendo tuyos","Cambiar de plan no elimina escenarios ni conversaciones."],["Renovación clara","Siempre ves cuándo se habilita nuevamente cada cupo."],["Una sola membresía","Pro se reconoce en Growtella y sus aplicaciones."]].map(([titleText,copy]) => <div key={titleText} className="rounded-2xl border border-white/[0.07] p-5"><p className="text-sm font-semibold text-white/75">{titleText}</p><p className="mt-2 text-xs leading-5 text-white/35">{copy}</p></div>)}</section></>}
+        {view === "plan" && <><header><p className="text-xs font-semibold text-emerald-200/60">Suscripción compartida</p><h1 className="mt-2 text-3xl font-semibold tracking-tight">Mi plan</h1><p className="mt-2 text-sm text-white/40">Tus beneficios y consumos para todo el ecosistema Growtella.</p></header><section className="relative mt-8 overflow-hidden rounded-[1.7rem] border border-emerald-300/20 bg-[linear-gradient(145deg,rgba(16,185,129,.12),rgba(255,255,255,.025)_55%,rgba(0,0,0,.12))] p-6 sm:p-8"><div className="pointer-events-none absolute -right-16 -top-20 size-64 rounded-full bg-emerald-300/[0.08] blur-3xl"/><div className="relative flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between"><div><div className="flex items-center gap-2"><span className="rounded-full border border-emerald-200/20 bg-emerald-200/[0.08] px-3 py-1 text-xs font-semibold uppercase tracking-[.14em] text-emerald-100">Plan {PLAN_LABELS[plan.plan]}</span>{plan.plan !== "free" && <span className="text-xs text-white/35">Activo</span>}</div><h2 className="mt-5 text-3xl font-semibold tracking-tight">{plan.plan === "free" ? "Todo lo esencial para empezar" : plan.plan === "basic" ? "Ordená tus números con más asistencia" : plan.plan === "pro" ? "Compará y decidí con más claridad" : "Capacidad máxima para trabajar sin límites"}</h2><p className="mt-3 max-w-xl text-sm leading-6 text-white/45">{plan.plan === "free" ? "Usá las calculadoras, guardá hasta 2 escenarios y probá la IA con límites gratuitos." : plan.plan === "basic" ? "Tenés las calculadoras esenciales, hasta 2 escenarios y 5 análisis con IA por mes." : plan.plan === "pro" ? "Tenés todas las calculadoras, escenarios ilimitados, comparación lado a lado y 50 análisis con IA por mes." : "Tenés todas las calculadoras, comparaciones y análisis con IA sin límite, más atención personalizada."}</p></div><Link href="/precios" className="relative shrink-0 rounded-full bg-emerald-300 px-5 py-2.5 text-center text-sm font-black text-[#052e21]">{plan.plan === "free" ? "Ver planes" : "Comparar planes"}</Link></div></section><PlanUsageDashboard plan={plan} usage={usage}/><section className="mt-8 grid gap-4 sm:grid-cols-3">{[["Tus datos siguen siendo tuyos","Cambiar de plan no elimina escenarios ni conversaciones."],["Renovación clara","Siempre ves cuándo se habilita nuevamente cada cupo."],["Una sola membresía","Tu nivel se reconoce en Growtella y sus aplicaciones."]].map(([titleText,copy]) => <div key={titleText} className="rounded-2xl border border-white/[0.07] p-5"><p className="text-sm font-semibold text-white/75">{titleText}</p><p className="mt-2 text-xs leading-5 text-white/35">{copy}</p></div>)}</section></>}
 
         {view === "cuenta" && <><header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-semibold text-emerald-200/60">Perfil central</p><h1 className="mt-2 text-3xl font-semibold tracking-tight">Tu negocio y tu cuenta</h1><p className="mt-2 text-sm text-white/40">Esta información permite personalizar las próximas herramientas.</p></div>{!editing && <button type="button" onClick={() => setEditing(true)} className="rounded-full bg-white px-4 py-2.5 text-sm font-bold text-zinc-950">Editar perfil</button>}</header><section className="mt-8 overflow-hidden rounded-3xl border border-white/[0.07]"><div className="grid gap-5 border-b border-white/[0.07] bg-white/[0.025] p-6 sm:grid-cols-[auto_1fr_auto] sm:items-center"><span className="grid size-16 place-items-center rounded-2xl bg-emerald-300 text-lg font-black text-[#052e21]">{initials || "CE"}</span><div><h2 className="text-xl font-semibold">{name}</h2><p className="mt-1 text-sm text-white/35">{profile.business_name || "Completá el nombre de tu emprendimiento"}</p></div><div className="sm:text-right"><p className="text-2xl font-semibold">{profileProgress}%</p><p className="text-xs text-white/30">perfil completo</p></div></div>{editing ? <form onSubmit={saveProfile} className="grid gap-5 p-6 sm:grid-cols-2">{[["full_name","Nombre completo","Tu nombre"],["phone","Teléfono","+54 9..."],["business_name","Nombre del emprendimiento","Tu marca o negocio"],["role","Actividad","Ej. comerciante"],["city","Ciudad","Tu ciudad"]].map(([key,label,placeholder]) => <label key={key} className="grid gap-2 text-xs font-semibold text-white/40">{label}<input value={profile[key as keyof ProfileData]} onChange={(event) => setProfile({ ...profile, [key]: event.target.value })} placeholder={placeholder} className="rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-3 text-sm text-white outline-none focus:border-emerald-300/40"/></label>)}<label className="grid gap-2 text-xs font-semibold text-white/40">Tipo de negocio<select value={profile.business_type} onChange={(event) => setProfile({ ...profile, business_type: event.target.value })} className="rounded-2xl border border-white/10 bg-[#111315] px-4 py-3 text-sm text-white outline-none focus:border-emerald-300/40"><option value="">Elegir</option><option value="Servicios">Servicios</option><option value="Productos">Productos</option><option value="Gastronomía">Gastronomía</option><option value="Digital">Digital</option><option value="Otro">Otro</option></select></label><label className="grid gap-2 text-xs font-semibold text-white/40">Etapa<select value={profile.business_stage} onChange={(event) => setProfile({ ...profile, business_stage: event.target.value })} className="rounded-2xl border border-white/10 bg-[#111315] px-4 py-3 text-sm text-white outline-none focus:border-emerald-300/40"><option value="">Elegir</option><option value="Idea o validación">Idea o validación</option><option value="Primeras ventas">Primeras ventas</option><option value="Negocio estable">Negocio estable</option><option value="En crecimiento">En crecimiento</option></select></label><label className="grid gap-2 text-xs font-semibold text-white/40">Objetivo principal<input value={profile.main_goal} onChange={(event) => setProfile({ ...profile, main_goal: event.target.value })} placeholder="Ej. mejorar rentabilidad" className="rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-3 text-sm text-white outline-none focus:border-emerald-300/40"/></label><label className="grid gap-2 text-xs font-semibold text-white/40">Moneda preferida<select value={profile.preferred_currency} onChange={(event) => setProfile({ ...profile, preferred_currency: event.target.value })} className="rounded-2xl border border-white/10 bg-[#111315] px-4 py-3 text-sm text-white outline-none focus:border-emerald-300/40"><option value="ARS">Pesos argentinos</option><option value="USD">Dólares</option></select></label><div className="flex flex-wrap gap-2 sm:col-span-2"><button disabled={saving} className="rounded-full bg-emerald-300 px-5 py-2.5 text-sm font-black text-[#052e21] disabled:opacity-55">{saving ? "Guardando..." : "Guardar cambios"}</button><button type="button" onClick={() => { setEditing(false); setProfile(profileFromUser(user)); }} className="rounded-full border border-white/10 px-4 py-2.5 text-sm text-white/55">Cancelar</button></div></form> : <dl className="grid gap-px bg-white/[0.07] sm:grid-cols-2 lg:grid-cols-3">{[["Email",user.email],["Teléfono",profile.phone],["Emprendimiento",profile.business_name],["Actividad",profile.role],["Tipo de negocio",profile.business_type],["Etapa",profile.business_stage],["Objetivo",profile.main_goal],["Ciudad",profile.city],["Moneda",profile.preferred_currency]].map(([label,value]) => <div key={label} className="bg-[#0b0c0e] p-5"><dt className="text-[10px] font-semibold uppercase tracking-[.1em] text-white/25">{label}</dt><dd className="mt-2 break-words text-sm font-semibold text-white/70">{value || "Sin completar"}</dd></div>)}</dl>}</section><section className="mt-6 flex flex-col gap-4 rounded-3xl border border-white/[0.07] p-6 sm:flex-row sm:items-center sm:justify-between"><div><h2 className="font-semibold">Seguridad de la cuenta</h2><p className="mt-1 text-xs text-white/35">Cuenta creada el {formatDate(user.created_at)}. Administrá el mismo acceso desde Growtella.</p></div><div className="flex flex-wrap gap-2"><a href="https://www.growtella.com/cuenta" className="rounded-full border border-white/10 px-4 py-2.5 text-sm font-semibold text-white/60 hover:bg-white/5 hover:text-white">Cuenta Growtella</a><button type="button" onClick={() => getSupabaseClient()?.auth.signOut()} className="rounded-full border border-red-400/20 bg-red-500/[0.06] px-4 py-2.5 text-sm font-semibold text-red-300/75 hover:bg-red-500/10">Cerrar sesión</button></div></section></>}
       </div>

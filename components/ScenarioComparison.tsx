@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import AuthModal from "@/components/AuthModal";
 import PrintPdfButton from "@/components/PrintPdfButton";
 import { trackEvent } from "@/lib/analytics";
+import { canCompareScenarios, comparisonLimit, effectivePlan, PLAN_LABELS, type PlanName } from "@/lib/plans";
 import { getCalculatorInfo, getScenarioFields, getScenarioMetrics, SAVED_SCENARIO_COLUMNS } from "@/lib/scenarios";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import type { SavedScenario } from "@/types/scenario";
@@ -26,6 +27,7 @@ export default function ScenarioComparison({ ids }: { ids: string[] }) {
   const [scenarios, setScenarios] = useState<SavedScenario[]>([]);
   const [loading, setLoading] = useState(ids.length >= 2);
   const [needsAuth, setNeedsAuth] = useState(false);
+  const [upgradeRequired, setUpgradeRequired] = useState<PlanName | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -53,12 +55,31 @@ export default function ScenarioComparison({ ids }: { ids: string[] }) {
           return;
         }
 
-        const { data, error: queryError } = await supabase
-          .from("saved_scenarios")
-          .select(SAVED_SCENARIO_COLUMNS)
-          .in("id", ids)
-          .eq("user_id", auth.session.user.id)
-          .limit(3);
+        const [scenarioResponse, planResponse] = await Promise.all([
+          supabase
+            .from("saved_scenarios")
+            .select(SAVED_SCENARIO_COLUMNS)
+            .in("id", ids)
+            .eq("user_id", auth.session.user.id)
+            .limit(ids.length),
+          supabase
+            .from("user_plans")
+            .select("plan,status,current_period_end")
+            .eq("user_id", auth.session.user.id)
+            .maybeSingle(),
+        ]);
+
+        const activePlan = effectivePlan(planResponse.data);
+        if (!canCompareScenarios(activePlan)) {
+          if (active) setUpgradeRequired(activePlan);
+          return;
+        }
+        const maximum = comparisonLimit(activePlan);
+        if (maximum !== null && ids.length > maximum) {
+          throw new Error("plan-limit");
+        }
+
+        const { data, error: queryError } = scenarioResponse;
 
         if (queryError) throw queryError;
         const found = (data as SavedScenario[] | null) ?? [];
@@ -85,7 +106,9 @@ export default function ScenarioComparison({ ids }: { ids: string[] }) {
         const reason = loadError instanceof Error ? loadError.message : "";
         setError(reason === "mixed-calculators"
           ? "Para que la comparación sea útil, elegí escenarios de una misma calculadora."
-          : "No pudimos abrir todos los escenarios. Es posible que alguno ya no exista o no pertenezca a tu cuenta.");
+          : reason === "plan-limit"
+            ? "La selección supera el máximo de escenarios simultáneos de tu plan."
+            : "No pudimos abrir todos los escenarios. Es posible que alguno ya no exista o no pertenezca a tu cuenta.");
       } finally {
         if (active) setLoading(false);
       }
@@ -107,7 +130,7 @@ export default function ScenarioComparison({ ids }: { ids: string[] }) {
       <main className="mx-auto min-h-[65vh] max-w-4xl px-4 py-16">
         <section className="rounded-[2rem] border border-white/[0.09] bg-white/[0.025] p-7 text-center sm:p-10">
           <p className="text-xs font-bold uppercase tracking-[.15em] text-emerald-200/60">Comparador</p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight">Elegí 2 o 3 escenarios</h1>
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight">Elegí al menos 2 escenarios</h1>
           <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-white/45">Volvé a tu historial y seleccioná alternativas de una misma calculadora para verlas lado a lado.</p>
           <Link href="/perfil?view=escenarios" className="mt-7 inline-flex rounded-full bg-emerald-300 px-5 py-3 text-sm font-black text-[#052e21]">Elegir escenarios</Link>
         </section>
@@ -116,7 +139,22 @@ export default function ScenarioComparison({ ids }: { ids: string[] }) {
   }
 
   if (loading) return <main className="grid min-h-[65vh] place-items-center px-4 text-sm text-white/45">Preparando la comparación...</main>;
-  if (needsAuth) return <AuthModal open returnTo={`/perfil/escenarios/comparar?ids=${ids.join(",")}`} />;
+  if (needsAuth) return <AuthModal open returnTo={`/perfil/escenarios/comparar?ids=${ids.join(",")}`} initialMode="signup" contextTitle="Registrate gratis para guardar y comparar tus escenarios" contextDescription="Creá tu cuenta para guardar alternativas. La comparación lado a lado está incluida en Pro y Premium." />;
+  if (upgradeRequired) {
+    return (
+      <main className="mx-auto min-h-[65vh] max-w-4xl px-4 py-16">
+        <section className="rounded-[2rem] border border-emerald-300/15 bg-[linear-gradient(145deg,rgba(16,185,129,.1),rgba(255,255,255,.025))] p-7 text-center sm:p-10">
+          <p className="text-xs font-bold uppercase tracking-[.15em] text-emerald-200/60">Plan {PLAN_LABELS[upgradeRequired]}</p>
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight">Desbloqueá la comparación lado a lado</h1>
+          <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-white/45">Pro permite comparar hasta 3 escenarios y Premium elimina el límite simultáneo.</p>
+          <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
+            <Link href="/precios#plan-pro" className="rounded-full bg-emerald-300 px-5 py-3 text-sm font-black text-[#052e21]">Ver planes</Link>
+            <Link href="/perfil?view=escenarios" className="rounded-full border border-white/10 px-5 py-3 text-sm font-semibold text-white/65">Volver a mis escenarios</Link>
+          </div>
+        </section>
+      </main>
+    );
+  }
   if (error || !scenarios.length) {
     return <main className="mx-auto min-h-[65vh] max-w-4xl px-4 py-16"><p role="alert" className="rounded-2xl border border-amber-300/20 bg-amber-300/[0.06] p-5 text-sm leading-6 text-amber-50/85">{error}</p><Link href="/perfil?view=escenarios" className="mt-5 inline-flex text-sm font-semibold text-emerald-200">← Volver a elegir</Link></main>;
   }

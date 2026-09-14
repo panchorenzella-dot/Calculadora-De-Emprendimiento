@@ -11,7 +11,7 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3
 
 function parseIds(value?: string) {
   if (!value) return [];
-  return Array.from(new Set(value.split(",").map((id) => id.trim()).filter((id) => UUID_PATTERN.test(id)))).slice(0, 3);
+  return Array.from(new Set(value.split(",").map((id) => id.trim()).filter((id) => UUID_PATTERN.test(id))));
 }
 
 export default async function Page({ searchParams }: { searchParams: Promise<{ ids?: string }> }) {

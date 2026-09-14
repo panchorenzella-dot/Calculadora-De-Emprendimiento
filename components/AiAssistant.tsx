@@ -228,7 +228,7 @@ export default function AiAssistant({ draft, hasResults, initialConversationId, 
       return null;
     }
     if (!quota?.allowed || !quota.scenario_id) {
-      setNotice("El análisis continuará y quedará en tu historial, pero hoy ya usaste los 3 escenarios del plan Gratis. En Pro son ilimitados.");
+      setNotice("El análisis continuará y quedará en tu historial, pero ya guardaste los 2 escenarios disponibles en Gratis o Básico. En Pro y Premium son ilimitados.");
       return null;
     }
     setScenarioId(quota.scenario_id);
@@ -520,7 +520,7 @@ export default function AiAssistant({ draft, hasResults, initialConversationId, 
     {!standalone && <section className="ai-surface relative flex h-full flex-col overflow-hidden border-t border-white/[0.08] p-6 sm:p-8 md:border-t-0">
       <div className="pointer-events-none absolute -right-16 -top-20 size-44 rounded-full bg-emerald-300/[0.055] blur-3xl" />
       <div className="relative flex items-start gap-4">
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-emerald-300/20 bg-emerald-300/[0.06] text-xs font-black text-emerald-100/82">02</span>
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-emerald-300/20 bg-emerald-300/[0.06] text-xs font-black text-emerald-100/82">03</span>
         <div className="min-w-0">
           <p className="text-[10px] font-bold uppercase tracking-[0.17em] text-emerald-200/55">Lectura estratégica</p>
           <h2 className="mt-2 text-xl font-bold tracking-[-0.025em] text-white">Entendé qué te dicen los números</h2>

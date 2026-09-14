@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef } from "react";
 
 import AiMarkdown from "@/components/ai/AiMarkdown";
+import type { PlanName } from "@/lib/plans";
 
 export type AiChatMessage = {
   role: "user" | "assistant";
@@ -12,8 +13,8 @@ export type AiChatMessage = {
 export type AiQuotaStatus = {
   kind: "analysis" | "chat";
   used: number;
-  limit: number;
-  plan: "free" | "pro";
+  limit: number | null;
+  plan: PlanName;
 };
 
 type AiConversationStreamProps = {
@@ -224,7 +225,7 @@ export function AiConversationStream({ messages, calculatorName, loading, loadin
 export function AiComposer({ value, loading, quota, showSuggestions, onChange, onSubmit }: AiComposerProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const chatQuota = quota?.kind === "chat" ? quota : null;
-  const remaining = chatQuota ? Math.max(0, chatQuota.limit - chatQuota.used) : null;
+  const remaining = chatQuota?.limit == null ? null : Math.max(0, chatQuota.limit - chatQuota.used);
 
   useEffect(() => {
     const textarea = textareaRef.current;

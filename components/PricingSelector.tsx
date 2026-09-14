@@ -3,30 +3,25 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { BILLING_OPTIONS, type BillingInterval } from "@/lib/plans";
+import { paidPlan, type PaidPlanName } from "@/lib/plans";
 import { trackEvent } from "@/lib/analytics";
 
-function usd(value: number) {
-  return `US$ ${value.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
-
 type Props = {
+  plan: PaidPlanName;
   paypalReady: boolean;
   paypalMode: "sandbox" | "live";
+  emphasized?: boolean;
 };
 
-export default function PricingSelector({ paypalReady, paypalMode }: Props) {
+export default function PricingSelector({ plan, paypalReady, paypalMode, emphasized = false }: Props) {
   const router = useRouter();
-  const [selected, setSelected] = useState<BillingInterval>("monthly");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const option = BILLING_OPTIONS.find((item) => item.id === selected) ?? BILLING_OPTIONS[0];
+  const selectedPlan = paidPlan(plan);
 
   useEffect(() => {
-    trackEvent("view_pricing", { currency: "USD" });
     if (new URLSearchParams(window.location.search).get("paypal") === "cancelled") {
       setMessage("Cancelaste el proceso antes de confirmar. No se realizó ningún cobro.");
-      window.history.replaceState({}, "", "/precios");
     }
   }, []);
 
@@ -43,13 +38,17 @@ export default function PricingSelector({ paypalReady, paypalMode }: Props) {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        sessionStorage.setItem("calculadora-emprendedora:pending-plan", selected);
-        trackEvent("checkout_login_required", { plan: "pro", interval: selected, value: option.totalUsd, currency: "USD" });
-        router.push("/perfil?modo=registro&continuar=pro");
+        sessionStorage.setItem("calculadora-emprendedora:pending-plan", plan);
+        trackEvent("checkout_login_required", { plan, interval: "monthly", value: selectedPlan.priceUsd, currency: "USD" });
+        router.push(`/perfil?modo=registro&continuar=${plan}`);
         return;
       }
 
-      trackEvent("begin_checkout", { currency: "USD", value: option.totalUsd, items: [{ item_id: `pro_${selected}`, item_name: `Calculadora Emprendedora Pro ${option.label}`, price: option.totalUsd, quantity: 1 }] });
+      trackEvent("begin_checkout", {
+        currency: "USD",
+        value: selectedPlan.priceUsd,
+        items: [{ item_id: `${plan}_monthly`, item_name: `Calculadora Emprendedora ${selectedPlan.name}`, price: selectedPlan.priceUsd, quantity: 1 }],
+      });
 
       const response = await fetch("/api/paypal/subscriptions", {
         method: "POST",
@@ -57,14 +56,15 @@ export default function PricingSelector({ paypalReady, paypalMode }: Props) {
           Authorization: `Bearer ${session.access_token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ interval: selected, requestId: crypto.randomUUID() }),
+        body: JSON.stringify({ plan, requestId: crypto.randomUUID() }),
       });
       const data = await response.json() as { approvalUrl?: string; error?: string };
       if (!response.ok || !data.approvalUrl) {
         setMessage(data.error || "No pudimos abrir PayPal.");
         return;
       }
-      trackEvent("checkout_redirect", { provider: "paypal", interval: selected, value: option.totalUsd, currency: "USD" });
+
+      trackEvent("checkout_redirect", { provider: "paypal", plan, interval: "monthly", value: selectedPlan.priceUsd, currency: "USD" });
       window.location.assign(data.approvalUrl);
     } catch {
       setMessage("No pudimos conectar con PayPal. Intentá nuevamente.");
@@ -74,52 +74,27 @@ export default function PricingSelector({ paypalReady, paypalMode }: Props) {
   }
 
   return (
-    <div className="relative mt-6">
-      <div role="tablist" aria-label="Período de facturación" className="grid grid-cols-3 rounded-2xl border border-white/10 bg-black/25 p-1">
-        {BILLING_OPTIONS.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            role="tab"
-            aria-selected={selected === item.id}
-            onClick={() => setSelected(item.id)}
-            className={`rounded-xl px-2 py-2.5 text-xs font-semibold transition sm:text-sm ${selected === item.id ? "bg-emerald-300 text-emerald-950 shadow-[0_8px_30px_rgba(110,231,183,0.12)]" : "text-white/38 hover:text-white/70"}`}
-          >
-            {item.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="mt-6 flex items-end justify-between gap-4">
-        <div>
-          <p className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">{usd(option.totalUsd)}</p>
-          <p className="mt-1 text-sm text-emerald-100/45">por {option.months === 1 ? "mes" : `${option.months} meses`}</p>
-        </div>
-        {option.discount > 0 && <span className="rounded-full border border-emerald-200/20 bg-emerald-200/[0.08] px-3 py-1 text-xs font-semibold text-emerald-100">Ahorrás {option.discount}%</span>}
-      </div>
-
-      <p className="mt-4 text-sm leading-6 text-white/45">
-        {option.months === 1
-          ? "Un mes pagado por adelantado."
-          : `${usd(option.monthlyUsd)} por mes, con los ${option.months} meses pagados por adelantado.`}
-      </p>
-
-      <div className="mt-5 rounded-2xl border border-emerald-200/15 bg-emerald-200/[0.055] p-4">
-        <div className="flex items-center gap-2 text-sm font-semibold text-emerald-100"><span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />Pago seguro con PayPal</div>
-        <p className="mt-2 text-xs leading-5 text-white/42">El cobro se procesa en USD. Antes de confirmar, PayPal muestra el importe y cualquier conversión, comisión o impuesto que pudiera aplicar según la cuenta o el medio de pago.</p>
-      </div>
-
+    <div className="mt-6">
       <button
         type="button"
         disabled={!paypalReady || loading}
         onClick={startPayPalCheckout}
-        className="mt-5 w-full rounded-full bg-emerald-300 px-4 py-3 text-center text-sm font-black text-emerald-950 transition hover:bg-emerald-200 disabled:cursor-not-allowed disabled:bg-emerald-300/45 disabled:text-emerald-950/60"
+        className={`w-full rounded-full px-4 py-3 text-center text-sm font-black transition disabled:cursor-not-allowed disabled:opacity-50 ${emphasized ? "bg-emerald-300 text-emerald-950 hover:bg-emerald-200" : "border border-white/14 bg-white/[0.055] text-white/85 hover:border-white/25 hover:bg-white/[0.09] hover:text-white"}`}
       >
-        {loading ? "Abriendo PayPal..." : !paypalReady ? "Configurando PayPal..." : paypalMode === "sandbox" ? "Probar con PayPal Sandbox" : "Continuar con PayPal"}
+        {loading
+          ? "Abriendo PayPal..."
+          : !paypalReady
+            ? "Configurando este plan..."
+            : paypalMode === "sandbox"
+              ? `Probar ${selectedPlan.name} en Sandbox`
+              : `Elegir ${selectedPlan.name}`}
       </button>
-      {paypalMode === "sandbox" && paypalReady && <p className="mt-2 text-center text-[11px] font-medium leading-5 text-amber-200/65">Modo de prueba: no se mueve dinero real.</p>}
-      {message && <p role="alert" className="mt-3 rounded-2xl border border-amber-300/20 bg-amber-300/[0.07] px-4 py-3 text-center text-xs leading-5 text-amber-100/85">{message}</p>}
-      <p className="mt-2 text-center text-[11px] leading-5 text-white/28">El importe final y cualquier cargo o impuesto aplicable se mostrará antes del pago.</p>
+      {paypalMode === "sandbox" && paypalReady ? (
+        <p className="mt-2 text-center text-[11px] font-medium leading-5 text-amber-200/65">Modo de prueba: no se mueve dinero real.</p>
+      ) : null}
+      {message ? (
+        <p role="alert" className="mt-3 rounded-2xl border border-amber-300/20 bg-amber-300/[0.07] px-4 py-3 text-center text-xs leading-5 text-amber-100/85">{message}</p>
+      ) : null}
     </div>
   );
 }

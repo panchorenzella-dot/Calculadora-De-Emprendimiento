@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import AuthModal from "@/components/AuthModal";
 import { trackEvent } from "@/lib/analytics";
+import { PLAN_LABELS, type PlanName } from "@/lib/plans";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import type { ScenarioDraft } from "@/types/scenario";
 
@@ -20,7 +21,7 @@ type ScenarioQuotaResult = {
   used: number;
   quota_limit: number | null;
   resets_at: string | null;
-  plan: "free" | "pro";
+  plan: PlanName;
 };
 
 function defaultTitle(draft: ScenarioDraft) {
@@ -77,7 +78,7 @@ export default function SaveScenarioButton({ draft, hasResults }: Props) {
         .select("id")
         .single();
       saveError = legacy.error;
-      if (!legacy.error) quota = { allowed: true, scenario_id: legacy.data.id, used: 0, quota_limit: 3, resets_at: null, plan: "free" };
+      if (!legacy.error) quota = { allowed: true, scenario_id: legacy.data.id, used: 1, quota_limit: 2, resets_at: null, plan: "free" };
     }
 
     if (saveError) {
@@ -85,10 +86,8 @@ export default function SaveScenarioButton({ draft, hasResults }: Props) {
       return false;
     }
     if (!quota?.allowed) {
-      const reset = quota?.resets_at
-        ? new Intl.DateTimeFormat("es-AR", { timeZone: "America/Argentina/Buenos_Aires", dateStyle: "medium", timeStyle: "short" }).format(new Date(quota.resets_at))
-        : "mañana";
-      setStatus(`Ya guardaste los 3 escenarios de hoy. El cupo gratuito vuelve el ${reset}; en Pro son ilimitados.`);
+      const limit = quota?.quota_limit ?? 2;
+      setStatus(`Tu plan ${quota?.plan ? PLAN_LABELS[quota.plan] : "actual"} permite guardar hasta ${limit} escenarios. Podés eliminar uno o pasar a Pro para guardar sin límite.`);
       return false;
     }
 
@@ -171,7 +170,7 @@ export default function SaveScenarioButton({ draft, hasResults }: Props) {
           <span>{saving ? "Guardando..." : "Guardar escenario"}</span>
           <span aria-hidden="true" className="text-base font-normal text-white/40">＋</span>
         </button>
-        <p className="mt-3 text-xs leading-5 text-white/28">Gratis: hasta 3 por día · Pro: escenarios ilimitados.</p>
+        <p className="mt-3 text-xs leading-5 text-white/28">Gratis y Básico: hasta 2 guardados · Pro y Premium: ilimitados.</p>
       </div>
 
       {nameOpen && draft && (

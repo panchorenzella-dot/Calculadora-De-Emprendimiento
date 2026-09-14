@@ -18,6 +18,7 @@ import {
   resolveOpenAIModel,
   type OpenAIUsage,
 } from "@/lib/ai/telemetry";
+import { isPlanName, PLAN_LABELS, PLAN_LIMITS, type PlanName } from "@/lib/plans";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -52,9 +53,9 @@ const RequestSchema = z.object({
 type QuotaResult = {
   allowed: boolean;
   used: number;
-  quota_limit: number;
-  resets_at: string;
-  plan?: "free" | "pro";
+  quota_limit: number | null;
+  resets_at: string | null;
+  plan?: PlanName;
   usage_event_id?: number | string | null;
   denial_reason?: "quota" | "burst" | null;
   burst_limit?: number | null;
@@ -64,9 +65,9 @@ type QuotaResult = {
 type ErrorOptions = {
   quota?: {
     used: number;
-    limit: number;
-    resetsAt: string;
-    plan: "free" | "pro";
+    limit: number | null;
+    resetsAt: string | null;
+    plan: PlanName;
   };
   headers?: Record<string, string>;
 };
@@ -75,7 +76,7 @@ type AiTelemetry = {
   eventId: number | string | null;
   mode: "analysis" | "chat";
   model: string;
-  plan: "free" | "pro";
+  plan: PlanName;
   startedAt: number;
 };
 
@@ -129,7 +130,8 @@ function providerErrorResponse(requestId: string, failure: ProviderFailure) {
   return errorResponse(requestId, failure.status, failure.code, failure.message, failure.retryable);
 }
 
-function formatResetDate(value: string) {
+function formatResetDate(value: string | null) {
+  if (!value) return null;
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return null;
 
@@ -146,9 +148,9 @@ function isQuotaResult(value: unknown): value is QuotaResult {
   return typeof quota.allowed === "boolean"
     && typeof quota.used === "number"
     && Number.isFinite(quota.used)
-    && typeof quota.quota_limit === "number"
-    && Number.isFinite(quota.quota_limit)
-    && typeof quota.resets_at === "string"
+    && (quota.quota_limit === null || (typeof quota.quota_limit === "number" && Number.isFinite(quota.quota_limit)))
+    && (quota.resets_at === null || typeof quota.resets_at === "string")
+    && (quota.plan == null || isPlanName(quota.plan))
     && (quota.denial_reason == null || quota.denial_reason === "quota" || quota.denial_reason === "burst")
     && (quota.burst_limit == null || (typeof quota.burst_limit === "number" && Number.isFinite(quota.burst_limit)))
     && (quota.burst_retry_after_seconds == null || (
@@ -173,7 +175,7 @@ async function createAiTelemetryEvent(input: {
   usageEventId: number | string | null | undefined;
   requestId: string;
   mode: "analysis" | "chat";
-  plan: "free" | "pro";
+  plan: PlanName;
   model: string;
 }) {
   try {
@@ -422,7 +424,7 @@ export async function POST(request: Request) {
     }
 
     const quota = quotaCandidate;
-    const plan: "free" | "pro" = quota.plan === "pro" ? "pro" : "free";
+    const plan: PlanName = isPlanName(quota.plan) ? quota.plan : "free";
     const publicQuota = {
       used: quota.used,
       limit: quota.quota_limit,
@@ -457,13 +459,12 @@ export async function POST(request: Request) {
 
     if (!quota.allowed) {
       const reset = formatResetDate(quota.resets_at);
-      const errorMessage = plan === "pro"
-        ? payload.body.mode === "analysis"
-          ? `Alcanzaste los 30 análisis mensuales de Pro.${reset ? ` Se renuevan el ${reset}.` : ""}`
-          : `Alcanzaste los 300 mensajes mensuales de Pro.${reset ? ` Se renuevan el ${reset}.` : ""}`
-        : payload.body.mode === "analysis"
-          ? `Ya usaste el análisis semanal del plan gratuito.${reset ? ` Se habilita nuevamente el ${reset}.` : ""}`
-          : `Alcanzaste los 5 mensajes diarios del plan gratuito.${reset ? ` Podés volver a escribir desde el ${reset}.` : ""}`;
+      const configuredLimit = payload.body.mode === "analysis" ? PLAN_LIMITS[plan].analysis : PLAN_LIMITS[plan].chat;
+      const configuredPeriod = payload.body.mode === "analysis" ? PLAN_LIMITS[plan].analysisPeriod : PLAN_LIMITS[plan].chatPeriod;
+      const resourceLabel = payload.body.mode === "analysis" ? "análisis" : "mensajes";
+      const errorMessage = configuredLimit === null
+        ? "No pudimos procesar la consulta en este momento. Volvé a intentar."
+        : `Alcanzaste los ${configuredLimit} ${resourceLabel} por ${configuredPeriod} del plan ${PLAN_LABELS[plan]}.${reset ? ` Se renuevan el ${reset}.` : ""}`;
       return errorResponse(requestId, 429, "AI_QUOTA_REACHED", errorMessage, false, { quota: publicQuota });
     }
 

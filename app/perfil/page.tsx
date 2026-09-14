@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import ProfilePage from "@/components/ProfilePage";
+import { isPaidPlanName } from "@/lib/plans";
 
 export const metadata: Metadata = {
   title: "Mi perfil",
@@ -10,5 +11,5 @@ export const metadata: Metadata = {
 
 export default async function Page({ searchParams }: { searchParams: Promise<{ modo?: string; continuar?: string }> }) {
   const { modo, continuar } = await searchParams;
-  return <ProfilePage initialAuthMode={modo === "registro" ? "signup" : "login"} continueToPro={continuar === "pro"} />;
+  return <ProfilePage initialAuthMode={modo === "registro" ? "signup" : "login"} continueToPlan={isPaidPlanName(continuar) ? continuar : null} />;
 }

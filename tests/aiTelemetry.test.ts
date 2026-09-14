@@ -65,7 +65,7 @@ test("calculates current OpenAI token costs including cached input", () => {
   assert.equal(estimateOpenAICostUsd("future-model", usage), null);
 });
 
-test("uses configured models and an accessible fallback for both plans", () => {
+test("uses configured models and an accessible fallback for every plan", () => {
   assert.equal(resolveOpenAIModel("free", {
     freeModel: "custom-free",
     sharedModel: "shared-model",
@@ -73,6 +73,14 @@ test("uses configured models and an accessible fallback for both plans", () => {
   assert.equal(resolveOpenAIModel("pro", {
     proModel: "custom-pro",
     sharedModel: "shared-model",
+  }), "custom-pro");
+  assert.equal(resolveOpenAIModel("basic", {
+    freeModel: "custom-free",
+    proModel: "custom-pro",
+  }), "custom-free");
+  assert.equal(resolveOpenAIModel("premium", {
+    freeModel: "custom-free",
+    proModel: "custom-pro",
   }), "custom-pro");
   assert.equal(resolveOpenAIModel("free", { sharedModel: "shared-model" }), "shared-model");
   assert.equal(resolveOpenAIModel("free", {}), "gpt-5.4-mini");
