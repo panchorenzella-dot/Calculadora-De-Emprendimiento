@@ -36,13 +36,7 @@ export const metadata: Metadata = {
   },
 };
 
-type PageProps = {
-  searchParams: Promise<{ buscar?: string | string[] }>;
-};
-
-export default async function Page({ searchParams }: PageProps) {
-  const params = await searchParams;
-  const initialSearch = typeof params.buscar === "string" ? params.buscar : "";
+export default function Page() {
   const itemListId = `${baseUrl}/calculadoras#calculator-list`;
   const jsonLd = {
     "@context": "https://schema.org",
@@ -105,7 +99,7 @@ export default async function Page({ searchParams }: PageProps) {
           __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
         }}
       />
-      <CalculadorasClient initialSearch={initialSearch} />
+      <CalculadorasClient />
     </>
   );
 }

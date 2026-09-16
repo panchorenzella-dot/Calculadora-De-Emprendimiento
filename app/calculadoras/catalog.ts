@@ -14,12 +14,119 @@ export type CalculatorSection = {
   calculators: Calculator[];
 };
 
-/**
- * The directory is intentionally ordered by decision value: first the
- * day-to-day economics of a business, then investing, taxes and finally
- * calculators for narrower business models.
- */
+// Categories follow the requested browsing order: business type, investing, business, taxes.
 export const calculatorSections: CalculatorSection[] = [
+  {
+    id: "industries",
+    title: "Calculadoras por tipo de negocio",
+    description:
+      "Herramientas específicas para rubros que necesitan contemplar costos y variables propias de su operación.",
+    calculators: [
+      {
+        title: "Compra y venta",
+        description:
+          "Calculá precio final, margen, comisiones, envíos y ganancia real.",
+        idealFor: "Tiendas online, reventa y emprendimientos de ropa",
+        href: "/reventa",
+        tags: ["ropa", "reventa", "tienda", "comisiones"],
+      },
+      {
+        title: "Fábrica y producción",
+        description:
+          "Calculá costo por unidad, ganancia, margen y punto de equilibrio.",
+        idealFor: "Panaderías, producción de alimentos y fabricación",
+        href: "/produccion",
+        tags: ["panadería", "producción", "costos", "precio"],
+      },
+      {
+        title: "Distribuidoras",
+        description:
+          "Calculá margen por caja, costo de reparto, ganancia por cliente y stock necesario.",
+        idealFor: "Distribuidores y vendedores mayoristas",
+        href: "/distribuidora",
+        tags: ["distribuidora", "stock", "reparto", "clientes"],
+      },
+      {
+        title: "Intermediarios y comisiones",
+        description:
+          "Calculá comisiones, ganancia mensual, punto de equilibrio, recupero y ROI.",
+        idealFor: "Vendedores a comisión, brokers e intermediarios comerciales",
+        href: "/intermediarios",
+        tags: ["comisiones", "pedidos", "intermediarios", "ventas"],
+      },
+      {
+        title: "Cafeterías",
+        description:
+          "Estimá costos, ticket promedio, margen por venta y punto de equilibrio.",
+        idealFor: "Cafeterías, bares y locales gastronómicos",
+        href: "/cafeteria",
+        tags: ["cafetería", "gastronomía", "café", "ticket", "margen"],
+      },
+      {
+        title: "Hamburgueserías",
+        description:
+          "Calculá costos por hamburguesa, margen, precio recomendado y ganancia mensual.",
+        idealFor: "Hamburgueserías, dark kitchens y locales de comida",
+        href: "/hamburgueseria",
+        tags: ["hamburguesería", "gastronomía", "comida", "delivery", "margen"],
+      },
+    ],
+  },  {
+    id: "investment",
+    title: "Inversión y ahorro",
+    description:
+      "Herramientas para evaluar retornos, proyectar el crecimiento del capital y planificar objetivos de ahorro.",
+    calculators: [
+      {
+        title: "ROI de inversión",
+        description:
+          "Medí cuánto rinde una inversión comparando el capital inicial con el resultado final.",
+        idealFor: "Inversiones personales y proyectos",
+        href: "/roi-inversion",
+        tags: ["roi", "inversión", "retorno", "capital"],
+      },
+      {
+        title: "Interés compuesto",
+        description:
+          "Proyectá el crecimiento de tu plata con aportes mensuales e interés compuesto.",
+        idealFor: "Ahorro, inversión y planificación financiera",
+        href: "/interes-compuesto",
+        tags: ["interés compuesto", "inversión", "ahorro", "capital"],
+      },
+      {
+        title: "Inversión con aporte mensual",
+        description:
+          "Calculá cuánto podés juntar invirtiendo todos los meses.",
+        idealFor: "Planificar inversiones mensuales en pesos o dólares",
+        href: "/aporte-mensual",
+        tags: ["ahorro", "mensual", "aporte", "inversión"],
+      },
+      {
+        title: "Recupero de capital",
+        description:
+          "Calculá cuánto tardás en recuperar el dinero invertido en un activo o proyecto.",
+        idealFor: "Inversores y emprendedores",
+        href: "/recupero-capital",
+        tags: ["recupero", "capital", "inversión", "retorno"],
+      },
+      {
+        title: "Meta de ahorro",
+        description:
+          "Calculá cuánto necesitás ahorrar por mes para llegar a una meta.",
+        idealFor: "Planificar una meta de ahorro",
+        href: "/meta-ahorro",
+        tags: ["ahorro", "mensual", "meta", "inversión"],
+      },
+      {
+        title: "Rendimiento real",
+        description:
+          "Calculá si realmente ganaste después de descontar la inflación.",
+        idealFor: "Medir el poder de compra de una inversión",
+        href: "/rendimiento-real",
+        tags: ["rendimiento", "inflación", "inversión", "ahorro"],
+      },
+    ],
+  },
   {
     id: "business",
     title: "Precios, costos y rentabilidad",
@@ -88,62 +195,6 @@ export const calculatorSections: CalculatorSection[] = [
     ],
   },
   {
-    id: "investment",
-    title: "Inversión y ahorro",
-    description:
-      "Herramientas para evaluar retornos, proyectar el crecimiento del capital y planificar objetivos de ahorro.",
-    calculators: [
-      {
-        title: "ROI de inversión",
-        description:
-          "Medí cuánto rinde una inversión comparando el capital inicial con el resultado final.",
-        idealFor: "Inversiones personales y proyectos",
-        href: "/roi-inversion",
-        tags: ["roi", "inversión", "retorno", "capital"],
-      },
-      {
-        title: "Interés compuesto",
-        description:
-          "Proyectá el crecimiento de tu plata con aportes mensuales e interés compuesto.",
-        idealFor: "Ahorro, inversión y planificación financiera",
-        href: "/interes-compuesto",
-        tags: ["interés compuesto", "inversión", "ahorro", "capital"],
-      },
-      {
-        title: "Inversión con aporte mensual",
-        description:
-          "Calculá cuánto podés juntar invirtiendo todos los meses.",
-        idealFor: "Planificar inversiones mensuales en pesos o dólares",
-        href: "/aporte-mensual",
-        tags: ["ahorro", "mensual", "aporte", "inversión"],
-      },
-      {
-        title: "Recupero de capital",
-        description:
-          "Calculá cuánto tardás en recuperar el dinero invertido en un activo o proyecto.",
-        idealFor: "Inversores y emprendedores",
-        href: "/recupero-capital",
-        tags: ["recupero", "capital", "inversión", "retorno"],
-      },
-      {
-        title: "Meta de ahorro",
-        description:
-          "Calculá cuánto necesitás ahorrar por mes para llegar a una meta.",
-        idealFor: "Planificar una meta de ahorro",
-        href: "/meta-ahorro",
-        tags: ["ahorro", "mensual", "meta", "inversión"],
-      },
-      {
-        title: "Rendimiento real",
-        description:
-          "Calculá si realmente ganaste después de descontar la inflación.",
-        idealFor: "Medir el poder de compra de una inversión",
-        href: "/rendimiento-real",
-        tags: ["rendimiento", "inflación", "inversión", "ahorro"],
-      },
-    ],
-  },
-  {
     id: "taxes",
     title: "Impuestos y costos en Argentina",
     description:
@@ -183,62 +234,7 @@ export const calculatorSections: CalculatorSection[] = [
       },
     ],
   },
-  {
-    id: "industries",
-    title: "Calculadoras por tipo de negocio",
-    description:
-      "Herramientas específicas para rubros que necesitan contemplar costos y variables propias de su operación.",
-    calculators: [
-      {
-        title: "Compra y venta",
-        description:
-          "Calculá precio final, margen, comisiones, envíos y ganancia real.",
-        idealFor: "Tiendas online, reventa y emprendimientos de ropa",
-        href: "/reventa",
-        tags: ["ropa", "reventa", "tienda", "comisiones"],
-      },
-      {
-        title: "Fábrica y producción",
-        description:
-          "Calculá costo por unidad, ganancia, margen y punto de equilibrio.",
-        idealFor: "Panaderías, producción de alimentos y fabricación",
-        href: "/produccion",
-        tags: ["panadería", "producción", "costos", "precio"],
-      },
-      {
-        title: "Distribuidoras",
-        description:
-          "Calculá margen por caja, costo de reparto, ganancia por cliente y stock necesario.",
-        idealFor: "Distribuidores y vendedores mayoristas",
-        href: "/distribuidora",
-        tags: ["distribuidora", "stock", "reparto", "clientes"],
-      },
-      {
-        title: "Intermediarios y comisiones",
-        description:
-          "Calculá comisiones, ganancia mensual, punto de equilibrio, recupero y ROI.",
-        idealFor: "Vendedores a comisión, brokers e intermediarios comerciales",
-        href: "/intermediarios",
-        tags: ["comisiones", "pedidos", "intermediarios", "ventas"],
-      },
-      {
-        title: "Cafeterías",
-        description:
-          "Estimá costos, ticket promedio, margen por venta y punto de equilibrio.",
-        idealFor: "Cafeterías, bares y locales gastronómicos",
-        href: "/cafeteria",
-        tags: ["cafetería", "gastronomía", "café", "ticket", "margen"],
-      },
-      {
-        title: "Hamburgueserías",
-        description:
-          "Calculá costos por hamburguesa, margen, precio recomendado y ganancia mensual.",
-        idealFor: "Hamburgueserías, dark kitchens y locales de comida",
-        href: "/hamburgueseria",
-        tags: ["hamburguesería", "gastronomía", "comida", "delivery", "margen"],
-      },
-    ],
-  },
+
 ];
 
 export const availableCalculators = calculatorSections.flatMap((section) =>

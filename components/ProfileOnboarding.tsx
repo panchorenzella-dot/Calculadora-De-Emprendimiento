@@ -18,7 +18,7 @@ function recommendation(data: OnboardingData) {
   if (data.main_goal === "Saber cuánto vender") return { title: "Punto de equilibrio", href: "/punto-de-equilibrio" };
   if (data.main_goal === "Evaluar una inversión") return { title: "ROI de inversión", href: "/roi-inversion" };
   if (data.main_goal === "Ahorrar o invertir") return { title: "Meta de ahorro", href: "/meta-ahorro" };
-  if (data.business_type === "Gastronomía") return { title: "Calculadoras gastronómicas", href: "/calculadoras?buscar=gastronomía" };
+  if (data.business_type === "Gastronomía") return { title: "Calculadoras gastronómicas", href: "/calculadoras#industries" };
   if (data.business_type === "Producción") return { title: "Producción", href: "/produccion" };
   if (data.business_type === "Productos / Reventa") return { title: "Compra y venta", href: "/reventa" };
   return { title: "Directorio de calculadoras", href: "/calculadoras" };

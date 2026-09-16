@@ -11,18 +11,24 @@ test.describe("catálogo de calculadoras", () => {
     expect(html).toContain('href="/markup"');
   });
 
-  test("mantiene el filtro inicial y los nombres accesibles completos", async ({ page }) => {
+  test("muestra el catálogo completo en el orden solicitado y destaca margen", async ({ page }) => {
     await page.goto("/calculadoras?buscar=iva");
 
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    await expect(page.getByRole("searchbox", { name: "¿Qué querés calcular?" })).toHaveValue("iva");
-    await expect(page.getByRole("status")).toContainText("2 resultados");
-    await expect(page.locator('#calculator-results a[href^="/"]')).toHaveCount(2);
+    await expect(page.getByRole("searchbox")).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "¿Qué querés resolver hoy?" })).toHaveCount(0);
+    await expect(page.locator("#calculator-results section[id] h2")).toHaveText([
+      "Calculadoras por tipo de negocio",
+      "Inversión y ahorro",
+      "Precios, costos y rentabilidad",
+      "Impuestos y costos en Argentina",
+    ]);
+    await expect(page.locator('#calculator-results a[href^="/"]')).toHaveCount(20);
 
-    await page.getByRole("searchbox", { name: "¿Qué querés calcular?" }).fill("precio de venta");
-    const priceLink = page.locator('a[href="/markup"]').first();
-    await expect(priceLink).toHaveAccessibleName(
-      /Precio de venta.*Definí cuánto cobrar.*Ideal para.*Productos, servicios y emprendimientos.*Usar calculadora/,
-    );
+    const featured = page.getByRole("link", { name: /Calculadora destacada.*Margen de ganancia/ });
+    await expect(featured).toBeVisible();
+    await expect(featured).toHaveAttribute("href", "/margen");
+    await featured.click();
+    await expect(page).toHaveURL(/\/margen$/);
   });
 });

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import CalculatorFinder from "@/components/CalculatorFinder";
 import HomeAiDecisionDemo from "@/components/HomeAiDecisionDemo";
 import HomeProfitPreview from "@/components/HomeProfitPreview";
 import TrustSection from "@/components/TrustSection";
@@ -126,10 +125,6 @@ export default function Home() {
 
       <div className="pt-10 sm:pt-14">
         <HomeAiDecisionDemo />
-      </div>
-
-      <div className="pt-10 sm:pt-14">
-        <CalculatorFinder />
       </div>
 
       <div className="pt-10 sm:pt-14">

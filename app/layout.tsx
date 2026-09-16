@@ -109,14 +109,6 @@ export default function RootLayout({
         description: siteDescription,
         inLanguage: "es-AR",
         publisher: { "@id": `${baseUrl}/#organization` },
-        potentialAction: {
-          "@type": "SearchAction",
-          target: {
-            "@type": "EntryPoint",
-            urlTemplate: `${baseUrl}/calculadoras?buscar={search_term_string}`,
-          },
-          "query-input": "required name=search_term_string",
-        },
       },
     ],
   };
