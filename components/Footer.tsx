@@ -11,15 +11,35 @@ const links = [
   ["/contacto", "Contacto"],
 ];
 
+function SocialIcon({ platform }: { platform: string }) {
+  if (platform === "instagram") {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="size-5 shrink-0 text-white transition group-hover:text-pink-300 group-focus-visible:text-pink-300">
+        <rect x="3" y="3" width="18" height="18" rx="5" />
+        <circle cx="12" cy="12" r="4" />
+        <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" className="size-5 shrink-0 text-white transition group-hover:text-cyan-200 group-focus-visible:text-cyan-200">
+      <path d="M16.6 2h-3.5v13.8a3 3 0 1 1-2.6-3V9.3a6.5 6.5 0 1 0 6.1 6.5V8.9a9 9 0 0 0 5.4 1.8V7.2A5.4 5.4 0 0 1 16.6 2Z" />
+    </svg>
+  );
+}
+
 export default function Footer() {
   const growtellaUrl = ecosystemTools[0].href;
 
   return (
-    <footer className="border-t border-white/10 px-6 py-7 text-xs text-white/55 print:hidden">
-      <div className="mx-auto mb-7 max-w-6xl border-b border-white/10 pb-7">
-        <p className="text-sm font-semibold text-white/85">Seguinos en redes</p>
-        <p className="mt-2 text-sm leading-6 text-white/55">Ideas, negocios y finanzas con Growtella.</p>
-        <nav aria-label="Redes sociales de Growtella" className="mt-4 flex flex-wrap gap-3">
+    <footer className="border-t border-white/10 px-6 py-5 text-xs text-white/55 print:hidden">
+      <div className="mx-auto mb-5 flex max-w-6xl flex-col gap-4 border-b border-white/10 pb-5 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <p className="text-sm font-semibold text-emerald-200">Seguinos en redes</p>
+          <p className="mt-1 text-xs leading-5 text-white/70">Ideas, negocios y finanzas con Growtella.</p>
+        </div>
+        <nav aria-label="Redes sociales de Growtella" className="flex flex-wrap gap-2.5">
           {socialLinks.map((social) => (
             <a
               key={social.href}
@@ -27,9 +47,15 @@ export default function Footer() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`${social.name}, ${social.handle} (se abre en una nueva pestaña)`}
-              className="inline-flex min-h-11 items-center gap-3 rounded-full border border-white/15 bg-white/[0.035] px-4 py-2.5 text-sm font-semibold text-white/75 transition hover:border-emerald-300/35 hover:text-emerald-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-emerald-200"
+              className={`group inline-flex min-h-11 items-center gap-2.5 rounded-full border border-white/25 bg-white/[0.06] px-4 py-2.5 text-sm font-semibold text-white transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-emerald-200 ${
+                social.platform === "instagram"
+                  ? "hover:border-pink-400/70 hover:bg-gradient-to-r hover:from-purple-500/20 hover:to-pink-500/20 focus-visible:border-pink-400/70 focus-visible:bg-pink-500/15"
+                  : "hover:border-cyan-300/70 hover:bg-cyan-300/[0.08] focus-visible:border-cyan-300/70 focus-visible:bg-cyan-300/[0.08]"
+              }`}
             >
-              {social.name} <span aria-hidden="true" className="text-emerald-200/70">↗</span>
+              <SocialIcon platform={social.platform} />
+              {social.name}
+              {social.handle === "@growtellamoney" ? <span aria-hidden="true" className="text-base leading-none">💰</span> : null}
             </a>
           ))}
         </nav>

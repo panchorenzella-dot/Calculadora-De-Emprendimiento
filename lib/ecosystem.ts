@@ -18,7 +18,7 @@ export const ecosystemTools = [
 ];
 
 export const socialLinks = [
-  { name: "Instagram", handle: "@growtellaa", href: "https://www.instagram.com/growtellaa/" },
-  { name: "TikTok Growtella", handle: "@growtella", href: "https://www.tiktok.com/@growtella" },
-  { name: "TikTok Money", handle: "@growtellamoney", href: "https://www.tiktok.com/@growtellamoney" },
+  { name: "Instagram", platform: "instagram", handle: "@growtellaa", href: "https://www.instagram.com/growtellaa/" },
+  { name: "TikTok Growtella", platform: "tiktok", handle: "@growtella", href: "https://www.tiktok.com/@growtella" },
+  { name: "TikTok Money", platform: "tiktok", handle: "@growtellamoney", href: "https://www.tiktok.com/@growtellamoney" },
 ];
