@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import HomeAiDecisionDemo from "@/components/HomeAiDecisionDemo";
+import EcosystemTools from "@/components/EcosystemTools";
 import HomeProfitPreview from "@/components/HomeProfitPreview";
 import TrustSection from "@/components/TrustSection";
 import { guides } from "@/lib/guides";
@@ -191,6 +192,7 @@ export default function Home() {
           </Link>
         </div>
       </section>
+      <EcosystemTools />
     </div>
   );
 }
