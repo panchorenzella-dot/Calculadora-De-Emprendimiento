@@ -1,5 +1,7 @@
 "use client";
 
+import OptionalFields from "@/components/OptionalFields";
+import ResultsOverview from "@/components/ResultsOverview";
 import { FormEvent, useState } from "react";
 import { calculateReventa } from "@/lib/calculations/business";
 import { formatLocaleNumberInputChange, parseLocaleNumber, validateNumericFields } from "@/lib/numberInput";
@@ -323,13 +325,15 @@ export default function CompraVentaPage() {
                     helper="Incluye local, depósito, internet, publicidad fija, suscripciones, herramientas o gastos mensuales."
                   />
 
-                  <InputField
-                    label="Capital invertido"
-                    value={capitalInvertido}
-                    onChange={setCapitalInvertido}
-                    prefix={moneyPrefix}
-                    helper="Es el dinero que pusiste para comprar mercadería o arrancar la operación."
-                  />
+                  <OptionalFields title="Añadir capital invertido para calcular ROI y recupero">
+                    <InputField
+                      label="Capital invertido"
+                      value={capitalInvertido}
+                      onChange={setCapitalInvertido}
+                      prefix={moneyPrefix}
+                      helper="Es el dinero que pusiste para comprar mercadería o arrancar la operación."
+                    />
+                  </OptionalFields>
                 </div>
               </div>
 
@@ -353,17 +357,33 @@ export default function CompraVentaPage() {
               </p>
             )}
 
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <ResultCard
-                title="Ganancia neta mensual"
-                value={formatMoney(
-                  displayedResults.gananciaNetaMensual,
-                  currency
-                )}
-                muted={isMuted}
-                highlight
-              />
-
+            <ResultsOverview primary={<>
+                <ResultCard
+                  title="Ganancia neta mensual"
+                  value={formatMoney(
+                    displayedResults.gananciaNetaMensual,
+                    currency
+                  )}
+                  muted={isMuted}
+                  highlight
+                />
+                <ResultCard
+                  title="Margen de ganancia"
+                  value={formatPercent(displayedResults.margenGanancia)}
+                  muted={isMuted}
+                />
+                <ResultCard
+                  title="Punto de equilibrio mensual"
+                  value={
+                    displayedResults.puntoEquilibrioMensual === null
+                      ? "No rentable"
+                      : `${formatNumber(
+                          Math.ceil(displayedResults.puntoEquilibrioMensual)
+                        )} unidades`
+                  }
+                  muted={isMuted}
+                />
+              </>}>
               <ResultCard
                 title="Ganancia por unidad"
                 value={formatMoney(
@@ -372,31 +392,21 @@ export default function CompraVentaPage() {
                 )}
                 muted={isMuted}
               />
-
-              <ResultCard
-                title="Margen de ganancia"
-                value={formatPercent(displayedResults.margenGanancia)}
-                muted={isMuted}
-              />
-
               <ResultCard
                 title="Markup"
                 value={formatPercent(displayedResults.markup)}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Unidades vendidas por mes"
                 value={formatNumber(displayedResults.unidadesVendidasMes)}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Ventas mensuales"
                 value={formatMoney(displayedResults.ventasMensuales, currency)}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Costo de compra mensual"
                 value={formatMoney(
@@ -405,7 +415,6 @@ export default function CompraVentaPage() {
                 )}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Gastos variables mensuales"
                 value={formatMoney(
@@ -414,7 +423,6 @@ export default function CompraVentaPage() {
                 )}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Ganancia bruta mensual"
                 value={formatMoney(
@@ -423,19 +431,6 @@ export default function CompraVentaPage() {
                 )}
                 muted={isMuted}
               />
-
-              <ResultCard
-                title="Punto de equilibrio mensual"
-                value={
-                  displayedResults.puntoEquilibrioMensual === null
-                    ? "No rentable"
-                    : `${formatNumber(
-                        Math.ceil(displayedResults.puntoEquilibrioMensual)
-                      )} unidades`
-                }
-                muted={isMuted}
-              />
-
               <ResultCard
                 title="Recupero del capital"
                 value={
@@ -445,7 +440,6 @@ export default function CompraVentaPage() {
                 }
                 muted={isMuted}
               />
-
               <ResultCard
                 title="ROI mensual estimado"
                 value={
@@ -455,7 +449,7 @@ export default function CompraVentaPage() {
                 }
                 muted={isMuted}
               />
-            </div>
+            </ResultsOverview>
           </section>
         </section>
 

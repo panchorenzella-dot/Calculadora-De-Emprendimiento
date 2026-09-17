@@ -92,6 +92,7 @@ export default function AiAssistant({ draft, hasResults, initialConversationId, 
   const [notice, setNotice] = useState("");
   const [copied, setCopied] = useState(false);
   const [copiedMessageIndex, setCopiedMessageIndex] = useState<number | null>(null);
+  const [limitReached, setLimitReached] = useState(false);
   const [quota, setQuota] = useState<AiQuotaStatus | null>(null);
   const [retryRequest, setRetryRequest] = useState<RetryRequest | null>(null);
   const [retryAllowed, setRetryAllowed] = useState(false);
@@ -308,6 +309,7 @@ export default function AiAssistant({ draft, hasResults, initialConversationId, 
         setQuota({ kind: mode, used: data.quota.used, limit: data.quota.limit, plan: data.quota.plan });
       }
 
+      setLimitReached(response.status === 429 && data.code === "AI_QUOTA_REACHED");
       if (!response.ok || !data.text?.trim()) {
         if (response.status === 401) setAuthOpen(true);
         const retryable = data.retryable ?? (response.status === 408 || response.status >= 500);
@@ -532,7 +534,6 @@ export default function AiAssistant({ draft, hasResults, initialConversationId, 
       </div>
       <div className="relative mt-auto pt-6">
         <button ref={analysisTriggerRef} type="button" onClick={requestAnalysis} disabled={loading || !hasResults} className="group flex min-h-12 w-full items-center justify-between rounded-xl bg-emerald-300 px-4 py-3 text-sm font-black text-emerald-950 transition hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-55"><span>{loading ? "Preparando análisis…" : hasResults ? "Analizar este resultado" : "Calculá para analizar"}</span><span aria-hidden="true" className="text-base font-normal transition-transform group-hover:translate-x-0.5">→</span></button>
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[11px] font-medium text-white/34"><span>Se descuenta al confirmar</span><Link href="/precios" className="text-emerald-200/65 transition hover:text-emerald-100">Ver planes</Link></div>
       </div>
       {!open && error && <p role="alert" className="relative mt-4 rounded-xl border border-red-300/15 bg-red-500/[0.065] px-3 py-2.5 text-sm leading-5 text-red-100/82">{error}</p>}
       {!open && notice && <p role="status" className="relative mt-4 rounded-xl border border-emerald-300/[0.12] bg-emerald-300/[0.045] px-3 py-2.5 text-sm leading-5 text-emerald-100/72">{notice}</p>}
@@ -576,6 +577,7 @@ export default function AiAssistant({ draft, hasResults, initialConversationId, 
           onCopyMessage={(index, content) => { void copyMessage(index, content); }}
           onRetry={retryLastRequest}
         />
+        {limitReached && <Link href="/precios" className="mx-4 mt-3 text-sm font-semibold text-emerald-200 hover:text-emerald-100">Alcanzaste el límite de tu plan. Ver planes</Link>}
         <AiComposer
           value={message}
           loading={loading || loadingHistory}
@@ -596,8 +598,8 @@ export default function AiAssistant({ draft, hasResults, initialConversationId, 
         <div className="pointer-events-none absolute -right-16 -top-20 size-56 rounded-full bg-emerald-300/[0.09] blur-3xl"/>
         <div className="relative">
           <div className="flex items-start gap-4"><AiAssistantMark/><div><p className="text-[11px] font-bold uppercase tracking-[0.16em] text-emerald-200/55">Confirmación necesaria</p><h2 id="confirm-analysis-title" className="mt-2 text-2xl font-bold tracking-[-0.03em]">¿Iniciar el análisis con IA?</h2></div></div>
-          <p id="confirm-analysis-description" className="mt-5 text-sm leading-7 text-white/58">Vamos a enviar los datos y resultados de <strong className="text-white/85">{draft?.calculatorName}</strong> al asistente. Al continuar se usará <strong className="text-white/85">1 análisis disponible</strong> de tu plan.</p>
-          <div className="mt-5 rounded-2xl border border-emerald-300/[0.11] bg-emerald-300/[0.035] p-4"><p className="text-sm font-semibold text-emerald-100/78">Todavía no se consumió ningún análisis.</p><p className="mt-1 text-xs leading-5 text-white/38">Podés cancelar y revisar los números antes de confirmar.</p></div>
+          <p id="confirm-analysis-description" className="mt-5 text-sm leading-7 text-white/58">Vamos a enviar los datos y resultados de <strong className="text-white/85">{draft?.calculatorName}</strong> al asistente. Así podrá ayudarte a interpretar el resultado.</p>
+          <div className="mt-5 rounded-2xl border border-emerald-300/[0.11] bg-emerald-300/[0.035] p-4"><p className="text-sm font-semibold text-emerald-100/78">Revisá los datos antes de continuar.</p><p className="mt-1 text-xs leading-5 text-white/38">Podés cancelar y revisar los números antes de confirmar.</p></div>
           <div className="mt-7 grid gap-3 sm:grid-cols-2"><button ref={cancelConfirmRef} type="button" onClick={() => { setConfirmOpen(false); window.requestAnimationFrame(() => analysisTriggerRef.current?.focus()); }} className="rounded-full border border-white/12 bg-black/25 px-4 py-3 text-sm font-bold text-white/72 transition hover:border-white/22 hover:bg-white/[0.05] hover:text-white">Cancelar</button><button type="button" onClick={confirmAnalysis} className="rounded-full border border-emerald-200/40 bg-emerald-300 px-4 py-3 text-sm font-black text-emerald-950 shadow-[0_12px_35px_rgba(16,185,129,0.15)] transition hover:bg-emerald-200">Sí, iniciar análisis</button></div>
         </div>
       </section>

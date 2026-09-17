@@ -1,5 +1,6 @@
 "use client";
 
+import ResultsOverview from "@/components/ResultsOverview";
 import { FormEvent, useState } from "react";
 import { calculateCafeteria } from "@/lib/calculations/business";
 import { formatLocaleNumberInputChange, parseLocaleNumber, validateNumericFields } from "@/lib/numberInput";
@@ -342,17 +343,33 @@ export default function CafeteriaPage() {
               </p>
             )}
 
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <ResultCard
-                title="Ganancia neta mensual"
-                value={formatMoney(
-                  displayedResults.gananciaNetaMensual,
-                  currency
-                )}
-                muted={isMuted}
-                highlight
-              />
-
+            <ResultsOverview primary={<>
+                <ResultCard
+                  title="Ganancia neta mensual"
+                  value={formatMoney(
+                    displayedResults.gananciaNetaMensual,
+                    currency
+                  )}
+                  muted={isMuted}
+                  highlight
+                />
+                <ResultCard
+                  title="Margen de ganancia"
+                  value={formatPercent(displayedResults.margenGanancia)}
+                  muted={isMuted}
+                />
+                <ResultCard
+                  title="Punto de equilibrio mensual"
+                  value={
+                    displayedResults.puntoEquilibrioMensual === null
+                      ? "No rentable"
+                      : `${formatNumber(
+                          Math.ceil(displayedResults.puntoEquilibrioMensual)
+                        )} clientes`
+                  }
+                  muted={isMuted}
+                />
+              </>}>
               <ResultCard
                 title="Ganancia por pedido"
                 value={formatMoney(
@@ -361,31 +378,21 @@ export default function CafeteriaPage() {
                 )}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Costo total por pedido"
                 value={formatMoney(displayedResults.costoTotalPedido, currency)}
                 muted={isMuted}
               />
-
-              <ResultCard
-                title="Margen de ganancia"
-                value={formatPercent(displayedResults.margenGanancia)}
-                muted={isMuted}
-              />
-
               <ResultCard
                 title="Clientes por mes"
                 value={formatNumber(displayedResults.clientesPorMes)}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Ventas mensuales"
                 value={formatMoney(displayedResults.ventasMensuales, currency)}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Costo variable mensual"
                 value={formatMoney(
@@ -394,7 +401,6 @@ export default function CafeteriaPage() {
                 )}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Ganancia bruta mensual"
                 value={formatMoney(
@@ -403,19 +409,6 @@ export default function CafeteriaPage() {
                 )}
                 muted={isMuted}
               />
-
-              <ResultCard
-                title="Punto de equilibrio mensual"
-                value={
-                  displayedResults.puntoEquilibrioMensual === null
-                    ? "No rentable"
-                    : `${formatNumber(
-                        Math.ceil(displayedResults.puntoEquilibrioMensual)
-                      )} clientes`
-                }
-                muted={isMuted}
-              />
-
               <ResultCard
                 title="Punto de equilibrio diario"
                 value={
@@ -427,7 +420,7 @@ export default function CafeteriaPage() {
                 }
                 muted={isMuted}
               />
-            </div>
+            </ResultsOverview>
           </section>
         </section>
 

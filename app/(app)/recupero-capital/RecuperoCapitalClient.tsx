@@ -1,5 +1,6 @@
 "use client";
 
+import ResultsOverview from "@/components/ResultsOverview";
 import { type FormEvent, type ReactNode, useState } from "react";
 import { calculateRecuperoCapital } from "@/lib/calculations/investments";
 import { formatLocaleNumberInputChange, parseLocaleNumber, validateNumericFields } from "@/lib/numberInput";
@@ -339,44 +340,39 @@ export default function RecuperoDeCapitalPage() {
               </p>
             )}
 
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <ResultCard
-                title="Meses para recuperar"
-                value={formatMonths(displayedResults.mesesParaRecuperar)}
-                muted={isMuted}
-                highlight
-              />
-
+            <ResultsOverview primary={<>
+                <ResultCard
+                  title="Meses para recuperar"
+                  value={formatMonths(displayedResults.mesesParaRecuperar)}
+                  muted={isMuted}
+                  highlight
+                />
+                <ResultCard
+                  title="Capital pendiente"
+                  value={formatMoney(displayedResults.capitalPendiente, currency)}
+                  muted={isMuted}
+                />
+                <ResultCard
+                  title="Porcentaje recuperado"
+                  value={formatPercent(displayedResults.porcentajeRecuperado)}
+                  muted={isMuted}
+                />
+              </>}>
               <ResultCard
                 title="Estado"
                 value={displayedResults.estado}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Ganancia acumulada"
                 value={formatMoney(displayedResults.gananciaAcumulada, currency)}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Capital recuperado"
                 value={formatMoney(displayedResults.capitalRecuperado, currency)}
                 muted={isMuted}
               />
-
-              <ResultCard
-                title="Capital pendiente"
-                value={formatMoney(displayedResults.capitalPendiente, currency)}
-                muted={isMuted}
-              />
-
-              <ResultCard
-                title="Porcentaje recuperado"
-                value={formatPercent(displayedResults.porcentajeRecuperado)}
-                muted={isMuted}
-              />
-
               <ResultCard
                 title="Ganancia después del recupero"
                 value={formatMoney(
@@ -385,13 +381,12 @@ export default function RecuperoDeCapitalPage() {
                 )}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Período analizado"
                 value={`${formatNumber(displayedResults.mesesAnalisis)} meses`}
                 muted={isMuted}
               />
-            </div>
+            </ResultsOverview>
           </section>
         </section>
 

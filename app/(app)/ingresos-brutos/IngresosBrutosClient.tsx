@@ -1,5 +1,6 @@
 "use client";
 
+import OptionalFields from "@/components/OptionalFields";
 import { FormEvent, useMemo, useState } from "react";
 import {
   CalculatorForm,
@@ -77,18 +78,17 @@ export default function IngresosBrutosClient() {
         <MoneyField label="Facturación gravada del período" value={taxableRevenue} onChange={setTaxableRevenue} hint="Base atribuible a la jurisdicción seleccionada" />
         <PercentField label="Alícuota aplicable" value={rate} onChange={setRate} hint="Copiala de tu constancia, padrón o ley tarifaria. No existe una tasa única nacional." />
         <MoneyField label="Impuesto mínimo del período" value={minimumTax} onChange={setMinimumTax} hint="Opcional: dejalo en cero si no corresponde" />
-        <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-          <p className="text-sm font-semibold">Pagos a cuenta y saldos</p>
-          <div className="mt-4 grid gap-4">
+        <OptionalFields title="Añadir pagos a cuenta y saldos">
+          <div className="grid gap-4">
             <MoneyField label="Retenciones sufridas" value={withholdings} onChange={setWithholdings} />
             <MoneyField label="Percepciones sufridas" value={perceptions} onChange={setPerceptions} />
             <MoneyField label="Recaudaciones bancarias" value={bankCollections} onChange={setBankCollections} hint="Por ejemplo, SIRCREB u otro régimen aplicable" />
             <MoneyField label="Saldo a favor anterior" value={previousBalance} onChange={setPreviousBalance} />
           </div>
-        </div>
+        </OptionalFields>
       </CalculatorForm>
       <ResultsPanel hasResults={Boolean(results)} status={results ? <div className={`mt-5 rounded-2xl border p-4 ${results.taxToPay > 0 ? "border-amber-300/20 bg-amber-300/[0.05]" : "border-emerald-300/20 bg-emerald-300/[0.05]"}`}><p className="text-xs font-bold uppercase tracking-[0.14em] text-white/45">{jurisdiction}</p><p className="mt-2 text-lg font-semibold">{results.taxToPay > 0 ? "Anticipo estimado a pagar" : "Sin saldo a pagar estimado"}</p></div> : null}>
-        {results ? <ResultCards items={[
+        {results ? <ResultCards primaryTitles={["Ingresos Brutos a pagar", "Saldo a favor estimado", "Tasa efectiva"]} items={[
           { title: "Impuesto por alícuota", value: results.calculatedTax },
           { title: "Impuesto determinado", value: results.determinedTax, note: parseDigitsToNumber(minimumTax) > results.calculatedTax ? "Se aplicó el mínimo ingresado." : undefined },
           { title: "Pagos a cuenta y saldos", value: results.credits },

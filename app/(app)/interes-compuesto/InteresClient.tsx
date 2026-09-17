@@ -1,5 +1,6 @@
 "use client";
 
+import ResultsOverview from "@/components/ResultsOverview";
 import { type FormEvent, type ReactNode, useState } from "react";
 import { calculateInteresCompuesto } from "@/lib/calculations/investments";
 import { formatLocaleNumberInputChange, parseLocaleNumber, validateNumericFields } from "@/lib/numberInput";
@@ -435,81 +436,76 @@ export default function InteresCompuestoPage() {
               </p>
             )}
 
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <ResultCard
-                title="Valor futuro estimado"
-                value={formatMoney(displayedResults.valorFuturo, currency)}
-                muted={isMuted}
-                highlight
-              />
-
-              <ResultCard
-                title="Total aportado"
-                value={formatMoney(displayedResults.totalAportado, currency)}
-                muted={isMuted}
-              />
-
-              <ResultCard
-                title="Interés ganado"
-                value={formatMoney(displayedResults.interesGanado, currency)}
-                muted={isMuted}
-              />
-
+            <ResultsOverview primary={<>
+                <ResultCard
+                  title="Valor futuro estimado"
+                  value={formatMoney(displayedResults.valorFuturo, currency)}
+                  muted={isMuted}
+                  highlight
+                />
+                <ResultCard
+                  title="Total aportado"
+                  value={formatMoney(displayedResults.totalAportado, currency)}
+                  muted={isMuted}
+                />
+                <ResultCard
+                  title="Interés ganado"
+                  value={formatMoney(displayedResults.interesGanado, currency)}
+                  muted={isMuted}
+                />
+              </>}>
               <ResultCard
                 title="Rendimiento total"
                 value={formatPercent(displayedResults.rendimientoTotal)}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Meses invertidos"
                 value={`${formatNumber(displayedResults.mesesTotales)} meses`}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Capitalización elegida"
                 value={frequencies[frecuencia].label}
                 muted={isMuted}
               />
-            </div>
+              <div className="sm:col-span-2">
+                <h3 className="text-xl font-bold">Escenarios</h3>
 
-            <div className="mt-8">
-              <h3 className="text-xl font-bold">Escenarios</h3>
+                <div className="mt-5 grid gap-4">
+                  <ScenarioCard
+                    title="Conservador"
+                    rate={displayedResults.tasaConservadora}
+                    value={formatMoney(
+                      displayedResults.escenarioConservador,
+                      currency
+                    )}
+                    muted={isMuted}
+                  />
 
-              <div className="mt-5 grid gap-4">
-                <ScenarioCard
-                  title="Conservador"
-                  rate={displayedResults.tasaConservadora}
-                  value={formatMoney(
-                    displayedResults.escenarioConservador,
-                    currency
-                  )}
-                  muted={isMuted}
-                />
+                  <ScenarioCard
+                    title="Estimado"
+                    rate={displayedResults.tasaEstimada}
+                    value={formatMoney(
+                      displayedResults.escenarioEstimado,
+                      currency
+                    )}
+                    muted={isMuted}
+                    highlight
+                  />
 
-                <ScenarioCard
-                  title="Estimado"
-                  rate={displayedResults.tasaEstimada}
-                  value={formatMoney(
-                    displayedResults.escenarioEstimado,
-                    currency
-                  )}
-                  muted={isMuted}
-                  highlight
-                />
-
-                <ScenarioCard
-                  title="Optimista"
-                  rate={displayedResults.tasaOptimista}
-                  value={formatMoney(
-                    displayedResults.escenarioOptimista,
-                    currency
-                  )}
-                  muted={isMuted}
-                />
+                  <ScenarioCard
+                    title="Optimista"
+                    rate={displayedResults.tasaOptimista}
+                    value={formatMoney(
+                      displayedResults.escenarioOptimista,
+                      currency
+                    )}
+                    muted={isMuted}
+                  />
+                </div>
               </div>
-            </div>
+            </ResultsOverview>
           </section>
         </section>
 

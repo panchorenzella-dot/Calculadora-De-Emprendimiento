@@ -1,5 +1,6 @@
 "use client";
 
+import ResultsOverview from "@/components/ResultsOverview";
 import { type FormEvent, type ReactNode, useState } from "react";
 import { calculateRoiInversion } from "@/lib/calculations/investments";
 import { formatLocaleNumberInputChange, parseLocaleNumber, validateNumericFields } from "@/lib/numberInput";
@@ -351,55 +352,49 @@ export default function RoiDeInversionPage() {
               </p>
             )}
 
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <ResultCard
-                title="ROI total"
-                value={formatPercent(displayedResults.roiTotal)}
-                muted={isMuted}
-                highlight
-              />
-
-              <ResultCard
-                title="Ganancia neta"
-                value={formatMoney(displayedResults.gananciaNeta, currency)}
-                muted={isMuted}
-              />
-
-              <ResultCard
-                title="Total invertido real"
-                value={formatMoney(
-                  displayedResults.totalInvertidoReal,
-                  currency
-                )}
-                muted={isMuted}
-              />
-
+            <ResultsOverview primary={<>
+                <ResultCard
+                  title="ROI total"
+                  value={formatPercent(displayedResults.roiTotal)}
+                  muted={isMuted}
+                  highlight
+                />
+                <ResultCard
+                  title="Ganancia neta"
+                  value={formatMoney(displayedResults.gananciaNeta, currency)}
+                  muted={isMuted}
+                />
+                <ResultCard
+                  title="Total invertido real"
+                  value={formatMoney(
+                    displayedResults.totalInvertidoReal,
+                    currency
+                  )}
+                  muted={isMuted}
+                />
+              </>}>
               <ResultCard
                 title="Estado"
                 value={displayedResults.estado}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Rendimiento mensual estimado"
                 value={formatPercent(displayedResults.rendimientoMensual)}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Rendimiento anualizado"
                 value={formatPercent(displayedResults.rendimientoAnualizado)}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Tiempo cargado"
                 value={`${formatNumber(displayedResults.meses)} meses`}
                 muted={isMuted}
               />
-
               <ResultCard title="Tipo de cálculo" value="ROI" muted={isMuted} />
-            </div>
+            </ResultsOverview>
           </section>
         </section>
 

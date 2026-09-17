@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import Card from "@/components/Card";
+import ResultsOverview from "@/components/ResultsOverview";
 import MoneyInput from "@/components/MoneyInput";
 import { fmtMoney } from "@/lib/format";
 import {
@@ -19,7 +20,7 @@ export function CalculatorHeader({ eyebrow, title, description }: { eyebrow: str
 }
 
 export function CalculatorForm({ children, onSubmit, error }: { children: ReactNode; onSubmit: (event: React.FormEvent<HTMLFormElement>) => void; error?: string | null }) {
-  return <form data-calculator-form onSubmit={onSubmit} className="rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
+  return <form data-calculator-form onSubmit={onSubmit} className="min-w-0 rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
     <h2 className="text-xl font-semibold">Datos</h2>
     <div className="mt-5 grid gap-4">{children}</div>
     {error ? <p role="alert" className="mt-5 rounded-xl border border-rose-300/20 bg-rose-300/[0.06] px-4 py-3 text-sm font-semibold text-rose-100">{error}</p> : null}
@@ -63,9 +64,9 @@ export function TextField({ label, value, onChange, placeholder, hint }: { label
 }
 
 export function SelectField({ label, value, onChange, children, hint }: { label: string; value: string; onChange: (value: string) => void; children: ReactNode; hint?: string }) {
-  return <label className="grid gap-2">
+  return <label className="grid min-w-0 gap-2">
     <span className="text-sm font-semibold text-white/80">{label}</span>
-    <select aria-label={label} data-calculator-control value={value} onChange={(event) => onChange(event.target.value)} className="rounded-xl bg-zinc-900 px-4 py-3 font-semibold text-white outline-none ring-1 ring-white/10 focus:ring-white/30 focus-visible:outline-none">{children}</select>
+    <select aria-label={label} data-calculator-control value={value} onChange={(event) => onChange(event.target.value)} className="w-full min-w-0 max-w-full rounded-xl bg-zinc-900 px-4 py-3 font-semibold text-white outline-none ring-1 ring-white/10 focus:ring-white/30 focus-visible:outline-none">{children}</select>
     {hint ? <span className="text-xs leading-5 text-white/45">{hint}</span> : null}
   </label>;
 }
@@ -80,16 +81,19 @@ export function SegmentedControl({ label, value, options, onChange }: { label: s
 }
 
 export function ResultsPanel({ children, hasResults, status }: { children: ReactNode; hasResults: boolean; status?: ReactNode }) {
-  return <section data-calculator-results={hasResults ? "ready" : "empty"} aria-live="polite" aria-atomic="false" className="self-start rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
+  return <section data-calculator-results={hasResults ? "ready" : "empty"} aria-live="polite" aria-atomic="false" className="min-w-0 self-start rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
     <h2 className="text-xl font-semibold">Resultados</h2>
     {!hasResults ? <p className="mt-4 text-sm font-medium text-white/60">Cargá tus datos y tocá <strong>Calcular</strong>.</p> : <>{status}{children}</>}
   </section>;
 }
 
-export function ResultCards({ items }: { items: Array<{ title: string; value: number | string; note?: string; money?: boolean }> }) {
-  return <div className="mt-5 grid gap-4 sm:grid-cols-2">
-    {items.map((item) => <Card key={item.title} title={item.title} value={typeof item.value === "number" && item.money !== false ? fmtMoney(item.value, "ARS") : String(item.value)} note={item.note} />)}
-  </div>;
+export function ResultCards({ items, primaryTitles }: { items: Array<{ title: string; value: number | string; note?: string; money?: boolean }>; primaryTitles: [string, string, string] }) {
+  function renderCard(item: typeof items[number]) {
+    return <Card key={item.title} title={item.title} value={typeof item.value === "number" && item.money !== false ? fmtMoney(item.value, "ARS") : String(item.value)} note={item.note} />;
+  }
+  const primary = primaryTitles.flatMap((title) => items.filter((item) => item.title === title));
+  const breakdown = items.filter((item) => !primaryTitles.includes(item.title));
+  return <ResultsOverview primary={primary.map(renderCard)}>{breakdown.map(renderCard)}</ResultsOverview>;
 }
 
 export function ExplainGrid({ children }: { children: ReactNode }) {

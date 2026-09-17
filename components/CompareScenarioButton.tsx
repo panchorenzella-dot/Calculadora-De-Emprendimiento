@@ -117,7 +117,6 @@ export default function CompareScenarioButton({ draft, hasResults }: { draft: Sc
           <span>{loading ? "Preparando..." : "Comparar con otro escenario"}</span>
           <span aria-hidden="true" className="text-base font-normal text-emerald-100/45">⇄</span>
         </button>
-        <p className="mt-3 text-xs leading-5 text-white/28">Disponible en Pro y Premium. Siempre podés ver el valor antes de registrarte.</p>
         {status ? <p role="status" className="mt-3 text-xs leading-5 text-amber-100/75">{status}</p> : null}
       </div>
 
@@ -127,7 +126,7 @@ export default function CompareScenarioButton({ draft, hasResults }: { draft: Sc
         returnTo={draft.calculatorPath}
         initialMode="signup"
         contextTitle="Registrate gratis para guardar y comparar tus escenarios"
-        contextDescription="Creá tu cuenta sin tarjeta. Vas a poder guardar hasta 2 escenarios y ver cómo funciona tu espacio; la comparación lado a lado se habilita con Pro o Premium."
+        contextDescription="Creá tu cuenta gratis y conservá tus resultados para seguir trabajando con tus escenarios."
         onAuthenticated={() => {
           setAuthOpen(false);
           void beginComparison();

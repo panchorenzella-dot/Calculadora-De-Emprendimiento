@@ -2,22 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import HomeAiDecisionDemo from "@/components/HomeAiDecisionDemo";
-import EcosystemTools from "@/components/EcosystemTools";
 import HomeProfitPreview from "@/components/HomeProfitPreview";
-import HomeCalculatorCatalog from "@/components/HomeCalculatorCatalog";
 import TrustSection from "@/components/TrustSection";
-import { guides } from "@/lib/guides";
 import { availableCalculators } from "@/app/calculadoras/catalog";
 
 const featuredCalculators = [
   "/markup",
   "/margen",
   "/punto-de-equilibrio",
-  "/roi-inversion",
-  "/interes-compuesto",
-  "/meta-ahorro",
-  "/iva-producto",
-  "/reventa",
 ].map((href) => availableCalculators.find((calculator) => calculator.href === href))
   .filter((calculator) => calculator !== undefined);
 
@@ -107,14 +99,14 @@ export default function Home() {
               Calculadoras destacadas
             </h2>
             <p className="mt-2 text-sm text-white/65">
-              Precios, ganancias, ventas, inversión, ahorro, impuestos y tu rubro.
+              Empezá por el precio, la ganancia o las ventas necesarias para cubrir costos.
             </p>
           </div>
           <Link href="/calculadoras" className="inline-flex shrink-0 justify-center rounded-full bg-white px-5 py-3 text-sm font-bold !text-zinc-950 transition hover:bg-emerald-100">
             Ver las {availableCalculators.length} calculadoras →
           </Link>
         </div>
-        <nav aria-label="Calculadoras destacadas" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <nav aria-label="Calculadoras destacadas" className="grid gap-3 md:grid-cols-3">
           {featuredCalculators.map((calculator) => (
             <Link key={calculator.href} href={calculator.href} className="group flex flex-col rounded-2xl border border-white/[0.08] bg-white/[0.025] p-5 transition hover:border-emerald-300/25 hover:bg-white/[0.05]">
               <h3 className="text-base font-bold text-emerald-200/90">{calculator.title}</h3>
@@ -125,8 +117,6 @@ export default function Home() {
         </nav>
       </section>
 
-      <HomeCalculatorCatalog />
-
       <div className="pt-10 sm:pt-14">
         <HomeAiDecisionDemo />
       </div>
@@ -135,41 +125,7 @@ export default function Home() {
         <TrustSection />
       </div>
 
-      <section className="py-12 sm:py-16">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-200/75">
-              El criterio detrás del resultado
-            </p>
-            <h2 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">
-              Guías con fórmulas y casos paso a paso
-            </h2>
-          </div>
-          <Link href="/guias" className="text-sm font-bold text-white/55 hover:text-white">
-            Ver todas las guías →
-          </Link>
-        </div>
-        <div className="mt-7 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {guides.slice(0, 3).map((guide) => (
-            <Link
-              key={guide.slug}
-              href={`/guias/${guide.slug}`}
-              className="group flex min-h-52 flex-col rounded-3xl border border-white/[0.08] bg-[#090c0a] p-5 transition hover:-translate-y-0.5 hover:border-emerald-300/20"
-            >
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-200/75">
-                {guide.eyebrow}
-              </p>
-              <h3 className="mt-4 text-lg font-bold text-white/90">{guide.title}</h3>
-              <p className="mt-3 text-sm leading-6 text-white/65">{guide.description}</p>
-              <span className="mt-auto pt-5 text-sm font-bold text-white/65 group-hover:text-white">
-                Ver fórmula y ejemplo →
-              </span>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section className="rounded-3xl border border-white/10 bg-gradient-to-r from-white/[0.055] to-white/[0.02] px-6 py-9 text-center sm:px-10 sm:py-12">
+      <section className="mt-10 rounded-3xl border border-white/10 bg-gradient-to-r from-white/[0.055] to-white/[0.02] px-6 py-9 text-center sm:px-10 sm:py-12">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200/65">
           Empezá por tu negocio
         </p>
@@ -195,7 +151,6 @@ export default function Home() {
           </Link>
         </div>
       </section>
-      <EcosystemTools />
     </div>
   );
 }

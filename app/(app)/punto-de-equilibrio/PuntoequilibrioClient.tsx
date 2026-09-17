@@ -1,5 +1,6 @@
 "use client";
 
+import ResultsOverview from "@/components/ResultsOverview";
 import { type FormEvent, useMemo, useState } from "react";
 import Card from "@/components/Card";
 import ResultNextStep from "@/components/ResultNextStep";
@@ -169,45 +170,45 @@ export default function PuntoEquilibrioPage() {
                 Cargá tus datos y tocá <strong>Calcular</strong>.
               </div>
             ) : <>
-            <Card
-              title="Punto de equilibrio (unidades)"
-              value={
-                calc.rentable
-                  ? fmtNum(Math.ceil(calc.unidadesEquilibrio))
-                  : "No rentable"
-              }
-              note={
-                calc.rentable
-                  ? "Unidades mínimas para cubrir costos fijos."
-                  : "El precio no alcanza para cubrir el costo variable."
-              }
-            />
-
-            <Card
-              title="Punto de equilibrio (facturación)"
-              value={
-                calc.rentable
-                  ? fmtMoney(calc.facturacionEquilibrio, currency)
-                  : "No rentable"
-              }
-              note="Facturación necesaria para no ganar ni perder."
-            />
-
-            <Card
-              title="Margen de contribución por unidad"
-              value={fmtMoney(calc.margenContribucionUnit, currency)}
-              note={`${fmtNum(calc.margenContribucionPct)}% del precio de venta`}
-            />
-
-            <Card
-              title="Ganancia estimada mensual"
-              value={fmtMoney(calc.gananciaEstimada, currency)}
-              note={
-                calc.ventas > 0
-                  ? `Tomando ${fmtNum(calc.ventas)} unidades por mes`
-                  : "Completá unidades estimadas para ver este dato"
-              }
-            />
+            <ResultsOverview primary={<>
+                <Card
+                  title="Punto de equilibrio (unidades)"
+                  value={
+                    calc.rentable
+                      ? fmtNum(Math.ceil(calc.unidadesEquilibrio))
+                      : "No rentable"
+                  }
+                  note={
+                    calc.rentable
+                      ? "Unidades mínimas para cubrir costos fijos."
+                      : "El precio no alcanza para cubrir el costo variable."
+                  }
+                />
+                <Card
+                  title="Punto de equilibrio (facturación)"
+                  value={
+                    calc.rentable
+                      ? fmtMoney(calc.facturacionEquilibrio, currency)
+                      : "No rentable"
+                  }
+                  note="Facturación necesaria para no ganar ni perder."
+                />
+                <Card
+                  title="Margen de contribución por unidad"
+                  value={fmtMoney(calc.margenContribucionUnit, currency)}
+                  note={`${fmtNum(calc.margenContribucionPct)}% del precio de venta`}
+                />
+              </>}>
+              <Card
+                title="Ganancia estimada mensual"
+                value={fmtMoney(calc.gananciaEstimada, currency)}
+                note={
+                  calc.ventas > 0
+                    ? `Tomando ${fmtNum(calc.ventas)} unidades por mes`
+                    : "Completá unidades estimadas para ver este dato"
+                }
+              />
+            </ResultsOverview>
             <ResultNextStep calculatorPath="/punto-de-equilibrio" outcome={{ marginPct: calc.margenContribucionPct, unitProfit: calc.margenContribucionUnit, monthlyProfit: calc.ventas > 0 ? calc.gananciaEstimada : null, plannedUnits: calc.ventas, breakEvenUnits: calc.rentable ? calc.unidadesEquilibrio : null, includesFixedCosts: true }} />
             </>}
           </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import ResultsOverview from "@/components/ResultsOverview";
 import { type FormEvent, type ReactNode, useState } from "react";
 import { calculateRendimientoReal } from "@/lib/calculations/investments";
 import { formatLocaleNumberInputChange, parseLocaleNumber, validateNumericFields } from "@/lib/numberInput";
@@ -373,47 +374,42 @@ export default function RendimientoRealPage() {
               </p>
             )}
 
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <ResultCard
-                title="Rendimiento real"
-                value={formatPercent(displayedResults.rendimientoReal)}
-                muted={isMuted}
-                highlight
-              />
-
+            <ResultsOverview primary={<>
+                <ResultCard
+                  title="Rendimiento real"
+                  value={formatPercent(displayedResults.rendimientoReal)}
+                  muted={isMuted}
+                  highlight
+                />
+                <ResultCard
+                  title="Rendimiento nominal"
+                  value={formatPercent(displayedResults.rendimientoNominal)}
+                  muted={isMuted}
+                />
+                <ResultCard
+                  title="Ganancia real ajustada"
+                  value={formatMoney(
+                    displayedResults.gananciaRealAjustada,
+                    currency
+                  )}
+                  muted={isMuted}
+                />
+              </>}>
               <ResultCard
                 title="Estado"
                 value={displayedResults.estado}
                 muted={isMuted}
               />
-
-              <ResultCard
-                title="Rendimiento nominal"
-                value={formatPercent(displayedResults.rendimientoNominal)}
-                muted={isMuted}
-              />
-
               <ResultCard
                 title="Inflación cargada"
                 value={formatPercent(displayedResults.inflacionCargada)}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Ganancia nominal"
                 value={formatMoney(displayedResults.gananciaNominal, currency)}
                 muted={isMuted}
               />
-
-              <ResultCard
-                title="Ganancia real ajustada"
-                value={formatMoney(
-                  displayedResults.gananciaRealAjustada,
-                  currency
-                )}
-                muted={isMuted}
-              />
-
               <ResultCard
                 title="Total invertido real"
                 value={formatMoney(
@@ -422,37 +418,32 @@ export default function RendimientoRealPage() {
                 )}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Monto final ajustado"
                 value={formatMoney(displayedResults.montoFinalAjustado, currency)}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Rendimiento real mensual"
                 value={formatPercent(displayedResults.rendimientoMensualReal)}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Rendimiento real anualizado"
                 value={formatPercent(displayedResults.rendimientoAnualizadoReal)}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Tiempo cargado"
                 value={`${formatNumber(displayedResults.meses)} meses`}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Tipo de cálculo"
                 value="Rendimiento real"
                 muted={isMuted}
               />
-            </div>
+            </ResultsOverview>
           </section>
         </section>
 

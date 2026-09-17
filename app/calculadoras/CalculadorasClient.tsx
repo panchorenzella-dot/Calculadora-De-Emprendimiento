@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import EcosystemTools from "@/components/EcosystemTools";
 
 import { trackEvent } from "@/lib/analytics";
 import {
@@ -196,7 +195,6 @@ export default function CalculadorasPage() {
             ) : null}
           </div>
         </div>
-        <EcosystemTools />
       </div>
     </main>
   );

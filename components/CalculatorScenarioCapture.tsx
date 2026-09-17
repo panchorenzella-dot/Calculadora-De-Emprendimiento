@@ -50,8 +50,8 @@ function captureMetrics(resultContainers: HTMLElement[]) {
   for (const container of resultContainers) {
     const explicitCards = Array.from(container.querySelectorAll<HTMLElement>("[data-scenario-metric]"));
     for (const card of explicitCards) {
-      const label = cleanLabel(card.querySelector<HTMLElement>("[data-scenario-label]")?.innerText || "");
-      const value = cleanLabel(card.querySelector<HTMLElement>("[data-scenario-value]")?.innerText || "");
+      const label = cleanLabel(card.querySelector<HTMLElement>("[data-scenario-label]")?.textContent || "");
+      const value = cleanLabel(card.querySelector<HTMLElement>("[data-scenario-value]")?.textContent || "");
       if (label && value) metrics[label] = value;
     }
   }

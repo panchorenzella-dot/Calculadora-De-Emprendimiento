@@ -17,12 +17,18 @@ test("el sitemap incluye cada calculadora activa una sola vez y sus rutas respon
 });
 
 for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 }]) {
-  test(`la home presenta ocho destacadas y acceso al catálogo en ${viewport.width}px`, async ({ page }) => {
+  test(`la home presenta tres destacadas y acceso al catálogo en ${viewport.width}px`, async ({ page }) => {
     await page.setViewportSize(viewport);
     await page.goto("/");
     const featured = page.getByRole("navigation", { name: "Calculadoras destacadas" });
-    await expect(featured.getByRole("link")).toHaveCount(8);
-    await expect(featured.locator('a[href="/iva-producto"]')).toBeVisible();
+    await expect(featured.getByRole("link")).toHaveCount(3);
+    for (const href of ["/markup", "/margen", "/punto-de-equilibrio"]) {
+      await expect(featured.locator(`a[href="${href}"]`)).toBeVisible();
+    }
+    await expect(page.getByRole("heading", { name: /calculadoras, por objetivo/ })).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "Guías con fórmulas y casos paso a paso" })).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "Más herramientas para tu negocio" })).toHaveCount(0);
+    await expect(page.getByRole("contentinfo").getByRole("link", { name: "Guías", exact: true })).toBeVisible();
     const catalogLink = page.getByRole("link", { name: `Ver las ${availableCalculators.length} calculadoras →`, exact: true });
     await expect(catalogLink).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBeTruthy();

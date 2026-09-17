@@ -33,10 +33,12 @@ export default function SaveScenarioButton({ draft, hasResults }: Props) {
   const [nameOpen, setNameOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [status, setStatus] = useState("");
+  const [limitReached, setLimitReached] = useState(false);
   const [saving, setSaving] = useState(false);
   const [savedScenarioId, setSavedScenarioId] = useState<string | null>(null);
 
   async function persist(scenario: ScenarioDraft, customTitle?: string) {
+    setLimitReached(false);
     const supabase = getSupabaseClient();
     if (!supabase) {
       setStatus("Falta configurar Supabase para guardar escenarios.");
@@ -86,6 +88,7 @@ export default function SaveScenarioButton({ draft, hasResults }: Props) {
       return false;
     }
     if (!quota?.allowed) {
+      setLimitReached(true);
       const limit = quota?.quota_limit ?? 2;
       setStatus(`Tu plan ${quota?.plan ? PLAN_LABELS[quota.plan] : "actual"} permite guardar hasta ${limit} escenarios. Podés eliminar uno o pasar a Pro para guardar sin límite.`);
       return false;
@@ -170,7 +173,6 @@ export default function SaveScenarioButton({ draft, hasResults }: Props) {
           <span>{saving ? "Guardando..." : "Guardar escenario"}</span>
           <span aria-hidden="true" className="text-base font-normal text-white/40">＋</span>
         </button>
-        <p className="mt-3 text-xs leading-5 text-white/28">Gratis y Básico: hasta 2 guardados · Pro y Premium: ilimitados.</p>
       </div>
 
       {nameOpen && draft && (
@@ -196,6 +198,7 @@ export default function SaveScenarioButton({ draft, hasResults }: Props) {
       {status && (
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <p className="text-sm text-white/70">{status}</p>
+          {limitReached && <Link href="/precios" className="text-sm font-semibold text-emerald-200 hover:text-emerald-100">Ver planes</Link>}
           {savedScenarioId ? (
             <Link
               href={`/perfil/escenarios/${savedScenarioId}`}

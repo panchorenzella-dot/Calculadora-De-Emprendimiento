@@ -65,7 +65,7 @@ export default function IvaProductoClient() {
         <IntegerField label="Cantidad de unidades" value={quantity} onChange={setQuantity} hint="Usá 1 para calcular un solo producto o servicio." />
       </CalculatorForm>
       <ResultsPanel hasResults={Boolean(results)}>
-        {results ? <ResultCards items={[
+        {results ? <ResultCards primaryTitles={["Precio final unitario", "Precio neto unitario", "IVA por unidad"]} items={[
           { title: "Precio neto unitario", value: results.netUnit },
           { title: "IVA por unidad", value: results.ivaUnit },
           { title: "Precio final unitario", value: results.totalUnit },

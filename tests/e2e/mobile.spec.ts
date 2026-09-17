@@ -36,7 +36,15 @@ test("el flujo crítico de cálculo funciona en mobile", async ({ page }) => {
   await page.getByRole("textbox", { name: "Sueldo bruto mensual" }).fill("4000000");
   await page.getByRole("button", { name: "Calcular", exact: true }).click();
 
-  await expect(page.locator('[data-calculator-results="ready"]')).toBeVisible();
+  const result = page.locator('[data-calculator-results="ready"]');
+  await expect(result).toBeVisible();
+  await expect(result.locator("[data-primary-results] [data-scenario-metric]")).toHaveCount(3);
+  const breakdown = result.locator("[data-results-breakdown]");
+  await expect(breakdown.locator("[data-scenario-metric]").first()).toBeHidden();
+  await breakdown.locator("summary").click();
+  await expect(breakdown.locator("[data-scenario-metric]").first()).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBeTruthy();
+  await breakdown.locator("summary").click();
   await expect(page.getByRole("button", { name: "Guardar escenario" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Analizar este resultado" })).toBeVisible();
 });

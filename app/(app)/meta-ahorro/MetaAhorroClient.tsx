@@ -1,5 +1,7 @@
 "use client";
 
+import OptionalFields from "@/components/OptionalFields";
+import ResultsOverview from "@/components/ResultsOverview";
 import { type FormEvent, type ReactNode, useState } from "react";
 import { calculateMetaAhorro } from "@/lib/calculations/investments";
 import { formatLocaleNumberInputChange, parseLocaleNumber, validateNumericFields } from "@/lib/numberInput";
@@ -312,11 +314,7 @@ export default function MetaDeAhorroPage() {
                 </div>
               </div>
 
-              <div>
-                <h3 className="mb-4 text-lg font-semibold text-zinc-100">
-                  Rendimiento opcional
-                </h3>
-
+              <OptionalFields title="Añadir rendimiento y aumento del aporte">
                 <div className="space-y-4">
                   <InputField
                     label="Rendimiento anual estimado"
@@ -334,7 +332,7 @@ export default function MetaDeAhorroPage() {
                     helper="Opcional. Si no aplica, dejalo en 0."
                   />
                 </div>
-              </div>
+              </OptionalFields>
 
               {error ? <p role="alert" className="rounded-xl border border-rose-300/20 bg-rose-300/[0.06] px-4 py-3 text-sm font-semibold text-rose-100">{error}</p> : null}
 
@@ -356,41 +354,37 @@ export default function MetaDeAhorroPage() {
               </p>
             )}
 
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <ResultCard
-                title="Ahorro mensual necesario"
-                value={formatMonthlySaving(
-                  displayedResults.ahorroMensualNecesario,
-                  currency
-                )}
-                muted={isMuted}
-                highlight
-              />
-
-              <ResultCard
-                title="Estado"
-                value={displayedResults.estado}
-                muted={isMuted}
-              />
-
+            <ResultsOverview primary={<>
+                <ResultCard
+                  title="Ahorro mensual necesario"
+                  value={formatMonthlySaving(
+                    displayedResults.ahorroMensualNecesario,
+                    currency
+                  )}
+                  muted={isMuted}
+                  highlight
+                />
+                <ResultCard
+                  title="Estado"
+                  value={displayedResults.estado}
+                  muted={isMuted}
+                />
+                <ResultCard
+                  title="Monto que falta juntar"
+                  value={formatMoney(displayedResults.montoFaltaJuntar, currency)}
+                  muted={isMuted}
+                />
+              </>}>
               <ResultCard
                 title="Meta de ahorro"
                 value={formatMoney(displayedResults.metaAhorro, currency)}
                 muted={isMuted}
               />
-
-              <ResultCard
-                title="Monto que falta juntar"
-                value={formatMoney(displayedResults.montoFaltaJuntar, currency)}
-                muted={isMuted}
-              />
-
               <ResultCard
                 title="Ahorro inicial"
                 value={formatMoney(displayedResults.ahorroInicial, currency)}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Valor final estimado"
                 value={formatMoney(
@@ -399,13 +393,11 @@ export default function MetaDeAhorroPage() {
                 )}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Total aportado"
                 value={formatMoney(displayedResults.totalAportado, currency)}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Rendimiento generado"
                 value={formatMoney(
@@ -414,31 +406,27 @@ export default function MetaDeAhorroPage() {
                 )}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Meta cubierta al inicio"
                 value={formatPercent(displayedResults.porcentajeCubiertoInicial)}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Meta cubierta al final"
                 value={formatPercent(displayedResults.porcentajeMetaFinal)}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Plazo"
                 value={`${formatNumber(displayedResults.meses)} meses`}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Tipo de cálculo"
                 value="Meta de ahorro"
                 muted={isMuted}
               />
-            </div>
+            </ResultsOverview>
           </section>
         </section>
 

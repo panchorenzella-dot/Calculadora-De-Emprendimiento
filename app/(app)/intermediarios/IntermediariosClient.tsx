@@ -1,5 +1,7 @@
 "use client";
 
+import OptionalFields from "@/components/OptionalFields";
+import ResultsOverview from "@/components/ResultsOverview";
 import { FormEvent, useState } from "react";
 import { calculateIntermediarios } from "@/lib/calculations/business";
 import { formatLocaleNumberInputChange, parseLocaleNumber, validateNumericFields } from "@/lib/numberInput";
@@ -323,13 +325,15 @@ export default function ComisionesPage() {
                     helper="Incluye internet, oficina, publicidad mensual, teléfono, CRM, herramientas, suscripciones o gastos fijos."
                   />
 
-                  <InputField
-                    label="Capital invertido"
-                    value={capitalInvertido}
-                    onChange={setCapitalInvertido}
-                    prefix={moneyPrefix}
-                    helper="Es el dinero invertido en publicidad, marca personal, página web, herramientas, capacitación o arranque."
-                  />
+                  <OptionalFields title="Añadir capital invertido para calcular ROI y recupero">
+                    <InputField
+                      label="Capital invertido"
+                      value={capitalInvertido}
+                      onChange={setCapitalInvertido}
+                      prefix={moneyPrefix}
+                      helper="Es el dinero invertido en publicidad, marca personal, página web, herramientas, capacitación o arranque."
+                    />
+                  </OptionalFields>
                 </div>
               </div>
 
@@ -353,17 +357,36 @@ export default function ComisionesPage() {
               </p>
             )}
 
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <ResultCard
-                title="Ganancia neta mensual"
-                value={formatMoney(
-                  displayedResults.gananciaNetaMensual,
-                  currency
-                )}
-                muted={isMuted}
-                highlight
-              />
-
+            <ResultsOverview primary={<>
+                <ResultCard
+                  title="Ganancia neta mensual"
+                  value={formatMoney(
+                    displayedResults.gananciaNetaMensual,
+                    currency
+                  )}
+                  muted={isMuted}
+                  highlight
+                />
+                <ResultCard
+                  title="Ganancia neta por operación"
+                  value={formatMoney(
+                    displayedResults.gananciaPorOperacion,
+                    currency
+                  )}
+                  muted={isMuted}
+                />
+                <ResultCard
+                  title="Punto de equilibrio mensual"
+                  value={
+                    displayedResults.puntoEquilibrioMensual === null
+                      ? "No rentable"
+                      : `${formatNumber(
+                          Math.ceil(displayedResults.puntoEquilibrioMensual)
+                        )} operaciones`
+                  }
+                  muted={isMuted}
+                />
+              </>}>
               <ResultCard
                 title="Comisión por operación"
                 value={formatMoney(
@@ -372,16 +395,6 @@ export default function ComisionesPage() {
                 )}
                 muted={isMuted}
               />
-
-              <ResultCard
-                title="Ganancia neta por operación"
-                value={formatMoney(
-                  displayedResults.gananciaPorOperacion,
-                  currency
-                )}
-                muted={isMuted}
-              />
-
               <ResultCard
                 title="Ingreso bruto mensual"
                 value={formatMoney(
@@ -390,7 +403,6 @@ export default function ComisionesPage() {
                 )}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Gastos variables mensuales"
                 value={formatMoney(
@@ -399,19 +411,6 @@ export default function ComisionesPage() {
                 )}
                 muted={isMuted}
               />
-
-              <ResultCard
-                title="Punto de equilibrio mensual"
-                value={
-                  displayedResults.puntoEquilibrioMensual === null
-                    ? "No rentable"
-                    : `${formatNumber(
-                        Math.ceil(displayedResults.puntoEquilibrioMensual)
-                      )} operaciones`
-                }
-                muted={isMuted}
-              />
-
               <ResultCard
                 title="Recupero del capital"
                 value={
@@ -421,7 +420,6 @@ export default function ComisionesPage() {
                 }
                 muted={isMuted}
               />
-
               <ResultCard
                 title="ROI mensual estimado"
                 value={
@@ -431,7 +429,7 @@ export default function ComisionesPage() {
                 }
                 muted={isMuted}
               />
-            </div>
+            </ResultsOverview>
           </section>
         </section>
 

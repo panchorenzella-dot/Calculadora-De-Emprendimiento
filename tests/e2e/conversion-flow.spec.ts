@@ -110,13 +110,11 @@ test("margen y punto de equilibrio recomiendan después de calcular y retiran el
   await expect(nextStep).toHaveCount(0);
 });
 
-test("la home permite abrir las cinco categorías y todas las páginas ofrecen herramientas relacionadas", async ({ page, request }) => {
+test("la home permite llegar al catálogo completo y todas las páginas ofrecen herramientas relacionadas", async ({ page, request }) => {
   await page.goto("/");
-  const catalog = page.getByRole("region", { name: `Las ${availableCalculators.length} calculadoras, por objetivo` });
-  await expect(catalog.locator("details")).toHaveCount(5);
-  await expect(catalog.locator("details[open]")).toHaveCount(0);
+  await page.getByRole("link", { name: `Ver las ${availableCalculators.length} calculadoras →`, exact: true }).click();
+  const catalog = page.locator("#calculator-results");
   await expect(catalog.locator("a")).toHaveCount(availableCalculators.length);
-  await catalog.locator("summary").filter({ hasText: "Impuestos" }).click();
   await expect(catalog.locator('a[href="/iva-producto"]')).toBeVisible();
   await catalog.locator('a[href="/iva-producto"]').click();
   await expect(page).toHaveURL(/\/iva-producto$/);

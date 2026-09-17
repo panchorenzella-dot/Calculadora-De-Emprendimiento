@@ -2,6 +2,7 @@
 
 import { type FormEvent, useMemo, useState } from "react";
 import Card from "@/components/Card";
+import ResultsOverview from "@/components/ResultsOverview";
 import ResultNextStep from "@/components/ResultNextStep";
 import MoneyInput, { Currency } from "@/components/MoneyInput";
 import { calculateMarkupPricing } from "@/lib/calculations/business";
@@ -354,28 +355,21 @@ export default function Page({ initialCost = "", initialPrice = "" }: { initialC
               </div>
             ) : (
               <>
-                <div className="mt-5 rounded-2xl border border-emerald-300/20 bg-emerald-300/[0.055] p-5">
-                  <p className="text-xs font-bold uppercase tracking-[0.15em] text-emerald-200/55">{modo === "desde_ganancia" ? "Precio sugerido" : nivel === "completo" ? "Ganancia neta por unidad" : "Ganancia bruta por unidad"}</p>
-                  <p data-scenario-metric className="mt-3">
-                    <span data-scenario-label className="sr-only">{modo === "desde_ganancia" ? "Precio de venta" : nivel === "completo" ? "Ganancia neta por unidad" : "Ganancia bruta por unidad"}</span>
-                    <span data-scenario-value className="text-4xl font-bold tracking-tight text-white">{fmtMoney(modo === "desde_ganancia" ? results.precioCalculado : results.gananciaPorUnidad, currency)}</span>
-                  </p>
-                  <p className="mt-2 text-xs leading-5 text-white/45">{nivel === "completo" ? "Incluye los costos y porcentajes que cargaste." : "Resultado orientativo antes de costos fijos, comisiones e impuestos."}</p>
-                </div>
-
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <ResultsOverview primary={<>
                   <Card title="Precio de venta" value={fmtMoney(results.precioCalculado, currency)} />
+                  <Card title={nivel === "completo" ? "Ganancia neta por unidad" : "Ganancia bruta por unidad"} value={fmtMoney(results.gananciaPorUnidad, currency)} />
+                  <Card title={nivel === "completo" ? "Margen neto sobre venta" : "Margen bruto sobre venta"} value={`${fmtNum(results.rentabilidadSobreVentaPct, 2)}%`} />
+                </>}>
                   <Card title="Costo total por unidad" value={fmtMoney(results.costoTotalUnitario, currency)} note={results.costoFijoPorUnidad > 0 ? `Incluye ${fmtMoney(results.costoFijoPorUnidad, currency)} de costos fijos` : undefined} />
                   {nivel === "completo" ? <Card title="Cargos por venta" value={fmtMoney(results.cargosPorVenta, currency)} /> : null}
-                  <Card title={nivel === "completo" ? "Ganancia neta por unidad" : "Ganancia bruta por unidad"} value={fmtMoney(results.gananciaPorUnidad, currency)} />
                   <Card title={nivel === "completo" ? "Markup neto" : "Markup sobre costo"} value={`${fmtNum(results.gananciaEsperadaPct, 2)}%`} />
-                  <Card title={nivel === "completo" ? "Margen neto sobre venta" : "Margen bruto sobre venta"} value={`${fmtNum(results.rentabilidadSobreVentaPct, 2)}%`} />
                   {parseDigitsToNumber(unidadesMes) > 0 ? <Card title="Costo mensual total" value={fmtMoney(results.costoMensual, currency)} /> : null}
                   <Card title="Facturación mensual" value={fmtMoney(results.facturacionMensual, currency)} />
                   {nivel === "completo" && results.cargosMensuales > 0 ? <Card title="Cargos mensuales estimados" value={fmtMoney(results.cargosMensuales, currency)} /> : null}
                   <Card title="Ganancia mensual estimada" value={fmtMoney(results.gananciaMensual, currency)} />
                   {results.puntoEquilibrio ? <Card title="Punto de equilibrio" value={`${fmtNum(results.puntoEquilibrio, 0)} unidades`} /> : null}
-                </div>
+                </ResultsOverview>
+                <p className="mt-3 text-xs leading-5 text-white/60">{nivel === "completo" ? "Incluye los costos y porcentajes que cargaste." : "Resultado orientativo antes de costos fijos, comisiones e impuestos."}</p>
                 <ResultNextStep calculatorPath="/markup" outcome={{ marginPct: results.rentabilidadSobreVentaPct, unitProfit: results.gananciaPorUnidad, monthlyProfit: parseDigitsToNumber(unidadesMes) > 0 ? results.gananciaMensual : null, plannedUnits: parseDigitsToNumber(unidadesMes), breakEvenUnits: results.puntoEquilibrio ?? (nivel === "completo" && parseDigitsToNumber(costosFijosMensuales) === 0 ? 0 : null), includesFixedCosts: nivel === "completo" }} />
               </>
             )}

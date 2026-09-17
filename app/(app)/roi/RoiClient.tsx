@@ -1,5 +1,6 @@
 "use client";
 
+import ResultsOverview from "@/components/ResultsOverview";
 import { type FormEvent, useMemo, useState } from "react";
 
 import Card from "@/components/Card";
@@ -122,27 +123,25 @@ export default function Page() {
           {!calc ? (
             <p className="mt-4 text-sm font-medium text-white/60">Cargá tus datos y tocá <strong>Calcular</strong>.</p>
           ) : (
-          <div className="mt-6 grid gap-4">
-            <Card
-              title="Ganancia neta"
-              value={fmtMoney(calc.gananciaNeta, currency)}
-            />
-
-            <Card
-              title="ROI"
-              value={`${calc.roi.toFixed(2)} %`}
-            />
-
-            <Card
-              title="Retorno bruto"
-              value={fmtMoney(calc.retornoBruto, currency)}
-            />
-
-            <Card
-              title="Margen sobre retorno"
-              value={`${calc.margenSobreRetorno.toFixed(2)} %`}
-            />
-          </div>
+          <ResultsOverview primary={<>
+                <Card
+                  title="ROI"
+                  value={`${calc.roi.toFixed(2)} %`}
+                />
+                <Card
+                  title="Ganancia neta"
+                  value={fmtMoney(calc.gananciaNeta, currency)}
+                />
+                <Card
+                  title="Retorno bruto"
+                  value={fmtMoney(calc.retornoBruto, currency)}
+                />
+              </>}>
+              <Card
+                title="Margen sobre retorno"
+                value={`${calc.margenSobreRetorno.toFixed(2)} %`}
+              />
+            </ResultsOverview>
           )}
         </div>
       </div>

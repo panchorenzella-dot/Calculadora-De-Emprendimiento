@@ -302,7 +302,7 @@ export function AiComposer({ value, loading, quota, showSuggestions, onChange, o
         <div id="ai-message-hint" className="mt-1.5 flex min-h-4 items-center justify-between gap-3 px-1 text-[10px] font-medium text-white/30">
           <span className="hidden sm:inline">Enter envía · Shift + Enter agrega una línea</span>
           <span className="sm:hidden">Revisá tu pregunta antes de enviar</span>
-          {remaining !== null ? <span className={remaining <= 1 ? "text-amber-200/70" : "text-white/34"}>{remaining} {remaining === 1 ? "mensaje disponible" : "mensajes disponibles"} {chatQuota?.plan === "free" ? "hoy" : "este mes"}</span> : <span>La IA puede equivocarse</span>}
+          {remaining === 0 ? <span className="text-amber-200/70">Alcanzaste el límite de mensajes</span> : <span>La IA puede equivocarse</span>}
         </div>
       </div>
     </footer>

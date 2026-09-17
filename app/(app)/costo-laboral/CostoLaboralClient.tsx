@@ -96,7 +96,7 @@ export default function CostoLaboralClient() {
         <IntegerField label="Días de vacaciones anuales" value={vacationDays} onChange={setVacationDays} hint="Usamos 14 días como referencia inicial; ajustalo según antigüedad y convenio." />
       </CalculatorForm>
       <ResultsPanel hasResults={Boolean(results)} status={results ? <div className="mt-5 rounded-2xl border border-emerald-300/20 bg-emerald-300/[0.05] p-4"><p className="text-xs font-bold uppercase tracking-[0.14em] text-white/45">Costo completo mensualizado</p><p className="mt-2 text-lg font-semibold">{fmtNum(results.extraRate, 2)}% por encima del sueldo bruto</p></div> : null}>
-        {results ? <ResultCards items={[
+        {results ? <ResultCards primaryTitles={["Costo mensual completo", "Costo mensual de caja", "Costo adicional sobre el bruto"]} items={[
           { title: "Sueldo bruto", value: parseDigitsToNumber(grossSalary) },
           { title: "Seguridad social", value: results.socialSecurity, note: `${fmtNum(socialSecurityRate, 2)}%` },
           { title: "Obra social", value: results.healthInsurance, note: `${fmtNum(parseDecimalInput(healthInsuranceRate), 2)}%` },

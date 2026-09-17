@@ -1,5 +1,6 @@
 "use client";
 
+import ResultsOverview from "@/components/ResultsOverview";
 import { type FormEvent, useMemo, useState } from "react";
 
 import Card from "@/components/Card";
@@ -293,30 +294,14 @@ export default function Page() {
                 Cargá tus datos y tocá <b>Calcular</b>.
               </p>
             ) : (
-              <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <ResultsOverview primary={<>
                 <Card
-                  title="Unidades / mes"
-                  value={fmtNum(derived?.unidadesMes ?? 0, 0)}
-                />
-                <Card
-                  title="Ventas brutas"
-                  value={fmtMoney(results.ventasBrutas, currency)}
-                />
-                <Card
-                  title="Ventas netas"
-                  value={fmtMoney(results.ventasNetas, currency)}
-                />
-                <Card
-                  title="Costo unitario"
-                  value={fmtMoney(results.costoUnit, currency)}
+                  title="Ganancia mensual"
+                  value={fmtMoney(results.gananciaMes, currency)}
                 />
                 <Card
                   title="Margen unitario"
                   value={fmtMoney(results.margenUnit, currency)}
-                />
-                <Card
-                  title="Ganancia mensual"
-                  value={fmtMoney(results.gananciaMes, currency)}
                 />
                 <Card
                   title="Break-even"
@@ -326,23 +311,40 @@ export default function Page() {
                       : `${fmtNum(results.breakEvenUnidades, 0)} unidades`
                   }
                 />
-                <Card
-                  title="Período de recupero"
-                  value={
-                    results.paybackMeses === null
-                      ? "—"
-                      : `${fmtNum(results.paybackMeses, 1)} meses`
-                  }
-                />
-                <Card
-                  title="ROI anual"
-                  value={
-                    results.roiAnualPct === null
-                      ? "—"
-                      : `${fmtNum(results.roiAnualPct, 1)}%`
-                  }
-                />
-              </div>
+              </>}>
+              <Card
+                title="Unidades / mes"
+                value={fmtNum(derived?.unidadesMes ?? 0, 0)}
+              />
+              <Card
+                title="Ventas brutas"
+                value={fmtMoney(results.ventasBrutas, currency)}
+              />
+              <Card
+                title="Ventas netas"
+                value={fmtMoney(results.ventasNetas, currency)}
+              />
+              <Card
+                title="Costo unitario"
+                value={fmtMoney(results.costoUnit, currency)}
+              />
+              <Card
+                title="Período de recupero"
+                value={
+                  results.paybackMeses === null
+                    ? "—"
+                    : `${fmtNum(results.paybackMeses, 1)} meses`
+                }
+              />
+              <Card
+                title="ROI anual"
+                value={
+                  results.roiAnualPct === null
+                    ? "—"
+                    : `${fmtNum(results.roiAnualPct, 1)}%`
+                }
+              />
+            </ResultsOverview>
             )}
             {results ? <ResultNextStep calculatorPath="/margen" outcome={{ marginPct: results.ventasNetas > 0 ? results.gananciaMes / results.ventasNetas * 100 : 0, unitProfit: results.margenUnit, monthlyProfit: results.gananciaMes, plannedUnits: derived?.unidadesMes ?? 0, breakEvenUnits: results.breakEvenUnidades, includesFixedCosts: true }} /> : null}
           </div>

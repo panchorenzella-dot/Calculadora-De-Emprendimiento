@@ -90,7 +90,7 @@ export default function IvaMensualClient() {
       </CalculatorForm>
 
       <ResultsPanel hasResults={Boolean(results)} status={results ? <div className={`mt-5 rounded-2xl border p-4 ${results.taxToPay > 0 ? "border-amber-300/20 bg-amber-300/[0.05]" : "border-emerald-300/20 bg-emerald-300/[0.05]"}`}><p className="text-xs font-bold uppercase tracking-[0.14em] text-white/45">Situación estimada</p><p className="mt-2 text-lg font-semibold">{results.taxToPay > 0 ? "Resultado a pagar" : "Sin saldo a pagar estimado"}</p></div> : null}>
-        {results ? <ResultCards items={[
+        {results ? <ResultCards primaryTitles={["IVA estimado a pagar", "Nuevo saldo técnico a favor", "Nuevo saldo de libre disponibilidad"]} items={[
           { title: "Débito fiscal por ventas", value: results.taxDebit },
           { title: "Crédito fiscal por compras", value: results.taxCredit },
           { title: "Impuesto determinado", value: results.determinedTax },

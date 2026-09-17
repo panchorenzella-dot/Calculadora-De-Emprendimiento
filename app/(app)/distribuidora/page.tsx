@@ -1,5 +1,7 @@
 "use client";
 
+import OptionalFields from "@/components/OptionalFields";
+import ResultsOverview from "@/components/ResultsOverview";
 import { FormEvent, useState } from "react";
 import { calculateDistribuidora } from "@/lib/calculations/business";
 import { formatLocaleNumberInputChange, parseLocaleNumber, validateNumericFields } from "@/lib/numberInput";
@@ -340,13 +342,15 @@ export default function DistribuidoraPage() {
                     helper="Incluye depósito, sueldos, vehículo, seguro, internet, contador, mantenimiento, marketing y otros gastos mensuales."
                   />
 
-                  <InputField
-                    label="Capital invertido en mercadería"
-                    value={capitalInvertido}
-                    onChange={setCapitalInvertido}
-                    prefix={moneyPrefix}
-                    helper="Es el dinero inicial que pusiste o pensás poner en stock."
-                  />
+                  <OptionalFields title="Añadir capital invertido para calcular ROI y recupero">
+                    <InputField
+                      label="Capital invertido en mercadería"
+                      value={capitalInvertido}
+                      onChange={setCapitalInvertido}
+                      prefix={moneyPrefix}
+                      helper="Es el dinero inicial que pusiste o pensás poner en stock."
+                    />
+                  </OptionalFields>
                 </div>
               </div>
 
@@ -370,17 +374,33 @@ export default function DistribuidoraPage() {
               </p>
             )}
 
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <ResultCard
-                title="Ganancia neta mensual"
-                value={formatMoney(
-                  displayedResults.gananciaNetaMensual,
-                  currency
-                )}
-                muted={isMuted}
-                highlight
-              />
-
+            <ResultsOverview primary={<>
+                <ResultCard
+                  title="Ganancia neta mensual"
+                  value={formatMoney(
+                    displayedResults.gananciaNetaMensual,
+                    currency
+                  )}
+                  muted={isMuted}
+                  highlight
+                />
+                <ResultCard
+                  title="Margen de ganancia"
+                  value={formatPercent(displayedResults.margenGanancia)}
+                  muted={isMuted}
+                />
+                <ResultCard
+                  title="Punto de equilibrio mensual"
+                  value={
+                    displayedResults.puntoEquilibrioMensual === null
+                      ? "No rentable"
+                      : `${formatNumber(
+                          Math.ceil(displayedResults.puntoEquilibrioMensual)
+                        )} unidades`
+                  }
+                  muted={isMuted}
+                />
+              </>}>
               <ResultCard
                 title="Ganancia por unidad"
                 value={formatMoney(
@@ -389,31 +409,21 @@ export default function DistribuidoraPage() {
                 )}
                 muted={isMuted}
               />
-
-              <ResultCard
-                title="Margen de ganancia"
-                value={formatPercent(displayedResults.margenGanancia)}
-                muted={isMuted}
-              />
-
               <ResultCard
                 title="Markup"
                 value={formatPercent(displayedResults.markup)}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Unidades vendidas por mes"
                 value={formatNumber(displayedResults.unidadesPorMes)}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Ventas mensuales"
                 value={formatMoney(displayedResults.ventasMensuales, currency)}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Costo de mercadería mensual"
                 value={formatMoney(
@@ -422,7 +432,6 @@ export default function DistribuidoraPage() {
                 )}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Otros gastos variables mensuales"
                 value={formatMoney(
@@ -431,7 +440,6 @@ export default function DistribuidoraPage() {
                 )}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Ganancia bruta mensual"
                 value={formatMoney(
@@ -440,19 +448,6 @@ export default function DistribuidoraPage() {
                 )}
                 muted={isMuted}
               />
-
-              <ResultCard
-                title="Punto de equilibrio mensual"
-                value={
-                  displayedResults.puntoEquilibrioMensual === null
-                    ? "No rentable"
-                    : `${formatNumber(
-                        Math.ceil(displayedResults.puntoEquilibrioMensual)
-                      )} unidades`
-                }
-                muted={isMuted}
-              />
-
               <ResultCard
                 title="Punto de equilibrio diario"
                 value={
@@ -464,7 +459,6 @@ export default function DistribuidoraPage() {
                 }
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Recupero del capital"
                 value={
@@ -474,7 +468,6 @@ export default function DistribuidoraPage() {
                 }
                 muted={isMuted}
               />
-
               <ResultCard
                 title="ROI mensual estimado"
                 value={
@@ -484,7 +477,7 @@ export default function DistribuidoraPage() {
                 }
                 muted={isMuted}
               />
-            </div>
+            </ResultsOverview>
           </section>
         </section>
 

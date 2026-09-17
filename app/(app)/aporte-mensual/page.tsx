@@ -1,5 +1,6 @@
 "use client";
 
+import ResultsOverview from "@/components/ResultsOverview";
 import { type FormEvent, type ReactNode, useState } from "react";
 import { calculateAporteMensual } from "@/lib/calculations/investments";
 import { formatLocaleNumberInputChange, parseLocaleNumber, validateNumericFields } from "@/lib/numberInput";
@@ -398,44 +399,39 @@ export default function InversionConAportesMensualesPage() {
               </p>
             )}
 
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <ResultCard
-                title="Capital final estimado"
-                value={formatMoney(displayedResults.capitalFinal, currency)}
-                muted={isMuted}
-                highlight
-              />
-
-              <ResultCard
-                title="Total invertido"
-                value={formatMoney(displayedResults.totalInvertido, currency)}
-                muted={isMuted}
-              />
-
-              <ResultCard
-                title="Ganancia generada"
-                value={formatMoney(displayedResults.gananciaGenerada, currency)}
-                muted={isMuted}
-              />
-
+            <ResultsOverview primary={<>
+                <ResultCard
+                  title="Capital final estimado"
+                  value={formatMoney(displayedResults.capitalFinal, currency)}
+                  muted={isMuted}
+                  highlight
+                />
+                <ResultCard
+                  title="Total invertido"
+                  value={formatMoney(displayedResults.totalInvertido, currency)}
+                  muted={isMuted}
+                />
+                <ResultCard
+                  title="Ganancia generada"
+                  value={formatMoney(displayedResults.gananciaGenerada, currency)}
+                  muted={isMuted}
+                />
+              </>}>
               <ResultCard
                 title="Rendimiento total"
                 value={formatPercent(displayedResults.rendimientoTotal)}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Aportes realizados"
                 value={`${formatNumber(displayedResults.aportesRealizados)} aportes`}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Aporte mensual promedio"
                 value={formatMoney(displayedResults.aportePromedio, currency)}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Último aporte mensual"
                 value={formatMoney(
@@ -444,13 +440,12 @@ export default function InversionConAportesMensualesPage() {
                 )}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Tipo de cálculo"
                 value="Aportes mensuales"
                 muted={isMuted}
               />
-            </div>
+            </ResultsOverview>
 
             <div className="mt-8">
               <h3 className="text-xl font-bold">Escenarios</h3>

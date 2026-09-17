@@ -1,5 +1,6 @@
 "use client";
 
+import ResultsOverview from "@/components/ResultsOverview";
 import { FormEvent, useState } from "react";
 import { calculateHamburgueseria } from "@/lib/calculations/business";
 import { formatLocaleNumberInputChange, parseLocaleNumber, validateNumericFields } from "@/lib/numberInput";
@@ -338,17 +339,33 @@ export default function HamburgueseriaPage() {
               </p>
             )}
 
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <ResultCard
-                title="Ganancia neta mensual"
-                value={formatMoney(
-                  displayedResults.gananciaNetaMensual,
-                  currency
-                )}
-                muted={isMuted}
-                highlight
-              />
-
+            <ResultsOverview primary={<>
+                <ResultCard
+                  title="Ganancia neta mensual"
+                  value={formatMoney(
+                    displayedResults.gananciaNetaMensual,
+                    currency
+                  )}
+                  muted={isMuted}
+                  highlight
+                />
+                <ResultCard
+                  title="Margen de ganancia"
+                  value={formatPercent(displayedResults.margenGanancia)}
+                  muted={isMuted}
+                />
+                <ResultCard
+                  title="Punto de equilibrio mensual"
+                  value={
+                    displayedResults.puntoEquilibrioMensual === null
+                      ? "No rentable"
+                      : `${formatNumber(
+                          Math.ceil(displayedResults.puntoEquilibrioMensual)
+                        )} Unidades`
+                  }
+                  muted={isMuted}
+                />
+              </>}>
               <ResultCard
                 title="Ganancia por hamburguesa"
                 value={formatMoney(
@@ -357,7 +374,6 @@ export default function HamburgueseriaPage() {
                 )}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Costo total por hamburguesa"
                 value={formatMoney(
@@ -366,25 +382,16 @@ export default function HamburgueseriaPage() {
                 )}
                 muted={isMuted}
               />
-
-              <ResultCard
-                title="Margen de ganancia"
-                value={formatPercent(displayedResults.margenGanancia)}
-                muted={isMuted}
-              />
-
               <ResultCard
                 title="Hamburguesas vendidas por mes"
                 value={formatNumber(displayedResults.hamburguesasPorMes)}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Ventas mensuales"
                 value={formatMoney(displayedResults.ventasMensuales, currency)}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Costo variable mensual"
                 value={formatMoney(
@@ -393,7 +400,6 @@ export default function HamburgueseriaPage() {
                 )}
                 muted={isMuted}
               />
-
               <ResultCard
                 title="Ganancia bruta mensual"
                 value={formatMoney(
@@ -402,19 +408,6 @@ export default function HamburgueseriaPage() {
                 )}
                 muted={isMuted}
               />
-
-              <ResultCard
-                title="Punto de equilibrio mensual"
-                value={
-                  displayedResults.puntoEquilibrioMensual === null
-                    ? "No rentable"
-                    : `${formatNumber(
-                        Math.ceil(displayedResults.puntoEquilibrioMensual)
-                      )} Unidades`
-                }
-                muted={isMuted}
-              />
-
               <ResultCard
                 title="Punto de equilibrio diario"
                 value={
@@ -426,7 +419,7 @@ export default function HamburgueseriaPage() {
                 }
                 muted={isMuted}
               />
-            </div>
+            </ResultsOverview>
           </section>
         </section>
 
