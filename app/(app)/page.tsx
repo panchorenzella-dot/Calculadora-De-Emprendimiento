@@ -6,6 +6,19 @@ import EcosystemTools from "@/components/EcosystemTools";
 import HomeProfitPreview from "@/components/HomeProfitPreview";
 import TrustSection from "@/components/TrustSection";
 import { guides } from "@/lib/guides";
+import { availableCalculators } from "@/app/calculadoras/catalog";
+
+const featuredCalculators = [
+  "/markup",
+  "/margen",
+  "/punto-de-equilibrio",
+  "/roi-inversion",
+  "/interes-compuesto",
+  "/meta-ahorro",
+  "/iva-producto",
+  "/reventa",
+].map((href) => availableCalculators.find((calculator) => calculator.href === href))
+  .filter((calculator) => calculator !== undefined);
 
 export const metadata: Metadata = {
   title: {
@@ -67,9 +80,9 @@ export default function Home() {
               </Link>
               <Link
                 href="/calculadoras"
-                className="rounded-full border border-white/15 bg-white/[0.04] px-5 py-3 text-center text-sm font-semibold text-white transition hover:border-white/30 hover:bg-white/[0.08]"
+                className="rounded-full border border-emerald-300/30 bg-emerald-300/10 px-5 py-3 text-center text-sm font-bold text-emerald-100 transition hover:border-emerald-300/50 hover:bg-emerald-300/20"
               >
-                Explorar calculadoras
+                Explorar las {availableCalculators.length} calculadoras →
               </Link>
             </div>
             <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-xs text-white/65">
@@ -86,43 +99,30 @@ export default function Home() {
         </div>
       </section>
 
-      <nav aria-label="Calculadoras principales" className="pt-6 sm:pt-8">
-        <div className="grid gap-3 sm:grid-cols-3">
-          <Link
-            href="/markup"
-            className="rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 transition hover:border-emerald-300/25"
-          >
-            <span className="block text-xs font-bold uppercase tracking-[0.14em] text-emerald-200/75">
-              Precio de venta
-            </span>
-            <span className="mt-2 block text-sm font-bold text-white/90">
-              Calculá cuánto cobrar →
-            </span>
-          </Link>
-          <Link
-            href="/margen"
-            className="rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 transition hover:border-emerald-300/25"
-          >
-            <span className="block text-xs font-bold uppercase tracking-[0.14em] text-emerald-200/75">
-              Ganancia real
-            </span>
-            <span className="mt-2 block text-sm font-bold text-white/90">
-              Calculá margen y rentabilidad →
-            </span>
-          </Link>
-          <Link
-            href="/punto-de-equilibrio"
-            className="rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 transition hover:border-emerald-300/25"
-          >
-            <span className="block text-xs font-bold uppercase tracking-[0.14em] text-emerald-200/75">
-              Ventas mínimas
-            </span>
-            <span className="mt-2 block text-sm font-bold text-white/90">
-              Calculá el punto de equilibrio →
-            </span>
+      <section aria-labelledby="featured-calculators-title" className="pt-8 sm:pt-10">
+        <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 id="featured-calculators-title" className="text-2xl font-bold tracking-tight">
+              Calculadoras destacadas
+            </h2>
+            <p className="mt-2 text-sm text-white/65">
+              Precios, ganancias, ventas, inversión, ahorro, impuestos y tu rubro.
+            </p>
+          </div>
+          <Link href="/calculadoras" className="inline-flex shrink-0 justify-center rounded-full bg-white px-5 py-3 text-sm font-bold !text-zinc-950 transition hover:bg-emerald-100">
+            Ver las {availableCalculators.length} calculadoras →
           </Link>
         </div>
-      </nav>
+        <nav aria-label="Calculadoras destacadas" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {featuredCalculators.map((calculator) => (
+            <Link key={calculator.href} href={calculator.href} className="group flex flex-col rounded-2xl border border-white/[0.08] bg-white/[0.025] p-5 transition hover:border-emerald-300/25 hover:bg-white/[0.05]">
+              <h3 className="text-base font-bold text-emerald-200/90">{calculator.title}</h3>
+              <p className="mt-3 text-sm leading-6 text-white/65">{calculator.description}</p>
+              <span className="mt-auto pt-4 text-sm font-bold text-white/90 group-hover:text-emerald-200">Abrir calculadora →</span>
+            </Link>
+          ))}
+        </nav>
+      </section>
 
       <div className="pt-10 sm:pt-14">
         <HomeAiDecisionDemo />
