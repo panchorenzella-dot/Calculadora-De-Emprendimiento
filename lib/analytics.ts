@@ -17,8 +17,7 @@ export function trackEvent(name: string, parameters: AnalyticsParameters = {}) {
 export function trackPageView(path: string) {
   trackEvent("page_view", {
     page_path: path,
-    page_location: window.location.href,
+    page_location: `${window.location.origin}${path}`,
     page_title: document.title,
   });
 }
-

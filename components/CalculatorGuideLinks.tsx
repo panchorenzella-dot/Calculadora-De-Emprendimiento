@@ -1,4 +1,5 @@
 import Link from "next/link";
+import RelatedCalculators from "@/components/RelatedCalculators";
 
 import { calculatorSections } from "@/app/calculadoras/catalog";
 import { guides, type GuideTopic } from "@/lib/guides";
@@ -20,9 +21,11 @@ export default function CalculatorGuideLinks({ path }: { path: string }) {
   );
   const visibleGuides = [...directGuides, ...relatedGuides].slice(0, 3);
 
-  if (!visibleGuides.length) return null;
+  if (!visibleGuides.length) return <RelatedCalculators path={path} />;
 
   return (
+    <>
+    <RelatedCalculators path={path} />
     <aside
       aria-labelledby={`calculator-guides-${path.slice(1)}`}
       className="mt-10 rounded-3xl border border-white/[0.08] bg-[#080b09] p-6 sm:p-8"
@@ -64,5 +67,6 @@ export default function CalculatorGuideLinks({ path }: { path: string }) {
         Explorar las {guides.length} guías →
       </Link>
     </aside>
+    </>
   );
 }

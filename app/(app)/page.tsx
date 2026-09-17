@@ -4,6 +4,7 @@ import Link from "next/link";
 import HomeAiDecisionDemo from "@/components/HomeAiDecisionDemo";
 import EcosystemTools from "@/components/EcosystemTools";
 import HomeProfitPreview from "@/components/HomeProfitPreview";
+import HomeCalculatorCatalog from "@/components/HomeCalculatorCatalog";
 import TrustSection from "@/components/TrustSection";
 import { guides } from "@/lib/guides";
 import { availableCalculators } from "@/app/calculadoras/catalog";
@@ -123,6 +124,8 @@ export default function Home() {
           ))}
         </nav>
       </section>
+
+      <HomeCalculatorCatalog />
 
       <div className="pt-10 sm:pt-14">
         <HomeAiDecisionDemo />

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
+import { formatLocaleNumberInputChange, parseLocaleNumber } from "@/lib/numberInput";
 
 import { trackEvent } from "@/lib/analytics";
 
@@ -14,13 +15,13 @@ function formatMoney(value: number) {
 }
 
 function clampAmount(value: string) {
-  const parsed = Number(value);
+  const parsed = parseLocaleNumber(value);
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
 }
 
 export default function HomeProfitPreview() {
-  const [cost, setCost] = useState("14000");
-  const [price, setPrice] = useState("25000");
+  const [cost, setCost] = useState("14.000");
+  const [price, setPrice] = useState("25.000");
   const interactionStarted = useRef(false);
   const completedInputs = useRef(new Set<string>());
 
@@ -50,11 +51,12 @@ export default function HomeProfitPreview() {
     const numericCost = clampAmount(cost);
     const numericPrice = clampAmount(price);
     const profit = numericPrice - numericCost;
-    const margin = numericPrice > 0 ? (profit / numericPrice) * 100 : 0;
-    const markup = numericCost > 0 ? (profit / numericCost) * 100 : 0;
+    const margin = numericPrice > 0 ? (profit / numericPrice) * 100 : null;
+    const markup = numericCost > 0 ? (profit / numericCost) * 100 : null;
 
     return { profit, margin, markup };
   }, [cost, price]);
+  const completeHref = `/markup?${new URLSearchParams({ costo: String(clampAmount(cost)), precio: String(clampAmount(price)) })}`;
 
   const status = result.profit > 0
     ? { label: "Resultado positivo", className: "bg-emerald-300/10 text-emerald-200" }
@@ -63,13 +65,13 @@ export default function HomeProfitPreview() {
       : { label: "Sin ganancia", className: "bg-amber-300/10 text-amber-100" };
 
   return (
-    <div className="relative rounded-[28px] border border-white/10 bg-[#0b0d0c]/95 p-4 shadow-[0_30px_100px_rgba(0,0,0,0.45)] sm:p-5">
+    <section aria-labelledby="hero-preview-title" className="relative rounded-[28px] border border-white/10 bg-[#0b0d0c]/95 p-4 shadow-[0_30px_100px_rgba(0,0,0,0.45)] sm:p-5">
       <div className="flex items-center justify-between gap-4 border-b border-white/[0.07] pb-4">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-200/65">
             Probalo ahora
           </p>
-          <h2 className="mt-1 text-base font-semibold text-white">Resultado rápido por unidad</h2>
+          <h2 id="hero-preview-title" className="mt-1 text-base font-semibold text-white">Resultado rápido por unidad</h2>
         </div>
         <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold ${status.className}`}>
           {status.label}
@@ -83,11 +85,10 @@ export default function HomeProfitPreview() {
             <span className="text-sm text-white/65">$</span>
             <input
               aria-label="Costo por unidad"
-              type="number"
-              min="0"
+              type="text"
               inputMode="decimal"
               value={cost}
-              onChange={(event) => updateInput("cost", event.target.value, setCost)}
+              onChange={(event) => updateInput("cost", formatLocaleNumberInputChange(cost, event.target.value, { maxDecimals: 2, allowNegative: false }, (event.nativeEvent as InputEvent).inputType), setCost)}
               onBlur={(event) => completeInput("cost", event.target.value)}
               className="min-w-0 flex-1 bg-transparent text-lg font-semibold text-white outline-none"
             />
@@ -99,11 +100,10 @@ export default function HomeProfitPreview() {
             <span className="text-sm text-white/65">$</span>
             <input
               aria-label="Precio de venta"
-              type="number"
-              min="0"
+              type="text"
               inputMode="decimal"
               value={price}
-              onChange={(event) => updateInput("price", event.target.value, setPrice)}
+              onChange={(event) => updateInput("price", formatLocaleNumberInputChange(price, event.target.value, { maxDecimals: 2, allowNegative: false }, (event.nativeEvent as InputEvent).inputType), setPrice)}
               onBlur={(event) => completeInput("price", event.target.value)}
               className="min-w-0 flex-1 bg-transparent text-lg font-semibold text-white outline-none"
             />
@@ -119,11 +119,11 @@ export default function HomeProfitPreview() {
         <div className="mt-4 grid grid-cols-2 gap-3 border-t border-white/[0.07] pt-4">
           <div>
             <p className="text-[11px] text-white/65">Margen</p>
-            <p className="mt-1 text-base font-semibold text-emerald-200">{result.margin.toFixed(1)}%</p>
+            <p className="mt-1 text-base font-semibold text-emerald-200">{result.margin === null ? "—" : `${result.margin.toLocaleString("es-AR", { maximumFractionDigits: 1 })}%`}</p>
           </div>
           <div>
             <p className="text-[11px] text-white/65">Markup</p>
-            <p className="mt-1 text-base font-semibold text-white/80">{result.markup.toFixed(1)}%</p>
+            <p className="mt-1 text-base font-semibold text-white/80">{result.markup === null ? "—" : `${result.markup.toLocaleString("es-AR", { maximumFractionDigits: 1 })}%`}</p>
           </div>
         </div>
       </div>
@@ -132,17 +132,17 @@ export default function HomeProfitPreview() {
         Vista rápida sin costos fijos ni impuestos. La calculadora completa incorpora más variables.
       </p>
       <Link
-        href="/margen"
+        href={completeHref}
         onClick={() =>
           trackEvent("hero_calculator_cta", {
             location: "home_hero",
-            destination: "/margen",
+            destination: "/markup",
           })
         }
         className="mt-4 flex items-center justify-center rounded-xl bg-white px-4 py-2.5 text-sm font-bold !text-zinc-950 transition hover:bg-emerald-100"
       >
-        Analizar mi negocio →
+        Ver el cálculo completo →
       </Link>
-    </div>
+    </section>
   );
 }

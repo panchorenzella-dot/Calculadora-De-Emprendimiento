@@ -11,6 +11,10 @@ Aplicacion web con calculadoras online para emprendedores, comercios y proyectos
 ## Que incluye
 
 - Catalogo de calculadoras con buscador.
+- Hero interactivo con ganancia, margen y markup en vivo; el cálculo completo recibe los mismos importes sin volver a cargarlos.
+- Precio de venta con selector de markup sobre costo o margen sobre precio y equivalencia instantánea.
+- Ocho calculadoras destacadas, las 20 herramientas agrupadas en cinco categorías en la home y sugerencias relacionadas en cada calculadora.
+- Próximos pasos contextuales en precio, margen y punto de equilibrio: Compra Negocio para escenarios con margen de al menos 30%, ganancia mensual positiva y equilibrio por debajo del 70% de las ventas estimadas; Diagnóstico 360° de Growtella después de dos escenarios distintos con pérdidas o ventas insuficientes en la misma sesión. Se guarda solo un contador y una huella del resultado en el navegador, sin enviar los importes a estos destinos.
 - Calculadoras para margen, precio de venta, punto de equilibrio, ROI, recupero, interes compuesto, ahorro y rendimiento real.
 - Calculadoras por rubro, como hamburgueseria, cafeteria, produccion, reventa e intermediarios.
 - Calculadoras de [IVA por producto](https://www.calculadoraemprendedora.com/iva-producto), [IVA mensual](https://www.calculadoraemprendedora.com/iva-mensual), Ingresos Brutos y costo laboral, visibles en la sección de impuestos del catálogo.

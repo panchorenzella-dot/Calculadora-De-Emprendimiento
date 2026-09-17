@@ -2,6 +2,7 @@
 
 import { type FormEvent, useMemo, useState } from "react";
 import Card from "@/components/Card";
+import ResultNextStep from "@/components/ResultNextStep";
 import MoneyInput, { Currency } from "@/components/MoneyInput";
 import { calculateBreakEven } from "@/lib/calculations/business";
 import { fmtMoney, fmtNum } from "@/lib/format";
@@ -89,7 +90,7 @@ export default function PuntoEquilibrioPage() {
         </header>
 
         <div className="grid items-start gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <form onSubmit={handleCalculate} className="rounded-2xl border border-white/10 bg-white/5 p-5">
+          <form onSubmit={handleCalculate} onChange={() => { setCalc(null); setError(""); }} className="rounded-2xl border border-white/10 bg-white/5 p-5">
             <div className="mb-5 flex flex-wrap gap-2">
               <button
                 type="button"
@@ -207,6 +208,7 @@ export default function PuntoEquilibrioPage() {
                   : "Completá unidades estimadas para ver este dato"
               }
             />
+            <ResultNextStep calculatorPath="/punto-de-equilibrio" outcome={{ marginPct: calc.margenContribucionPct, unitProfit: calc.margenContribucionUnit, monthlyProfit: calc.ventas > 0 ? calc.gananciaEstimada : null, plannedUnits: calc.ventas, breakEvenUnits: calc.rentable ? calc.unidadesEquilibrio : null, includesFixedCosts: true }} />
             </>}
           </div>
         </div>

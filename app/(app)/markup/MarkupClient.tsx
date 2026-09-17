@@ -2,8 +2,10 @@
 
 import { type FormEvent, useMemo, useState } from "react";
 import Card from "@/components/Card";
+import ResultNextStep from "@/components/ResultNextStep";
 import MoneyInput, { Currency } from "@/components/MoneyInput";
 import { calculateMarkupPricing } from "@/lib/calculations/business";
+import { convertProfitPercent, type ProfitBasis } from "@/lib/pricingIntent";
 import { fmtMoney, fmtNum } from "@/lib/format";
 import { formatLocaleNumberInput, formatLocaleNumberInputChange, parseDigitsToNumber, parseLocaleNumber, validateNumericFields } from "@/lib/numberInput";
 
@@ -100,13 +102,14 @@ function ToggleGroup<T extends string>({ label, name, value, options, onChange }
   );
 }
 
-export default function Page() {
+export default function Page({ initialCost = "", initialPrice = "" }: { initialCost?: string; initialPrice?: string }) {
   const [currency, setCurrency] = useState<Currency>("ARS");
-  const [modo, setModo] = useState<ModoGanancia>("desde_ganancia");
+  const [modo, setModo] = useState<ModoGanancia>(initialCost && initialPrice ? "desde_precio" : "desde_ganancia");
+  const [profitBasis, setProfitBasis] = useState<ProfitBasis>("markup");
   const [nivel, setNivel] = useState<NivelCalculo>("rapido");
-  const [costo, setCosto] = useState("");
+  const [costo, setCosto] = useState(initialCost);
   const [gananciaDeseadaPct, setGananciaDeseadaPct] = useState("");
-  const [precio, setPrecio] = useState("");
+  const [precio, setPrecio] = useState(initialPrice);
   const [unidadesMes, setUnidadesMes] = useState("");
   const [otrosCostosUnitarios, setOtrosCostosUnitarios] = useState("");
   const [costosFijosMensuales, setCostosFijosMensuales] = useState("");
@@ -127,13 +130,14 @@ export default function Page() {
     const result = calculateMarkupPricing({
       productCost: costoProducto,
       targetMarkupPct: markupObjetivo,
+      targetMarginPct: markupObjetivo,
       salePrice: precioIngresado,
       unitsPerMonth: unidades,
       extraUnitCosts: costoExtra,
       monthlyFixedCosts: costosFijos,
       commissionPct: comision,
       taxPct: impuestos,
-      mode: modo === "desde_ganancia" ? "from-markup" : "from-price",
+      mode: modo === "desde_ganancia" ? profitBasis === "markup" ? "from-markup" : "from-margin" : "from-price",
     });
 
     return {
@@ -151,7 +155,19 @@ export default function Page() {
       gananciaMensual: result.monthlyProfit,
       puntoEquilibrio: result.breakEvenUnits,
     };
-  }, [comisionPct, costo, costosFijosMensuales, gananciaDeseadaPct, impuestosPct, modo, nivel, otrosCostosUnitarios, precio, unidadesMes]);
+  }, [comisionPct, costo, costosFijosMensuales, gananciaDeseadaPct, impuestosPct, modo, nivel, otrosCostosUnitarios, precio, unidadesMes, profitBasis]);
+
+  const desiredPercent = parsePercent(gananciaDeseadaPct);
+  const convertedPercent = convertProfitPercent(desiredPercent, profitBasis);
+
+  function changeProfitBasis(next: ProfitBasis) {
+    if (next === profitBasis) return;
+    if (gananciaDeseadaPct.trim() && convertedPercent !== null) {
+      setGananciaDeseadaPct(new Intl.NumberFormat("es-AR", { maximumFractionDigits: 6, useGrouping: false }).format(convertedPercent));
+    }
+    setProfitBasis(next);
+    resetResult();
+  }
 
   function resetResult() {
     setResults(null);
@@ -171,7 +187,7 @@ export default function Page() {
 
     const fields = [
       { name: "cost", label: "Costo del producto", value: costo, required: true, min: 0 },
-      { name: "markup", label: "Ganancia deseada", value: gananciaDeseadaPct, min: 0 },
+      ...(modo === "desde_ganancia" ? [{ name: "markup", label: profitBasis === "markup" ? "Markup deseado" : "Margen deseado", value: gananciaDeseadaPct, required: true, min: 0 }] : []),
       { name: "units", label: "Unidades vendidas por mes", value: unidadesMes, min: 0, integer: true },
       ...(modo === "desde_precio" ? [{ name: "price", label: "Precio de venta", value: precio, required: true, min: 0 }] : []),
       ...(nivel === "completo" ? [
@@ -206,6 +222,11 @@ export default function Page() {
     }
     if (nivel === "completo" && cargos >= 95) {
       setError("La suma de comisiones e impuestos debe ser menor al 95%.");
+      setResults(null);
+      return;
+    }
+    if (modo === "desde_ganancia" && profitBasis === "margin" && (desiredPercent >= 100 || desiredPercent + (nivel === "completo" ? cargos : 0) >= 100)) {
+      setError("El margen deseado más las comisiones e impuestos debe ser menor al 100% del precio de venta.");
       setResults(null);
       return;
     }
@@ -289,7 +310,17 @@ export default function Page() {
                 </>
               ) : null}
               {modo === "desde_ganancia" ? (
-                <PercentInput label="Ganancia deseada sobre el costo" hint="También conocida como markup. No es lo mismo que margen sobre venta." value={gananciaDeseadaPct} onChange={(value) => updateField(setGananciaDeseadaPct, value)} />
+                <div className="grid gap-3">
+                  <ToggleGroup<ProfitBasis> label="Cómo querés expresar la ganancia" name="profit-basis" value={profitBasis} onChange={changeProfitBasis} options={[
+                    { value: "markup", label: "Sobre costo (markup)" },
+                    { value: "margin", label: "Sobre precio (margen)" },
+                  ]} />
+                  <PercentInput label={profitBasis === "markup" ? "Markup deseado" : "Margen deseado"} value={gananciaDeseadaPct} onChange={(value) => updateField(setGananciaDeseadaPct, value)} />
+                  <p aria-live="polite" className="text-xs leading-5 text-white/60">
+                    {!gananciaDeseadaPct.trim() ? "Ingresá un porcentaje para ver su equivalencia." : convertedPercent === null ? "El margen debe ser menor al 100%." : `${fmtNum(desiredPercent, 2)}% ${profitBasis === "markup" ? "markup" : "margen"} = ${fmtNum(convertedPercent, 2)}% ${profitBasis === "markup" ? "margen" : "markup"}`}
+                  </p>
+                  {nivel === "completo" ? <p className="text-xs leading-5 text-white/45">La equivalencia muestra el caso sin cargos. El precio sugerido compensa las comisiones e impuestos para conservar tu objetivo.</p> : null}
+                </div>
               ) : (
                 <MoneyInput label="Precio de venta actual" valueDigits={precio} onChangeDigits={(value) => updateField(setPrecio, value)} currency={currency} />
               )}
@@ -345,6 +376,7 @@ export default function Page() {
                   <Card title="Ganancia mensual estimada" value={fmtMoney(results.gananciaMensual, currency)} />
                   {results.puntoEquilibrio ? <Card title="Punto de equilibrio" value={`${fmtNum(results.puntoEquilibrio, 0)} unidades`} /> : null}
                 </div>
+                <ResultNextStep calculatorPath="/markup" outcome={{ marginPct: results.rentabilidadSobreVentaPct, unitProfit: results.gananciaPorUnidad, monthlyProfit: parseDigitsToNumber(unidadesMes) > 0 ? results.gananciaMensual : null, plannedUnits: parseDigitsToNumber(unidadesMes), breakEvenUnits: results.puntoEquilibrio ?? (nivel === "completo" && parseDigitsToNumber(costosFijosMensuales) === 0 ? 0 : null), includesFixedCosts: nivel === "completo" }} />
               </>
             )}
           </section>

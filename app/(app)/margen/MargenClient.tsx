@@ -3,6 +3,7 @@
 import { type FormEvent, useMemo, useState } from "react";
 
 import Card from "@/components/Card";
+import ResultNextStep from "@/components/ResultNextStep";
 import MoneyInput, { Currency } from "@/components/MoneyInput";
 import InfoSections from "@/components/InfoSections";
 import SeoContent from "@/components/SeoContent";
@@ -36,6 +37,7 @@ export default function Page() {
 
   const [loading, setLoading] = useState(false);
   const [resp, setResp] = useState<CalcResponse | null>(null);
+  const [submittedPayload, setSubmittedPayload] = useState("");
   const [error, setError] = useState("");
 
   const payload = useMemo(() => {
@@ -89,6 +91,7 @@ export default function Page() {
     }
 
     setLoading(true);
+    setSubmittedPayload(JSON.stringify(payload));
     setResp(null);
     setError("");
 
@@ -118,8 +121,9 @@ export default function Page() {
     }
   }
 
-  const results = resp?.ok ? resp.results : null;
-  const derived = resp?.ok ? resp.derived : null;
+  const hasCurrentResult = resp?.ok && submittedPayload === JSON.stringify(payload);
+  const results = hasCurrentResult ? resp.results : null;
+  const derived = hasCurrentResult ? resp.derived : null;
 
   const unidadesMesPreview =
     parseDigitsToNumber(unidadesDia) *
@@ -340,6 +344,7 @@ export default function Page() {
                 />
               </div>
             )}
+            {results ? <ResultNextStep calculatorPath="/margen" outcome={{ marginPct: results.ventasNetas > 0 ? results.gananciaMes / results.ventasNetas * 100 : 0, unitProfit: results.margenUnit, monthlyProfit: results.gananciaMes, plannedUnits: derived?.unidadesMes ?? 0, breakEvenUnits: results.breakEvenUnidades, includesFixedCosts: true }} /> : null}
           </div>
         </div>
 

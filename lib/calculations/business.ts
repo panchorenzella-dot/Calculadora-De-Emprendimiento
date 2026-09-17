@@ -103,13 +103,14 @@ export function calculateBreakEven(input: {
 export type MarkupPricingInput = {
   productCost: number;
   targetMarkupPct: number;
+  targetMarginPct?: number;
   salePrice?: number;
   unitsPerMonth?: number;
   extraUnitCosts?: number;
   monthlyFixedCosts?: number;
   commissionPct?: number;
   taxPct?: number;
-  mode: "from-markup" | "from-price";
+  mode: "from-markup" | "from-margin" | "from-price";
 };
 
 export function calculateMarkupPricing(input: MarkupPricingInput) {
@@ -126,7 +127,9 @@ export function calculateMarkupPricing(input: MarkupPricingInput) {
   const targetNetRevenue = totalUnitCost * (1 + targetMarkupPct / 100);
   const calculatedPrice = input.mode === "from-markup"
     ? targetNetRevenue / (1 - chargeRate)
-    : nonNegative(input.salePrice ?? 0);
+    : input.mode === "from-margin"
+      ? totalUnitCost / Math.max(1 - chargeRate - nonNegative(input.targetMarginPct ?? 0) / 100, 0.000001)
+      : nonNegative(input.salePrice ?? 0);
   const chargesPerSale = calculatedPrice * chargeRate;
   const profitPerUnit = calculatedPrice - chargesPerSale - totalUnitCost;
   const contributionPerUnit = calculatedPrice - chargesPerSale - variableUnitCost;

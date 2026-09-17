@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import CalculatorGuideLinks from "@/components/CalculatorGuideLinks";
 import MarkupClient from "./MarkupClient";
+import MarkupFromHero from "./MarkupFromHero";
 
 const baseUrl = "https://www.calculadoraemprendedora.com";
 const pageTitle = "Calculadora de precio de venta: cuánto cobrar";
@@ -90,7 +92,7 @@ export default function Page() {
           __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
         }}
       />
-      <MarkupClient />
+      <Suspense fallback={<MarkupClient />}><MarkupFromHero /></Suspense>
       <CalculatorGuideLinks path="/markup" />
     </>
   );

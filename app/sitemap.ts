@@ -5,7 +5,7 @@ import { guides } from "@/lib/guides";
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = "https://www.calculadoraemprendedora.com";
   const contentUpdatedAt = new Date("2026-09-11T00:00:00-03:00");
-  const homeUpdatedAt = new Date("2026-09-16T00:00:00-03:00");
+  const calculatorUpdatedAt = new Date("2026-09-17T00:00:00-03:00");
   const calculatorRoutes = availableCalculators.map((calculator) => calculator.href);
 
   const routes = [
@@ -31,7 +31,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return [...new Set(routes)].map((route) => ({
     url: `${base}${route}`,
-    lastModified: route === "/" ? homeUpdatedAt : updatedRoutes.has(route) ? contentUpdatedAt : undefined,
+    lastModified: route === "/" || calculatorRoutes.includes(route) ? calculatorUpdatedAt : updatedRoutes.has(route) ? contentUpdatedAt : undefined,
     changeFrequency: route === "/" ? "weekly" : "monthly",
     priority:
       route === "/"
