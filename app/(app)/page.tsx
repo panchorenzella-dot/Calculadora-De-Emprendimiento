@@ -13,17 +13,18 @@ const featuredCalculators = [
 ].map((href) => availableCalculators.find((calculator) => calculator.href === href))
   .filter((calculator) => calculator !== undefined);
 
+const homeTitle = "Calculadoras gratis para emprendedores | Precio y costos";
+const homeDescription = `${availableCalculators.length} calculadoras gratis para emprendedores y pymes de Argentina. Calculá precios, ganancias, costos, impuestos, inversión y ahorro sin registrarte.`;
+
 export const metadata: Metadata = {
   title: {
-    absolute: "Calculadora de precio de venta y margen para emprendedores",
+    absolute: homeTitle,
   },
-  description:
-    "Calculá gratis cuánto cobrar, tu margen de ganancia y las ventas necesarias para cubrir costos. Herramientas online para emprendedores y pymes.",
+  description: homeDescription,
   alternates: { canonical: "/" },
   openGraph: {
-    title: "Definí precios rentables antes de vender",
-    description:
-      "Calculá precio de venta, margen y punto de equilibrio con números claros y sin armar una planilla.",
+    title: homeTitle,
+    description: homeDescription,
     url: "/",
     type: "website",
     images: [
@@ -37,9 +38,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Definí precios rentables antes de vender",
-    description:
-      "Calculá precio de venta, margen y punto de equilibrio con números claros.",
+    title: homeTitle,
+    description: homeDescription,
     images: ["/opengraph-image"],
   },
 };
