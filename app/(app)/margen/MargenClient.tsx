@@ -1,4 +1,5 @@
 "use client";
+import CalculatorInterpretation from "@/components/CalculatorInterpretation";
 
 import ResultsOverview from "@/components/ResultsOverview";
 import { type FormEvent, useMemo, useState } from "react";
@@ -154,7 +155,7 @@ export default function Page() {
         </div>
 
         <div className="mt-8 grid items-start gap-6 lg:grid-cols-2">
-          <form onSubmit={calcular} className="rounded-2xl border border-white/10 bg-white/5 p-6">
+          <form aria-busy={loading} onChangeCapture={() => { setResp(null); setError(""); }} onClickCapture={(event) => { if ((event.target as Element).closest("button[type=button]")) setResp(null); }} onSubmit={calcular} className="rounded-2xl border border-white/10 bg-white/5 p-6">
             <h2 className="text-xl font-semibold">Inputs</h2>
 
             <div className="mt-5 grid gap-4">
@@ -346,6 +347,7 @@ export default function Page() {
               />
             </ResultsOverview>
             )}
+            {results ? <CalculatorInterpretation kind="margen" result={results} currency={currency} /> : null}
             {results ? <ResultNextStep calculatorPath="/margen" outcome={{ marginPct: results.ventasNetas > 0 ? results.gananciaMes / results.ventasNetas * 100 : 0, unitProfit: results.margenUnit, monthlyProfit: results.gananciaMes, plannedUnits: derived?.unidadesMes ?? 0, breakEvenUnits: results.breakEvenUnidades, includesFixedCosts: true }} /> : null}
           </div>
         </div>

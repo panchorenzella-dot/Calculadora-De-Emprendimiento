@@ -90,7 +90,7 @@ export default function GuidesPage() {
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-200/75">
             Centro de aprendizaje · {guides.length} guías gratuitas
           </p>
-          <h1 className="mt-4 text-4xl font-bold tracking-tight sm:text-5xl">
+          <h1 className="mt-4 text-4xl font-semibold tracking-[-0.04em] sm:text-5xl">
             Guías para manejar los números de tu negocio
           </h1>
           <p className="mt-5 max-w-3xl text-base leading-8 text-white/70">
@@ -105,7 +105,7 @@ export default function GuidesPage() {
             <a
               key={topic.id}
               href={`#${topic.id}`}
-              className="rounded-full border border-white/10 bg-white/[0.035] px-4 py-2 text-sm font-bold text-white/75 transition hover:border-emerald-300/25 hover:text-white"
+              className="rounded-lg border border-white/[0.08] bg-white/[0.015] px-4 py-2 text-sm font-medium text-white/65 transition hover:border-white/18 hover:text-white"
             >
               {topic.title}
             </a>
@@ -133,7 +133,7 @@ export default function GuidesPage() {
                     <Link
                       key={guide.slug}
                       href={`/guias/${guide.slug}`}
-                      className="group flex min-h-64 flex-col rounded-3xl border border-white/[0.08] bg-[#0a0d0b] p-6 transition hover:-translate-y-0.5 hover:border-emerald-300/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+                      className="group flex min-h-64 flex-col rounded-xl border border-white/[0.07] bg-white/[0.015] p-6 transition hover:border-white/[0.15] hover:bg-white/[0.025] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200/60"
                     >
                       <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-200/75">
                         {guide.eyebrow}

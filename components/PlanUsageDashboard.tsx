@@ -41,18 +41,18 @@ function UsageRing({ item }: { item: UsageItem }) {
   const meta = labels[item.resource];
 
   return (
-    <article className="rounded-3xl border border-white/[0.08] bg-black/20 p-5">
+    <article className="rounded-xl border border-white/[0.07] bg-black/15 p-5">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="text-sm font-medium text-white/78">{meta.name}</p>
+          <p className="text-sm font-medium text-white/72">{meta.name}</p>
           <p className="mt-1 text-xs text-white/32">{unlimited ? `${item.used} usados este mes` : `${item.used} de ${item.quota_limit} usados`}</p>
         </div>
         <div className="relative grid h-20 w-20 shrink-0 place-items-center">
-          <svg viewBox="0 0 42 42" className="h-20 w-20 -rotate-90" aria-hidden="true">
+          <svg viewBox="0 0 42 42" className="h-16 w-16 -rotate-90" aria-hidden="true">
             <circle cx="21" cy="21" r="16" fill="none" stroke="rgba(255,255,255,.07)" strokeWidth="3" />
             <circle cx="21" cy="21" r="16" fill="none" stroke="#6ee7b7" strokeWidth="3" strokeLinecap="round" pathLength="100" strokeDasharray={`${unlimited ? 100 : consumed} 100`} />
           </svg>
-          <span className="absolute text-lg font-semibold text-emerald-100">{unlimited ? "∞" : remaining}</span>
+          <span className="absolute text-base font-medium text-emerald-100">{unlimited ? "∞" : remaining}</span>
         </div>
       </div>
       <div className="mt-5 flex items-center justify-between border-t border-white/[0.06] pt-4 text-xs">
@@ -113,7 +113,7 @@ export default function PlanUsageDashboard({ plan, usage }: { plan: PlanPeriod; 
       </section>
 
       {billing.kind === "paid" && (
-        <section className="mt-8 rounded-3xl border border-emerald-300/15 bg-[linear-gradient(135deg,rgba(16,185,129,0.09),rgba(255,255,255,0.02))] p-6 sm:p-7">
+        <section className="mt-8 rounded-xl border border-emerald-200/13 bg-emerald-200/[0.025] p-6 sm:p-7">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-200/55">Próximo pago · Plan {PLAN_LABELS[plan.plan]}</p><h2 className="mt-2 text-2xl font-semibold tracking-tight">{date(billing.end)}</h2><p className="mt-2 text-sm text-white/40">Ciclo mensual · {billing.daysLeft} {billing.daysLeft === 1 ? "día restante" : "días restantes"}</p></div><div className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-xs text-white/45">{renewalLabel}</div></div>
           <div className="mt-7 h-2 overflow-hidden rounded-full bg-white/[0.07]"><div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-200 transition-[width] duration-700" style={{ width: `${billing.progress}%` }} /></div>
           <div className="mt-3 flex justify-between text-[11px] text-white/28"><span>Inicio del ciclo</span><span>{Math.round(billing.progress)}% transcurrido</span><span>Fecha de pago</span></div>
@@ -138,7 +138,7 @@ export default function PlanUsageDashboard({ plan, usage }: { plan: PlanPeriod; 
       )}
 
       {billing.kind === "free" && (
-        <section className="mt-8 flex flex-col gap-4 rounded-3xl border border-white/[0.08] bg-white/[0.02] p-6 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-sm font-medium text-white/75">Tu plan Gratis no vence</p><p className="mt-1 text-xs leading-5 text-white/35">Cada medidor muestra su propia fecha de renovación.</p></div><Link href="/precios" className="rounded-full border border-emerald-200/20 bg-emerald-200/[0.06] px-4 py-2 text-center text-sm font-semibold text-emerald-100">Ver planes</Link></section>
+        <section className="mt-8 flex flex-col gap-4 rounded-xl border border-white/[0.07] bg-white/[0.015] p-6 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-sm font-medium text-white/75">Tu plan Gratis no vence</p><p className="mt-1 text-xs leading-5 text-white/35">Cada medidor muestra su propia fecha de renovación.</p></div><Link href="/precios" className="rounded-lg border border-emerald-200/16 bg-emerald-200/[0.035] px-4 py-2 text-center text-sm font-medium text-emerald-100/80">Ver planes</Link></section>
       )}
     </>
   );

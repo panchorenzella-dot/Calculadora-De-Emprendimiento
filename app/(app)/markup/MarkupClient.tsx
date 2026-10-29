@@ -1,6 +1,7 @@
 "use client";
+import CalculatorInterpretation from "@/components/CalculatorInterpretation";
 
-import { type FormEvent, useMemo, useState } from "react";
+import { type FormEvent, useMemo, useState, useSyncExternalStore } from "react";
 import Card from "@/components/Card";
 import ResultsOverview from "@/components/ResultsOverview";
 import ResultNextStep from "@/components/ResultNextStep";
@@ -12,6 +13,10 @@ import { formatLocaleNumberInput, formatLocaleNumberInputChange, parseDigitsToNu
 
 type ModoGanancia = "desde_ganancia" | "desde_precio";
 type NivelCalculo = "rapido" | "completo";
+
+const subscribeHydration = () => () => {};
+const clientReady = () => true;
+const serverReady = () => false;
 
 type Results = {
   precioCalculado: number;
@@ -104,6 +109,7 @@ function ToggleGroup<T extends string>({ label, name, value, options, onChange }
 }
 
 export default function Page({ initialCost = "", initialPrice = "" }: { initialCost?: string; initialPrice?: string }) {
+  const hydrated = useSyncExternalStore(subscribeHydration, clientReady, serverReady);
   const [currency, setCurrency] = useState<Currency>("ARS");
   const [modo, setModo] = useState<ModoGanancia>(initialCost && initialPrice ? "desde_precio" : "desde_ganancia");
   const [profitBasis, setProfitBasis] = useState<ProfitBasis>("markup");
@@ -293,7 +299,8 @@ export default function Page({ initialCost = "", initialPrice = "" }: { initialC
         </section>
 
         <div className="mt-6 grid items-start gap-6 lg:grid-cols-2">
-          <form onSubmit={handleCalculate} className="rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
+          <form data-calculator-hydrated={hydrated ? "true" : "false"} onSubmit={handleCalculate} className="rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
+            <fieldset disabled={!hydrated} className="min-w-0 border-0 p-0">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-xl font-semibold">Datos del producto</h2>
@@ -341,9 +348,10 @@ export default function Page({ initialCost = "", initialPrice = "" }: { initialC
             <button type="submit" className="mt-5 w-full rounded-full bg-white px-4 py-3 text-sm font-black text-zinc-950 transition hover:bg-zinc-200">
               {modo === "desde_ganancia" ? "Calcular precio sugerido" : "Calcular ganancia estimada"}
             </button>
+            </fieldset>
           </form>
 
-          <section data-calculator-results={results ? "ready" : "empty"} aria-live="polite" className="self-start rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
+          <section data-calculator-results={results ? "ready" : "empty"} aria-live="polite" aria-atomic="false" className="self-start rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
             <div className="flex items-center justify-between gap-4">
               <h2 className="text-xl font-semibold">Resultados</h2>
               {results ? <span className="text-xs font-semibold text-emerald-200/60">Estimación actual</span> : null}
@@ -369,6 +377,7 @@ export default function Page({ initialCost = "", initialPrice = "" }: { initialC
                   <Card title="Ganancia mensual estimada" value={fmtMoney(results.gananciaMensual, currency)} />
                   {results.puntoEquilibrio ? <Card title="Punto de equilibrio" value={`${fmtNum(results.puntoEquilibrio, 0)} unidades`} /> : null}
                 </ResultsOverview>
+          {results ? <CalculatorInterpretation kind="markup" result={results} currency={currency} /> : null}
                 <p className="mt-3 text-xs leading-5 text-white/60">{nivel === "completo" ? "Incluye los costos y porcentajes que cargaste." : "Resultado orientativo antes de costos fijos, comisiones e impuestos."}</p>
                 <ResultNextStep calculatorPath="/markup" outcome={{ marginPct: results.rentabilidadSobreVentaPct, unitProfit: results.gananciaPorUnidad, monthlyProfit: parseDigitsToNumber(unidadesMes) > 0 ? results.gananciaMensual : null, plannedUnits: parseDigitsToNumber(unidadesMes), breakEvenUnits: results.puntoEquilibrio ?? (nivel === "completo" && parseDigitsToNumber(costosFijosMensuales) === 0 ? 0 : null), includesFixedCosts: nivel === "completo" }} />
               </>

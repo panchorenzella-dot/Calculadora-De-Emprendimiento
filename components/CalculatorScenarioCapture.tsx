@@ -50,7 +50,8 @@ function captureMetrics(resultContainers: HTMLElement[]) {
   for (const container of resultContainers) {
     const explicitCards = Array.from(container.querySelectorAll<HTMLElement>("[data-scenario-metric]"));
     for (const card of explicitCards) {
-      const label = cleanLabel(card.querySelector<HTMLElement>("[data-scenario-label]")?.textContent || "");
+      const labelElement = card.querySelector<HTMLElement>("[data-scenario-label]");
+      const label = cleanLabel(labelElement?.dataset.scenarioOriginalLabel || labelElement?.textContent || "");
       const value = cleanLabel(card.querySelector<HTMLElement>("[data-scenario-value]")?.textContent || "");
       if (label && value) metrics[label] = value;
     }
@@ -59,7 +60,7 @@ function captureMetrics(resultContainers: HTMLElement[]) {
   return metrics;
 }
 
-function capture(pathname: string, resultsAreCurrent = true): { draft: ScenarioDraft; hasResults: boolean } | null {
+function capture(pathname: string, resultsAreCurrent = true): { draft: ScenarioDraft; hasResults: boolean; isCalculating: boolean } | null {
   const calculator = calculatorTracking[pathname];
   if (!calculator) return null;
 
@@ -99,6 +100,7 @@ function capture(pathname: string, resultsAreCurrent = true): { draft: ScenarioD
 
   return {
     hasResults,
+    isCalculating: Boolean(calculatorRoot.querySelector('form[aria-busy="true"]')),
     draft: {
       calculatorType: calculator.type,
       calculatorName: calculator.name,
@@ -137,6 +139,13 @@ export default function CalculatorScenarioCapture() {
     const anchor = document.createElement("div");
     anchor.dataset.saveScenarioAnchor = "true";
 
+    // A streamed calculator can appear after this shared layout mounts.
+    // Place its actions only once the calculator has finished hydrating.
+    let placed = false;
+    const placeActions = () => {
+    if (placed || document.querySelector('[data-calculator-hydrated="false"]')) return;
+    if (!document.querySelector('.calculator-page-shell [data-calculator-results]')) return;
+
     const explicitBoundary = document.querySelector<HTMLElement>("[data-scenario-actions-before]");
     const contentHeadings = Array.from(document.querySelectorAll("h2, h3"));
     const calculationHeading = contentHeadings.find((heading) => {
@@ -162,14 +171,24 @@ export default function CalculatorScenarioCapture() {
     } else if (seoBoundary?.parentElement) {
       seoBoundary.parentElement.insertBefore(anchor, seoBoundary);
     } else {
-      document.querySelector("main main")?.appendChild(anchor);
+      const calculatorMain = document.querySelector("main main");
+      if (!calculatorMain) return;
+      calculatorMain.appendChild(anchor);
     }
+
+    placed = true;
+    placementObserver.disconnect();
 
     queueMicrotask(() => {
       if (!cancelled) setPortalTarget(anchor);
     });
+    };
+    const placementObserver = new MutationObserver(placeActions);
+    placementObserver.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["data-calculator-hydrated"] });
+    placeActions();
     return () => {
       cancelled = true;
+      placementObserver.disconnect();
       anchor.remove();
     };
   }, [pathname]);
@@ -177,17 +196,21 @@ export default function CalculatorScenarioCapture() {
   useEffect(() => {
     if (!calculatorTracking[pathname]) return;
 
-    let timeout: ReturnType<typeof setTimeout>;
+    let scheduled = false;
+    let disposed = false;
     const update = () => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => {
+      if (scheduled) return;
+      scheduled = true;
+      queueMicrotask(() => {
+        scheduled = false;
+        if (disposed) return;
         const next = capture(pathname, !inputsChangedSinceCalculation.current);
         const serialized = JSON.stringify(next);
         if (serialized !== lastSnapshot.current) {
           lastSnapshot.current = serialized;
           setSnapshot(next);
         }
-      }, 80);
+      });
     };
 
     const handleInputChange = (event: Event) => {
@@ -210,10 +233,10 @@ export default function CalculatorScenarioCapture() {
     document.addEventListener("submit", handleSubmit);
     document.addEventListener("click", update);
     const observer = new MutationObserver(update);
-    observer.observe(document.body, { childList: true, subtree: true });
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["aria-busy", "data-calculator-results"] });
 
     return () => {
-      clearTimeout(timeout);
+      disposed = true;
       document.removeEventListener("input", handleInputChange);
       document.removeEventListener("change", handleInputChange);
       document.removeEventListener("submit", handleSubmit);
@@ -246,7 +269,7 @@ export default function CalculatorScenarioCapture() {
         >
           <div className="grid border-t border-white/[0.08] md:grid-cols-3 md:divide-x md:divide-white/[0.08]">
             <SaveScenarioButton draft={snapshot.draft} hasResults={snapshot.hasResults} />
-            <CompareScenarioButton draft={snapshot.draft} hasResults={snapshot.hasResults} />
+            <CompareScenarioButton draft={snapshot.draft} hasResults={snapshot.hasResults} isCalculating={snapshot.isCalculating} />
             <AiAssistant draft={snapshot.draft} hasResults={snapshot.hasResults} />
           </div>
         </Suspense>

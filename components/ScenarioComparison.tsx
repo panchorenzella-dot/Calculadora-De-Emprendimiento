@@ -1,4 +1,5 @@
 "use client";
+import { resultPresentation } from "@/lib/resultPresentation";
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -171,7 +172,7 @@ export default function ScenarioComparison({ ids }: { ids: string[] }) {
       <div key={label} className="grid border-t border-white/[0.07] print:border-zinc-200" style={{ gridTemplateColumns: columnTemplate }}>
         <div className="sticky left-0 z-10 bg-[#0c100e] px-4 py-4 text-xs font-semibold leading-5 text-white/45 print:static print:bg-white print:text-zinc-600">{label}</div>
         {maps.map((map, scenarioIndex) => (
-          <div key={scenarios[scenarioIndex].id} className={`border-l border-white/[0.07] px-4 py-4 text-sm font-semibold text-white/85 print:border-zinc-200 print:text-zinc-950 ${rowIndex === 0 ? "bg-emerald-300/[0.045]" : ""}`}>
+          <div key={scenarios[scenarioIndex].id} data-tone={resultPresentation(label, map.get(label) || "").tone} className={`border-l border-white/[0.07] px-4 py-4 text-sm font-semibold text-white/85 print:border-zinc-200 print:text-zinc-950 ${rowIndex === 0 ? "bg-emerald-300/[0.045]" : ""}`}>
             {map.get(label) || <span className="font-normal text-white/25 print:text-zinc-400">Sin dato</span>}
           </div>
         ))}

@@ -1,4 +1,5 @@
 "use client";
+import CalculatorInterpretation from "@/components/CalculatorInterpretation";
 
 import ResultsOverview from "@/components/ResultsOverview";
 import { type FormEvent, useMemo, useState } from "react";
@@ -91,7 +92,7 @@ export default function PuntoEquilibrioPage() {
         </header>
 
         <div className="grid items-start gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <form onSubmit={handleCalculate} onChange={() => { setCalc(null); setError(""); }} className="rounded-2xl border border-white/10 bg-white/5 p-5">
+          <form onChangeCapture={() => { setCalc(null); setError(""); }} onClickCapture={(event) => { if ((event.target as Element).closest("button[type=button]")) setCalc(null); }} onSubmit={handleCalculate} onChange={() => { setCalc(null); setError(""); }} className="rounded-2xl border border-white/10 bg-white/5 p-5">
             <div className="mb-5 flex flex-wrap gap-2">
               <button
                 type="button"
@@ -209,6 +210,7 @@ export default function PuntoEquilibrioPage() {
                 }
               />
             </ResultsOverview>
+          {calc ? <CalculatorInterpretation kind="punto-de-equilibrio" result={calc} currency={currency} /> : null}
             <ResultNextStep calculatorPath="/punto-de-equilibrio" outcome={{ marginPct: calc.margenContribucionPct, unitProfit: calc.margenContribucionUnit, monthlyProfit: calc.ventas > 0 ? calc.gananciaEstimada : null, plannedUnits: calc.ventas, breakEvenUnits: calc.rentable ? calc.unidadesEquilibrio : null, includesFixedCosts: true }} />
             </>}
           </div>

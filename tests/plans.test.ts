@@ -9,6 +9,7 @@ import {
   PAID_PLANS,
   PLAN_LIMITS,
 } from "../lib/plans";
+import { ANNIVERSARY_PROMOTION, isAnniversaryPromotionActive, promotionalPriceForPlan } from "../lib/promotions";
 
 test("exposes the three monthly paid plans with Pro as the recommended anchor", () => {
   assert.deepEqual(PAID_PLANS.map((plan) => [plan.id, plan.priceUsd]), [
@@ -18,6 +19,16 @@ test("exposes the three monthly paid plans with Pro as the recommended anchor", 
   ]);
   assert.equal(PAID_PLANS.filter((plan) => "recommended" in plan && plan.recommended).length, 1);
   assert.equal(PAID_PLANS.find((plan) => plan.id === "pro")?.recommended, true);
+});
+
+test("applies the anniversary discount to Pro through October 31", () => {
+  const duringPromotion = Date.parse("2026-10-31T20:00:00-03:00");
+  const afterPromotion = Date.parse("2026-11-01T00:00:01-03:00");
+  assert.equal(isAnniversaryPromotionActive(duringPromotion), true);
+  assert.equal(isAnniversaryPromotionActive(afterPromotion), false);
+  assert.equal(promotionalPriceForPlan("pro", 19.99, duringPromotion), 14.99);
+  assert.equal(promotionalPriceForPlan("basic", 7.99, duringPromotion), 7.99);
+  assert.equal(ANNIVERSARY_PROMOTION.discountPercent, 25);
 });
 
 test("applies scenario and comparison entitlements by plan", () => {

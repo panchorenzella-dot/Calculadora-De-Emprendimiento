@@ -1,10 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { formatLocaleNumberInputChange, parseLocaleNumber } from "@/lib/numberInput";
 
 import { trackEvent } from "@/lib/analytics";
+import { hasStoredSession } from "@/lib/authBrowserSession";
+
+const SIGNUP_PROMPT_DISMISSED_KEY = "ce:home-signup-prompt-dismissed:v1";
+const SIGNUP_PROMPT_DELAY_MS = 1_500;
 
 function formatMoney(value: number) {
   return new Intl.NumberFormat("es-AR", {
@@ -22,8 +26,60 @@ function clampAmount(value: string) {
 export default function HomeProfitPreview() {
   const [cost, setCost] = useState("14.000");
   const [price, setPrice] = useState("25.000");
+  const [signupPromptVisible, setSignupPromptVisible] = useState(false);
   const interactionStarted = useRef(false);
   const completedInputs = useRef(new Set<string>());
+  const signupPromptTimeout = useRef<number | null>(null);
+
+  useEffect(() => () => {
+    if (signupPromptTimeout.current !== null) {
+      window.clearTimeout(signupPromptTimeout.current);
+    }
+  }, []);
+
+  function promptWasDismissed() {
+    try {
+      return window.sessionStorage.getItem(SIGNUP_PROMPT_DISMISSED_KEY) === "true";
+    } catch {
+      return false;
+    }
+  }
+
+  function rememberPromptDismissal() {
+    try {
+      window.sessionStorage.setItem(SIGNUP_PROMPT_DISMISSED_KEY, "true");
+    } catch {
+      // The prompt still closes when storage is unavailable.
+    }
+  }
+
+  function scheduleSignupPrompt() {
+    if (signupPromptVisible || promptWasDismissed() || hasStoredSession()) return;
+    if (signupPromptTimeout.current !== null) {
+      window.clearTimeout(signupPromptTimeout.current);
+    }
+    signupPromptTimeout.current = window.setTimeout(() => {
+      signupPromptTimeout.current = null;
+      if (promptWasDismissed()) return;
+      setSignupPromptVisible(true);
+      trackEvent("registration_prompt_view", {
+        location: "home_hero_result",
+        trigger: "hero_calculator_change",
+        variant: "contextual_banner",
+        delay_ms: SIGNUP_PROMPT_DELAY_MS,
+      });
+    }, SIGNUP_PROMPT_DELAY_MS);
+  }
+
+  function dismissSignupPrompt() {
+    rememberPromptDismissal();
+    setSignupPromptVisible(false);
+    trackEvent("registration_prompt_dismiss", {
+      location: "home_hero_result",
+      trigger: "hero_calculator_change",
+      variant: "contextual_banner",
+    });
+  }
 
   function updateInput(
     field: "cost" | "price",
@@ -35,6 +91,7 @@ export default function HomeProfitPreview() {
       trackEvent("hero_calculator_start", { location: "home_hero" });
     }
     setter(value);
+    scheduleSignupPrompt();
   }
 
   function completeInput(field: "cost" | "price", value: string) {
@@ -112,14 +169,14 @@ export default function HomeProfitPreview() {
       </div>
 
       <div aria-live="polite" className="mt-3 rounded-2xl border border-emerald-300/10 bg-emerald-300/[0.045] p-4">
-        <p className="text-xs text-white/65">Ganancia bruta por unidad</p>
-        <p className={`mt-1 text-3xl font-semibold tracking-tight ${result.profit >= 0 ? "text-white" : "text-red-200"}`}>
+        <p className="text-xs text-white/65">{result.profit < 0 ? "Pérdida bruta por unidad" : "Ganancia bruta por unidad"}</p>
+        <p data-tone={result.profit > 0 ? "positive" : result.profit < 0 ? "negative" : "neutral"} className="mt-1 text-3xl font-semibold tracking-tight">
           {formatMoney(result.profit)}
         </p>
         <div className="mt-4 grid grid-cols-2 gap-3 border-t border-white/[0.07] pt-4">
           <div>
             <p className="text-[11px] text-white/65">Margen</p>
-            <p className="mt-1 text-base font-semibold text-emerald-200">{result.margin === null ? "—" : `${result.margin.toLocaleString("es-AR", { maximumFractionDigits: 1 })}%`}</p>
+            <p data-tone={result.margin === null || result.margin === 0 ? "neutral" : result.margin > 0 ? "positive" : "negative"} className="mt-1 text-base font-semibold">{result.margin === null ? "—" : `${result.margin.toLocaleString("es-AR", { maximumFractionDigits: 1 })}%`}</p>
           </div>
           <div>
             <p className="text-[11px] text-white/65">Markup</p>
@@ -127,6 +184,45 @@ export default function HomeProfitPreview() {
           </div>
         </div>
       </div>
+
+      {signupPromptVisible ? (
+        <aside
+          aria-label="Guardar este cálculo"
+          className="relative mt-3 rounded-2xl border border-emerald-300/20 bg-emerald-300/[0.075] p-4 pr-11"
+        >
+          <button
+            type="button"
+            onClick={dismissSignupPrompt}
+            aria-label="Cerrar invitación de registro"
+            className="absolute right-2.5 top-2.5 grid size-8 place-items-center rounded-full text-lg text-white/45 transition hover:bg-white/[0.06] hover:text-white"
+          >
+            ×
+          </button>
+          <p className="text-sm font-bold text-white">Guardá este resultado y comparalo después</p>
+          <p className="mt-1.5 text-xs leading-5 text-white/65">
+            Con un costo de {formatMoney(clampAmount(cost))} y un precio de {formatMoney(clampAmount(price))},
+            este cálculo deja {formatMoney(result.profit)} por unidad
+            {result.margin === null
+              ? "."
+              : ` y ${result.margin.toLocaleString("es-AR", { maximumFractionDigits: 1 })}% de margen.`}
+          </p>
+          <Link
+            prefetch={false}
+            href="/perfil?modo=registro"
+            onClick={() => {
+              rememberPromptDismissal();
+              trackEvent("registration_prompt_click", {
+                location: "home_hero_result",
+                trigger: "hero_calculator_change",
+                variant: "contextual_banner",
+              });
+            }}
+            className="mt-3 inline-flex text-xs font-bold text-emerald-200 transition hover:text-emerald-100"
+          >
+            Registrarme gratis →
+          </Link>
+        </aside>
+      ) : null}
 
       <p className="mt-3 text-[11px] leading-5 text-white/65">
         Vista rápida sin costos fijos ni impuestos. La calculadora completa incorpora más variables.

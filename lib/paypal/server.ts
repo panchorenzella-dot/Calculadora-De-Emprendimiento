@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { PaidPlanName } from "@/lib/plans";
+import { ANNIVERSARY_PROMOTION, isAnniversaryPromotionActive } from "@/lib/promotions";
 
 type PayPalLink = { href: string; rel: string; method?: string };
 
@@ -140,6 +141,8 @@ export async function createPayPalSubscription(input: {
   requestId: string;
   brandName?: string;
 }) {
+  const hasAnniversaryPromotion = input.plan === "pro" && isAnniversaryPromotionActive();
+
   return paypalRequest<PayPalSubscription>("/v1/billing/subscriptions", {
     method: "POST",
     headers: {
@@ -149,6 +152,20 @@ export async function createPayPalSubscription(input: {
     body: JSON.stringify({
       plan_id: getPayPalPlanId(input.plan),
       custom_id: input.userId,
+      ...(hasAnniversaryPromotion ? {
+        plan: {
+          billing_cycles: [{
+            sequence: 1,
+            total_cycles: 0,
+            pricing_scheme: {
+              fixed_price: {
+                value: ANNIVERSARY_PROMOTION.promotionalPriceUsd.toFixed(2),
+                currency_code: "USD",
+              },
+            },
+          }],
+        },
+      } : {}),
       application_context: {
         brand_name: input.brandName || "Calculadora Emprendedora",
         shipping_preference: "NO_SHIPPING",

@@ -32,6 +32,8 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
     const catalogLink = page.getByRole("link", { name: `Ver las ${availableCalculators.length} calculadoras →`, exact: true });
     await expect(catalogLink).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBeTruthy();
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+    await page.screenshot({ path: `artifacts/stage1/home-${viewport.width}.png` });
     await catalogLink.click();
     await expect(page).toHaveURL(/\/calculadoras$/);
     await expect(page.locator('#calculator-results a[href^="/"]')).toHaveCount(availableCalculators.length);

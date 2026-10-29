@@ -11,13 +11,16 @@ type Props = {
   paypalReady: boolean;
   paypalMode: "sandbox" | "live";
   emphasized?: boolean;
+  displayPriceUsd?: number;
+  promotional?: boolean;
 };
 
-export default function PricingSelector({ plan, paypalReady, paypalMode, emphasized = false }: Props) {
+export default function PricingSelector({ plan, paypalReady, paypalMode, emphasized = false, displayPriceUsd, promotional = false }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const selectedPlan = paidPlan(plan);
+  const checkoutPriceUsd = displayPriceUsd ?? selectedPlan.priceUsd;
 
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("paypal") === "cancelled") {
@@ -39,15 +42,16 @@ export default function PricingSelector({ plan, paypalReady, paypalMode, emphasi
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         sessionStorage.setItem("calculadora-emprendedora:pending-plan", plan);
-        trackEvent("checkout_login_required", { plan, interval: "monthly", value: selectedPlan.priceUsd, currency: "USD" });
+        trackEvent("checkout_login_required", { plan, interval: "monthly", value: checkoutPriceUsd, currency: "USD", promotion_name: promotional ? "aniversario_2_meses" : undefined });
         router.push(`/perfil?modo=registro&continuar=${plan}`);
         return;
       }
 
       trackEvent("begin_checkout", {
         currency: "USD",
-        value: selectedPlan.priceUsd,
-        items: [{ item_id: `${plan}_monthly`, item_name: `Calculadora Emprendedora ${selectedPlan.name}`, price: selectedPlan.priceUsd, quantity: 1 }],
+        value: checkoutPriceUsd,
+        promotion_name: promotional ? "aniversario_2_meses" : undefined,
+        items: [{ item_id: `${plan}_monthly`, item_name: `Calculadora Emprendedora ${selectedPlan.name}`, price: checkoutPriceUsd, quantity: 1 }],
       });
 
       const response = await fetch("/api/paypal/subscriptions", {
@@ -64,7 +68,7 @@ export default function PricingSelector({ plan, paypalReady, paypalMode, emphasi
         return;
       }
 
-      trackEvent("checkout_redirect", { provider: "paypal", plan, interval: "monthly", value: selectedPlan.priceUsd, currency: "USD" });
+      trackEvent("checkout_redirect", { provider: "paypal", plan, interval: "monthly", value: checkoutPriceUsd, currency: "USD", promotion_name: promotional ? "aniversario_2_meses" : undefined });
       window.location.assign(data.approvalUrl);
     } catch {
       setMessage("No pudimos conectar con PayPal. Intentá nuevamente.");
@@ -79,7 +83,7 @@ export default function PricingSelector({ plan, paypalReady, paypalMode, emphasi
         type="button"
         disabled={!paypalReady || loading}
         onClick={startPayPalCheckout}
-        className={`w-full rounded-full px-4 py-3 text-center text-sm font-black transition disabled:cursor-not-allowed disabled:opacity-50 ${emphasized ? "bg-emerald-300 text-emerald-950 hover:bg-emerald-200" : "border border-white/14 bg-white/[0.055] text-white/85 hover:border-white/25 hover:bg-white/[0.09] hover:text-white"}`}
+        className={`action-positive w-full rounded-full px-4 py-3 text-center text-sm font-black transition disabled:cursor-not-allowed disabled:opacity-50 ${emphasized ? "bg-emerald-300 text-emerald-950 hover:bg-emerald-200" : "border border-white/14 bg-white/[0.055] text-white/85 hover:border-white/25 hover:bg-white/[0.09] hover:text-white"}`}
       >
         {loading
           ? "Abriendo PayPal..."

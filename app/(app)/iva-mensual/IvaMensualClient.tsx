@@ -1,4 +1,5 @@
 "use client";
+import CalculatorInterpretation from "@/components/CalculatorInterpretation";
 
 import { FormEvent, useMemo, useState } from "react";
 import {
@@ -67,7 +68,7 @@ export default function IvaMensualClient() {
     <CalculatorHeader eyebrow="Impuestos · Argentina" title="Calculadora de IVA mensual" description="Estimá el IVA a pagar del mes a partir del débito fiscal de tus ventas, el crédito fiscal computable de tus compras y los saldos a favor." />
 
     <div className="grid items-start gap-6 lg:grid-cols-[1.12fr_0.88fr]">
-      <CalculatorForm onSubmit={submit} error={error}>
+      <CalculatorForm onEdit={() => { setResults(null); setError(""); }} onSubmit={submit} error={error}>
         <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
           <p className="text-sm font-semibold text-white">Montos netos gravados por alícuota</p>
           <p className="mt-1 text-xs leading-5 text-white/45">Ingresá importes sin IVA. Si no usaste una alícuota, dejala en cero.</p>
@@ -99,6 +100,7 @@ export default function IvaMensualClient() {
           { title: "Nuevo saldo técnico a favor", value: results.newTechnicalBalance },
           { title: "Nuevo saldo de libre disponibilidad", value: results.newFreeBalance },
         ]} /> : null}
+          {results ? <CalculatorInterpretation kind="iva-mensual" result={results} /> : null}
       </ResultsPanel>
     </div>
 

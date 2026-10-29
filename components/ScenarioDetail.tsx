@@ -1,4 +1,5 @@
 "use client";
+import { resultPresentation } from "@/lib/resultPresentation";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -173,7 +174,7 @@ export default function ScenarioDetail({ id }: { id: string }) {
             <form onSubmit={saveDetails} className="mb-8 grid gap-4 rounded-3xl border border-white/[0.08] bg-white/[0.025] p-5 print:hidden">
               <label className="grid gap-2 text-xs font-semibold text-white/45">Nombre del escenario<input required maxLength={90} value={title} onChange={(event) => setTitle(event.target.value)} className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-emerald-300/45" /></label>
               <label className="grid gap-2 text-xs font-semibold text-white/45">Notas para recordar<textarea rows={3} maxLength={600} value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Ejemplo: volver a calcular si aumenta el costo de los insumos" className="resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm leading-6 text-white outline-none focus:border-emerald-300/45" /></label>
-              <div className="flex flex-wrap items-center gap-2"><button disabled={saving} className="rounded-full bg-white px-4 py-2.5 text-sm font-bold text-zinc-950 disabled:opacity-55">{saving ? "Guardando..." : "Guardar cambios"}</button><button type="button" onClick={() => setEditing(false)} className="rounded-full border border-white/10 px-4 py-2.5 text-sm text-white/55">Cancelar</button><button type="button" onClick={() => void removeScenario()} className="ml-auto rounded-full border border-red-400/20 px-4 py-2.5 text-sm font-semibold text-red-300/75 hover:bg-red-500/10">Eliminar escenario</button></div>
+              <div className="flex flex-wrap items-center gap-2"><button disabled={saving} className="action-positive rounded-full bg-white px-4 py-2.5 text-sm font-bold text-zinc-950 disabled:opacity-55">{saving ? "Guardando..." : "Guardar cambios"}</button><button type="button" onClick={() => setEditing(false)} className="rounded-full border border-white/10 px-4 py-2.5 text-sm text-white/55">Cancelar</button><button type="button" onClick={() => void removeScenario()} className="action-danger ml-auto rounded-full border border-red-400/20 px-4 py-2.5 text-sm font-semibold text-red-300/75 hover:bg-red-500/10">Eliminar escenario</button></div>
             </form>
           )}
 
@@ -182,7 +183,7 @@ export default function ScenarioDetail({ id }: { id: string }) {
               <div className="flex items-end justify-between gap-4"><div><p className="text-[11px] font-bold uppercase tracking-[.15em] text-emerald-200/55 print:text-emerald-700">Resultado principal</p><h2 className="mt-2 text-2xl font-semibold tracking-tight">Tus números, ordenados.</h2></div><span className="text-xs text-white/30 print:text-zinc-500">{metrics.length} métricas</span></div>
               {metrics.length ? (
                 <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                  {metrics.map((metric, index) => <article key={`${metric.label}-${index}`} className={`rounded-2xl border p-5 ${index === 0 ? "border-emerald-300/20 bg-emerald-300/[0.07]" : "border-white/[0.07] bg-white/[0.025]"} print:border-zinc-200 print:bg-white`}><p className="text-xs font-semibold leading-5 text-white/40 print:text-zinc-500">{metric.label}</p><p className={`mt-3 break-words text-xl font-semibold tracking-tight ${index === 0 ? "text-emerald-100" : "text-white/90"} print:text-zinc-950`}>{metric.value}</p></article>)}
+                  {metrics.map((metric, index) => <article key={`${metric.label}-${index}`} className={`rounded-2xl border p-5 ${index === 0 ? "border-emerald-300/20 bg-emerald-300/[0.07]" : "border-white/[0.07] bg-white/[0.025]"} print:border-zinc-200 print:bg-white`}><p className="text-xs font-semibold leading-5 text-white/40 print:text-zinc-500">{resultPresentation(metric.label, metric.value).title}</p><p data-tone={resultPresentation(metric.label, metric.value).tone} className={`mt-3 break-words text-xl font-semibold tracking-tight ${index === 0 ? "text-emerald-100" : "text-white/90"} print:text-zinc-950`}>{metric.value}</p></article>)}
                 </div>
               ) : <div className="mt-5 rounded-2xl border border-dashed border-white/10 p-6 text-sm leading-6 text-white/45 print:border-zinc-300 print:text-zinc-600">{getScenarioResultNarrative(scenario)}</div>}
             </section>

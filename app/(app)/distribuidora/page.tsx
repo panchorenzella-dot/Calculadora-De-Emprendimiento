@@ -1,4 +1,6 @@
 "use client";
+import { resultPresentation } from "@/lib/resultPresentation";
+import CalculatorInterpretation from "@/components/CalculatorInterpretation";
 
 import OptionalFields from "@/components/OptionalFields";
 import ResultsOverview from "@/components/ResultsOverview";
@@ -123,6 +125,7 @@ function ResultCard({
   muted = false,
   highlight = false,
 }: ResultCardProps) {
+  const presentation = resultPresentation(title, value);
   return (
     <div
       data-scenario-metric
@@ -132,10 +135,10 @@ function ResultCard({
           : "border-zinc-800 bg-zinc-950"
       }`}
     >
-      <p data-scenario-label className="text-sm text-zinc-400">{title}</p>
+      <p data-scenario-label data-scenario-original-label={title} className="text-sm text-zinc-400">{presentation.title}</p>
 
       <p
-        data-scenario-value
+        data-scenario-value data-tone={presentation.tone}
         className={`mt-2 text-2xl font-bold ${
           muted ? "text-zinc-600" : "text-zinc-50"
         }`}
@@ -239,7 +242,7 @@ export default function DistribuidoraPage() {
         </section>
 
         <section className="grid items-start gap-6 lg:grid-cols-[1fr_1.15fr]">
-          <form
+          <form onChangeCapture={() => { setResults(null); setError(""); }} onClickCapture={(event) => { if ((event.target as Element).closest("button[type=button]")) setResults(null); }}
             onSubmit={handleCalculate}
             className="rounded-3xl border border-zinc-800 bg-zinc-950 p-6"
           >
@@ -478,6 +481,7 @@ export default function DistribuidoraPage() {
                 muted={isMuted}
               />
             </ResultsOverview>
+          {results ? <CalculatorInterpretation kind="distribuidora" result={results} currency={currency} /> : null}
           </section>
         </section>
 

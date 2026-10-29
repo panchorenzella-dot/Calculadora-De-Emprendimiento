@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import AuthModal from "@/components/AuthModal";
 import { trackEvent } from "@/lib/analytics";
 import { canCompareScenarios, effectivePlan, PLAN_LABELS, PLAN_LIMITS, type PlanName } from "@/lib/plans";
+import { ANNIVERSARY_PROMOTION, isAnniversaryPromotionActive } from "@/lib/promotions";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import type { ScenarioDraft } from "@/types/scenario";
 
@@ -19,7 +20,7 @@ function defaultTitle(draft: ScenarioDraft) {
   return `${draft.calculatorName} · comparación · ${new Intl.DateTimeFormat("es-AR").format(new Date())}`;
 }
 
-export default function CompareScenarioButton({ draft, hasResults }: { draft: ScenarioDraft; hasResults: boolean }) {
+export default function CompareScenarioButton({ draft, hasResults, isCalculating = false }: { draft: ScenarioDraft; hasResults: boolean; isCalculating?: boolean }) {
   const router = useRouter();
   const [authOpen, setAuthOpen] = useState(false);
   const [gatePlan, setGatePlan] = useState<PlanName | null>(null);
@@ -27,6 +28,8 @@ export default function CompareScenarioButton({ draft, hasResults }: { draft: Sc
   const [status, setStatus] = useState("");
   const triggerRef = useRef<HTMLButtonElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const promotionActive = isAnniversaryPromotionActive();
+  const proPriceUsd = promotionActive ? ANNIVERSARY_PROMOTION.promotionalPriceUsd : ANNIVERSARY_PROMOTION.regularPriceUsd;
 
   useEffect(() => {
     if (!gatePlan) return;
@@ -111,7 +114,7 @@ export default function CompareScenarioButton({ draft, hasResults }: { draft: Sc
           ref={triggerRef}
           type="button"
           onClick={beginComparison}
-          disabled={loading}
+          disabled={loading || isCalculating}
           className="flex min-h-11 w-full items-center justify-between rounded-xl border border-emerald-200/[0.18] bg-emerald-300/[0.07] px-4 py-3 text-sm font-semibold text-emerald-50/88 transition hover:border-emerald-200/30 hover:bg-emerald-300/[0.11] hover:text-white disabled:cursor-wait disabled:opacity-55"
         >
           <span>{loading ? "Preparando..." : "Comparar con otro escenario"}</span>
@@ -146,7 +149,7 @@ export default function CompareScenarioButton({ draft, hasResults }: { draft: Sc
             <p className="mt-4 text-sm leading-7 text-white/52">Tu plan actual es <strong className="text-white/85">{PLAN_LABELS[gatePlan]}</strong>. Podés conservar hasta {PLAN_LIMITS[gatePlan].scenarios ?? "todos tus"} escenarios, pero la comparación interactiva se habilita desde Pro.</p>
             <div className="mt-6 grid gap-2 sm:grid-cols-2">
               <button type="button" onClick={() => setGatePlan(null)} className="rounded-full border border-white/12 px-4 py-3 text-sm font-semibold text-white/65 hover:bg-white/5 hover:text-white">Seguir calculando</button>
-              <Link href="/precios#plan-pro" onClick={() => trackEvent("compare_upgrade_click", { plan: gatePlan })} className="rounded-full bg-emerald-300 px-4 py-3 text-center text-sm font-black text-emerald-950 hover:bg-emerald-200">Ver Pro · US$ 19.99</Link>
+              <Link href="/precios#plan-pro" onClick={() => trackEvent("compare_upgrade_click", { plan: gatePlan, promotion_name: promotionActive ? ANNIVERSARY_PROMOTION.analyticsId : undefined })} className="rounded-full bg-emerald-300 px-4 py-3 text-center text-sm font-black text-emerald-950 hover:bg-emerald-200">Ver Pro · US$ {proPriceUsd.toFixed(2)}</Link>
             </div>
           </section>
         </div>

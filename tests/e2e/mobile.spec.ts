@@ -1,5 +1,35 @@
 import { expect, test } from "@playwright/test";
 
+test("la promoción aniversario es visible y no desborda en mobile", async ({ page }) => {
+  await page.goto("/");
+
+  const promotion = page.getByRole("heading", { name: "Plan Pro, ahora 25% menos" }).locator("..");
+  await expect(page.getByRole("heading", { name: "Plan Pro, ahora 25% menos" })).toBeVisible();
+  await expect(page.getByText("US$ 19.99", { exact: true })).toBeVisible();
+  await expect(page.getByText("US$ 14.99", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: /^Ver plan Pro/ })).toBeVisible();
+  await expect(promotion).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBeTruthy();
+});
+
+test("la home adelanta el ejemplo de IA en una versión compacta sin desbordar", async ({ page }) => {
+  await page.goto("/");
+
+  const aiDemo = page.locator("#analisis-ia");
+  const featuredCalculators = page.locator("#featured-calculators-title");
+  await expect(aiDemo.getByText("Precio objetivo $28.000", { exact: true })).toBeVisible();
+  await expect(aiDemo.getByRole("link", { name: "Ver cómo funciona el análisis con IA →" })).toBeVisible();
+  await expect(featuredCalculators).toBeVisible();
+  expect(await page.evaluate(() => {
+    const ai = document.querySelector("#analisis-ia");
+    const featured = document.querySelector("#featured-calculators-title");
+    return Boolean(ai && featured && (
+      ai.compareDocumentPosition(featured) & Node.DOCUMENT_POSITION_FOLLOWING
+    ));
+  })).toBeTruthy();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBeTruthy();
+});
+
 test("el catálogo mobile es estable, visible y no desborda", async ({ page }) => {
   await page.addInitScript(() => {
     let cumulativeLayoutShift = 0;

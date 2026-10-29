@@ -3,11 +3,20 @@ import { availableCalculators } from "../../app/calculadoras/catalog";
 
 test("el hero calcula al escribir y conserva los importes al abrir y recargar el cálculo completo", async ({ page }) => {
   await page.goto("/");
+  const signupPrompt = page.getByRole("complementary", { name: "Guardar este cálculo" });
+  await expect(signupPrompt).toHaveCount(0);
   await page.getByRole("textbox", { name: "Costo por unidad", exact: true }).fill("14.000,50");
   await page.getByRole("textbox", { name: "Precio de venta", exact: true }).fill("25.000,75");
   const preview = page.getByRole("region", { name: "Resultado rápido por unidad" });
   await expect(preview).toContainText("44%");
   await expect(preview).toContainText("78,6%");
+  await expect(signupPrompt).toContainText("$ 11.000");
+  await expect(signupPrompt).toContainText("44% de margen");
+  await signupPrompt.getByRole("button", { name: "Cerrar invitación de registro" }).click();
+  await page.getByRole("textbox", { name: "Precio de venta", exact: true }).fill("26.000");
+  await page.getByRole("textbox", { name: "Precio de venta", exact: true }).fill("25.000,75");
+  await page.waitForTimeout(1_700);
+  await expect(signupPrompt).toHaveCount(0);
   await page.getByRole("link", { name: "Ver el cálculo completo →", exact: true }).click();
   await expect(page).toHaveURL(/\/markup\?costo=14000\.5&precio=25000\.75$/);
   await page.reload();

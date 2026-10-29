@@ -32,35 +32,35 @@ export default function ProfileOnboarding({ initialData, saving, onSave }: { ini
   if (isComplete) return null;
 
   return (
-    <section aria-labelledby="onboarding-title" className="mt-7 overflow-hidden rounded-3xl border border-emerald-300/15 bg-[linear-gradient(135deg,rgba(16,185,129,.075),rgba(255,255,255,.02)_55%,rgba(0,0,0,.12))] p-5 sm:p-7">
+    <section aria-labelledby="onboarding-title" className="mt-7 overflow-hidden rounded-xl border border-emerald-200/13 bg-emerald-200/[0.025] p-5 sm:p-7">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-200/60">Configuración inicial · menos de un minuto</p>
-          <h2 id="onboarding-title" className="mt-2 text-xl font-bold text-white sm:text-2xl">Personalizá tus recomendaciones</h2>
+          <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-emerald-200/55">Configuración inicial · menos de un minuto</p>
+          <h2 id="onboarding-title" className="mt-3 text-xl font-medium text-white sm:text-2xl">Personalizá tus recomendaciones</h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-white/50">Tres respuestas para ordenar tu espacio. Podés modificarlas después desde Mi perfil.</p>
         </div>
-        <span className="shrink-0 rounded-full border border-white/10 bg-black/25 px-3 py-1.5 text-xs font-bold text-white/55">3 pasos</span>
+        <span className="shrink-0 rounded-md border border-white/[0.08] px-2.5 py-1.5 text-xs font-medium text-white/45">3 pasos</span>
       </div>
 
       <div className="mt-6 grid gap-5 xl:grid-cols-3">
         <fieldset>
           <legend className="text-xs font-bold text-white/55">1. Tipo de negocio</legend>
           <div className="mt-2 grid gap-2">
-            {businessTypes.map((value) => <button key={value} type="button" aria-pressed={data.business_type === value} onClick={() => setData((current) => ({ ...current, business_type: value }))} className={`rounded-xl border px-3 py-2.5 text-left text-xs font-bold transition ${data.business_type === value ? "border-emerald-300/35 bg-emerald-300/[0.08] text-white" : "border-white/[0.07] bg-black/20 text-white/50 hover:text-white"}`}>{value}</button>)}
+            {businessTypes.map((value) => <button key={value} type="button" aria-pressed={data.business_type === value} onClick={() => setData((current) => ({ ...current, business_type: value }))} className={`rounded-lg border px-3 py-2.5 text-left text-xs font-medium transition ${data.business_type === value ? "border-emerald-200/28 bg-emerald-200/[0.055] text-white" : "border-white/[0.07] bg-black/15 text-white/48 hover:border-white/14 hover:text-white"}`}>{value}</button>)}
           </div>
         </fieldset>
         <fieldset>
           <legend className="text-xs font-bold text-white/55">2. Objetivo principal</legend>
           <div className="mt-2 grid gap-2">
-            {goals.map((value) => <button key={value} type="button" aria-pressed={data.main_goal === value} onClick={() => setData((current) => ({ ...current, main_goal: value }))} className={`rounded-xl border px-3 py-2.5 text-left text-xs font-bold transition ${data.main_goal === value ? "border-emerald-300/35 bg-emerald-300/[0.08] text-white" : "border-white/[0.07] bg-black/20 text-white/50 hover:text-white"}`}>{value}</button>)}
+            {goals.map((value) => <button key={value} type="button" aria-pressed={data.main_goal === value} onClick={() => setData((current) => ({ ...current, main_goal: value }))} className={`rounded-lg border px-3 py-2.5 text-left text-xs font-medium transition ${data.main_goal === value ? "border-emerald-200/28 bg-emerald-200/[0.055] text-white" : "border-white/[0.07] bg-black/15 text-white/48 hover:border-white/14 hover:text-white"}`}>{value}</button>)}
           </div>
         </fieldset>
         <div>
           <p className="text-xs font-bold text-white/55">3. Moneda preferida</p>
           <div className="mt-2 grid grid-cols-2 gap-2">
-            {["ARS", "USD"].map((value) => <button key={value} type="button" aria-pressed={data.preferred_currency === value} onClick={() => setData((current) => ({ ...current, preferred_currency: value }))} className={`rounded-xl border px-3 py-3 text-xs font-black transition ${data.preferred_currency === value ? "border-emerald-300/35 bg-emerald-300/[0.08] text-white" : "border-white/[0.07] bg-black/20 text-white/50 hover:text-white"}`}>{value}</button>)}
+            {["ARS", "USD"].map((value) => <button key={value} type="button" aria-pressed={data.preferred_currency === value} onClick={() => setData((current) => ({ ...current, preferred_currency: value }))} className={`rounded-lg border px-3 py-3 text-xs font-medium transition ${data.preferred_currency === value ? "border-emerald-200/28 bg-emerald-200/[0.055] text-white" : "border-white/[0.07] bg-black/15 text-white/48 hover:border-white/14 hover:text-white"}`}>{value}</button>)}
           </div>
-          <div className="mt-4 rounded-2xl border border-white/[0.07] bg-black/25 p-4">
+          <div className="mt-4 rounded-lg border border-white/[0.07] bg-black/15 p-4">
             <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-200/50">Primera recomendación</p>
             <p className="mt-2 text-sm font-bold text-white/85">{suggested.title}</p>
             <Link href={suggested.href} className="mt-2 inline-flex text-xs font-bold text-white/50 hover:text-white">Ver herramienta →</Link>
@@ -70,7 +70,7 @@ export default function ProfileOnboarding({ initialData, saving, onSave }: { ini
 
       <div className="mt-6 flex flex-col gap-3 border-t border-white/[0.07] pt-5 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs text-white/40">La información se guarda en tu cuenta Growtella.</p>
-        <button type="button" disabled={saving || !data.business_type || !data.main_goal || !data.preferred_currency} onClick={() => void onSave(data)} className="app-dark-action rounded-full px-5 py-2.5 text-sm transition">{saving ? "Guardando..." : "Guardar y personalizar"}</button>
+        <button type="button" disabled={saving || !data.business_type || !data.main_goal || !data.preferred_currency} onClick={() => void onSave(data)} className="action-positive app-dark-action rounded-lg px-5 py-2.5 text-sm transition">{saving ? "Guardando..." : "Guardar y personalizar"}</button>
       </div>
     </section>
   );

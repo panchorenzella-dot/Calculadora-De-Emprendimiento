@@ -114,7 +114,7 @@ export default function RootLayout({
   };
 
   return (
-    <html lang="es-AR">
+    <html lang="es-AR" data-scroll-behavior="smooth">
       <body
         className={`${geistSans.variable} antialiased bg-zinc-950 text-white`}
       >
@@ -124,7 +124,7 @@ export default function RootLayout({
             __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
           }}
         />
-        <div className="min-h-screen flex flex-col">
+        <div className="site-frame flex min-h-screen flex-col">
           <Navbar />
           <div className="flex-1">{children}</div>
           <Footer />

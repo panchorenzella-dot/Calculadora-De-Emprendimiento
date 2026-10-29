@@ -168,7 +168,7 @@ export default function SaveScenarioButton({ draft, hasResults }: Props) {
           type="button"
           onClick={beginSave}
           disabled={saving}
-          className="flex min-h-11 w-full items-center justify-between rounded-xl border border-white/[0.13] bg-white/[0.045] px-4 py-3 text-sm font-semibold text-white/88 transition hover:border-white/25 hover:bg-white/[0.075] hover:text-white disabled:cursor-not-allowed disabled:opacity-55"
+          className="action-positive flex min-h-11 w-full items-center justify-between rounded-xl border border-white/[0.13] bg-white/[0.045] px-4 py-3 text-sm font-semibold text-white/88 transition hover:border-white/25 hover:bg-white/[0.075] hover:text-white disabled:cursor-not-allowed disabled:opacity-55"
         >
           <span>{saving ? "Guardando..." : "Guardar escenario"}</span>
           <span aria-hidden="true" className="text-base font-normal text-white/40">＋</span>
@@ -189,7 +189,7 @@ export default function SaveScenarioButton({ draft, hasResults }: Props) {
             placeholder={`Nombre opcional · ${defaultTitle(draft)}`}
             className="rounded-xl border border-white/10 bg-white/[0.035] px-4 py-3 text-sm outline-none transition focus:border-emerald-300/30"
           />
-          <button className="rounded-xl bg-white px-4 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-200">
+          <button className="action-positive rounded-xl bg-white px-4 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-200">
             Confirmar guardado
           </button>
         </form>

@@ -27,7 +27,7 @@ const passwordRequirements = [
   { label: "Un número", test: (value: string) => /\d/.test(value) },
 ];
 
-const inputClassName = "min-h-12 w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-sm font-semibold text-white outline-none transition hover:border-zinc-700 focus:border-green-600 focus:ring-4 focus:ring-green-600/10";
+const inputClassName = "min-h-12 w-full rounded-lg border border-white/[0.09] bg-black/20 px-4 py-3 text-sm font-normal text-white outline-none transition hover:border-white/16 focus:border-emerald-200/45 focus:ring-2 focus:ring-emerald-200/[0.06]";
 
 const benefits = [
   {
@@ -341,73 +341,72 @@ export default function AuthModal({
       aria-labelledby={titleId}
       aria-describedby={descriptionId}
       tabIndex={isModal ? -1 : undefined}
-      className="relative w-full max-w-5xl overflow-hidden rounded-[28px] border border-white/10 bg-[#080908] shadow-[0_30px_100px_rgba(0,0,0,0.62)] outline-none lg:grid lg:grid-cols-[0.84fr_1.16fr]"
+      className="relative w-full max-w-4xl overflow-hidden rounded-2xl border border-white/[0.08] bg-[#090b09] shadow-[0_24px_70px_rgba(0,0,0,0.38)] outline-none lg:grid lg:grid-cols-[0.78fr_1.22fr]"
     >
-      <aside className="relative hidden min-h-full overflow-hidden border-r border-white/10 bg-[linear-gradient(145deg,rgba(22,163,74,.11),rgba(8,9,8,.98)_52%,#050605)] p-9 lg:flex lg:flex-col">
-        <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-green-600/10 blur-3xl" />
+      <aside className="relative hidden min-h-full border-r border-white/[0.07] bg-[#070907] p-8 lg:flex lg:flex-col">
         <div className="relative flex items-center gap-3">
-          <span className="grid h-11 w-11 place-items-center rounded-2xl border border-white/15 bg-white/[0.05] font-black text-white">CE</span>
+          <span className="grid h-10 w-10 place-items-center rounded-lg border border-white/12 bg-white/[0.025] text-xs font-semibold text-white">CE</span>
           <div>
-            <p className="font-black tracking-tight text-white">Calculadora Emprendedora</p>
-            <p className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.17em] text-green-500/70">por Growtella</p>
+            <p className="text-sm font-medium tracking-tight text-white/85">Calculadora Emprendedora</p>
+            <p className="mt-1 text-[9px] font-medium uppercase tracking-[0.18em] text-white/32">por Growtella</p>
           </div>
         </div>
 
         <div className="relative my-auto py-12">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-green-500/75">Tu espacio de trabajo</p>
-          <h2 className="mt-4 max-w-sm text-3xl font-black leading-tight tracking-[-0.035em] text-white">
+          <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-emerald-200/50">Tu espacio de trabajo</p>
+          <h2 className="mt-4 max-w-sm text-2xl font-semibold leading-tight tracking-[-0.03em] text-white">
             Tus decisiones, ordenadas en un solo lugar.
           </h2>
-          <div className="mt-8 space-y-5">
+          <div className="mt-8 space-y-6">
             {benefits.map((benefit) => (
               <div key={benefit.title} className="flex gap-3">
-                <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full border border-green-600/40 bg-green-600/10 text-green-500">
+                <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-md border border-emerald-200/18 text-emerald-100/60">
                   <CheckIcon />
                 </span>
                 <div>
-                  <p className="text-sm font-bold text-white/90">{benefit.title}</p>
-                  <p className="mt-1 text-xs font-medium leading-5 text-white/48">{benefit.description}</p>
+                  <p className="text-sm font-medium text-white/78">{benefit.title}</p>
+                  <p className="mt-1 text-xs leading-5 text-white/38">{benefit.description}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="relative flex items-center gap-2 text-xs font-semibold text-white/45">
-          <span className="h-1.5 w-1.5 rounded-full bg-green-600" />
+        <div className="relative flex items-center gap-2 text-xs text-white/35">
+          <span className="h-1 w-1 rounded-full bg-emerald-200/70" />
           Gratis para empezar · Sin tarjeta
         </div>
       </aside>
 
-      <section className="relative bg-[#090a09] px-5 py-6 text-white sm:px-9 sm:py-8 lg:px-12 lg:py-10">
+      <section className="relative bg-[#0a0c0a] px-5 py-7 text-white sm:px-9 sm:py-9 lg:px-11">
         {onClose && (
           <button
             type="button"
             onClick={onClose}
             aria-label="Cerrar acceso"
-            className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full border border-white/10 text-xl leading-none text-white/45 transition hover:border-white/20 hover:bg-white/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600/50 sm:right-6 sm:top-6"
+            className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-lg border border-white/[0.08] text-lg leading-none text-white/40 transition hover:border-white/16 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200/50 sm:right-6 sm:top-6"
           >
             ×
           </button>
         )}
 
         <div className={onClose ? "pr-11" : ""}>
-          <div className="flex items-center gap-2 text-xs font-bold text-white/75 lg:hidden">
-            <span className="grid h-8 w-8 place-items-center rounded-xl border border-white/15 bg-white/[0.05] text-[10px] font-black text-white">CE</span>
+          <div className="flex items-center gap-2 text-xs font-medium text-white/65 lg:hidden">
+            <span className="grid h-8 w-8 place-items-center rounded-lg border border-white/12 text-[10px] font-semibold text-white">CE</span>
             Calculadora Emprendedora
           </div>
-          <p className="mt-6 text-xs font-black uppercase tracking-[0.18em] text-green-500 lg:mt-0">Cuenta Growtella</p>
-          <h1 id={titleId} className="mt-2 text-3xl font-black tracking-[-0.035em] text-white sm:text-[2rem]">{contextTitle && mode !== "verify" && mode !== "reset" ? contextTitle : defaultTitle}</h1>
-          <p id={descriptionId} className="mt-3 max-w-lg text-sm font-medium leading-6 text-white/55">{contextDescription && mode !== "verify" && mode !== "reset" ? contextDescription : defaultDescription}</p>
+          <p className="mt-6 text-[10px] font-medium uppercase tracking-[0.2em] text-emerald-200/55 lg:mt-0">Cuenta Growtella</p>
+          <h1 id={titleId} className="mt-3 text-3xl font-semibold tracking-[-0.035em] text-white sm:text-[2rem]">{contextTitle && mode !== "verify" && mode !== "reset" ? contextTitle : defaultTitle}</h1>
+          <p id={descriptionId} className="mt-3 max-w-lg text-sm leading-6 text-white/48">{contextDescription && mode !== "verify" && mode !== "reset" ? contextDescription : defaultDescription}</p>
         </div>
 
         {mode !== "reset" && mode !== "verify" && (
-          <div className="mt-7 grid grid-cols-2 rounded-xl border border-white/10 bg-white/[0.06] p-1" aria-label="Elegir tipo de acceso">
+          <div className="mt-7 grid grid-cols-2 rounded-lg border border-white/[0.08] bg-black/15 p-1" aria-label="Elegir tipo de acceso">
             <button
               type="button"
               onClick={() => changeMode("login")}
               aria-pressed={mode === "login"}
-              className={`rounded-lg px-3 py-2.5 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600/50 ${mode === "login" ? "bg-black text-white shadow-sm" : "text-white/45 hover:text-white"}`}
+              className={`rounded-md px-3 py-2.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200/50 ${mode === "login" ? "bg-white/[0.07] text-white" : "text-white/42 hover:text-white"}`}
             >
               Iniciar sesión
             </button>
@@ -415,7 +414,7 @@ export default function AuthModal({
               type="button"
               onClick={() => changeMode("signup")}
               aria-pressed={mode === "signup"}
-              className={`rounded-lg px-3 py-2.5 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600/50 ${mode === "signup" ? "bg-black text-white shadow-sm" : "text-white/45 hover:text-white"}`}
+              className={`rounded-md px-3 py-2.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200/50 ${mode === "signup" ? "bg-white/[0.07] text-white" : "text-white/42 hover:text-white"}`}
             >
               Crear cuenta
             </button>
@@ -428,7 +427,7 @@ export default function AuthModal({
               type="button"
               onClick={signInWithGoogle}
               disabled={busy}
-              className="mt-5 flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm font-bold text-zinc-950 shadow-sm transition hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#090a09] disabled:cursor-wait disabled:opacity-60"
+              className="mt-5 flex min-h-12 w-full items-center justify-center gap-3 rounded-lg border border-white/12 bg-white px-4 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#090a09] disabled:cursor-wait disabled:opacity-60"
             >
               {loading === "google" ? (
                 <span className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-400 border-t-zinc-900" aria-hidden="true" />
@@ -566,7 +565,7 @@ export default function AuthModal({
           <button
             type="submit"
             disabled={busy}
-            className="mt-1 flex min-h-12 items-center justify-center rounded-xl bg-green-700 px-4 py-3 text-sm font-black text-white shadow-[0_10px_26px_rgba(21,128,61,.18)] transition hover:bg-green-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600 focus-visible:ring-offset-2 focus-visible:ring-offset-[#090a09] disabled:cursor-wait disabled:opacity-55"
+              className="action-positive mt-1 flex min-h-12 items-center justify-center rounded-lg border border-emerald-200/20 bg-emerald-200 px-4 py-3 text-sm font-semibold text-[#062016] transition hover:bg-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200 focus-visible:ring-offset-2 focus-visible:ring-offset-[#090a09] disabled:cursor-wait disabled:opacity-55"
           >
             {loading === "email" || loading === "reset"
               ? "Procesando..."
@@ -594,7 +593,7 @@ export default function AuthModal({
 
   if (!isModal) {
     return (
-      <div className="mx-auto flex min-h-[72vh] w-full max-w-6xl items-center justify-center px-4 py-8 sm:py-12">
+      <div className="mx-auto flex min-h-[72vh] w-full max-w-6xl items-center justify-center px-4 py-10 sm:py-14">
         {card}
       </div>
     );
@@ -602,7 +601,7 @@ export default function AuthModal({
 
   return (
     <div
-      className="fixed inset-0 z-[150] overflow-y-auto bg-black/78 px-3 py-4 backdrop-blur-md sm:px-5 sm:py-8"
+      className="fixed inset-0 z-[150] overflow-y-auto bg-black/80 px-3 py-4 backdrop-blur-sm sm:px-5 sm:py-8"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose?.();
       }}

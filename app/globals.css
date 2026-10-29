@@ -1,13 +1,40 @@
 @import "tailwindcss";
 
 :root {
-  --background: #09090b;
+  --positive: #4ade80;
+  --negative: #fb7185;
+  --warning: #fbbf24;
+  --background: #070907;
   --foreground: #ffffff;
+  --surface: #090b09;
+  --surface-subtle: rgba(255, 255, 255, 0.018);
+  --line: rgba(255, 255, 255, 0.075);
+  --muted: rgba(255, 255, 255, 0.48);
+  --accent: #a7f3d0;
   color-scheme: dark;
 }
 
 * {
   box-sizing: border-box;
+}
+
+[data-tone="positive"] { color: var(--positive) !important; }
+[data-tone="negative"] { color: var(--negative) !important; }
+[data-calculator-results="empty"] [data-scenario-value] { color: #71717a !important; }
+.action-positive, :is(a, button).action-positive, .profile-shell .profile-primary-action.action-positive {
+  background: var(--positive) !important;
+  color: #052e16 !important;
+  border-color: transparent !important;
+}
+.action-positive:hover { background: #86efac !important; }
+.action-danger { color: var(--negative) !important; border-color: #fb71854d !important; }
+.result-insight { min-width: 0; max-width: 100%; background: rgba(255,255,255,.018); }
+.calculator-page-shell [data-calculator-results], .calculator-page-shell form { min-width: 0; }
+.result-insight table { min-width: 15rem; }
+.result-insight td, .result-insight th { padding-right: .75rem; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto !important; }
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; animation-iteration-count: 1 !important; }
 }
 
 html {
@@ -22,6 +49,15 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  letter-spacing: -0.005em;
+}
+
+.site-frame {
+  background: #070907;
+}
+
+.site-frame :is(h1, h2, h3) {
+  text-wrap: balance;
 }
 
 a {
@@ -113,10 +149,8 @@ input:-webkit-autofill:focus {
 
 .calculator-theme {
   background:
-    radial-gradient(circle at 12% 8%, rgba(52, 211, 153, 0.12), transparent 24rem),
-    radial-gradient(circle at 88% 28%, rgba(16, 185, 129, 0.07), transparent 30rem),
-    linear-gradient(180deg, #090b0a 0%, #09090b 42rem),
-    #09090b;
+    linear-gradient(180deg, rgba(167, 243, 208, 0.018), transparent 28rem),
+    #070907;
 }
 
 .calculator-page-shell > main {
@@ -136,28 +170,12 @@ input:-webkit-autofill:focus {
   isolation: isolate;
   overflow: hidden;
   padding: 1.5rem;
-  border: 1px solid rgba(110, 231, 183, 0.15);
-  border-radius: 1.75rem;
-  background:
-    radial-gradient(circle at 88% 5%, rgba(110, 231, 183, 0.12), transparent 15rem),
-    linear-gradient(135deg, rgba(16, 185, 129, 0.075), rgba(255, 255, 255, 0.025) 48%, rgba(56, 189, 248, 0.025));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.035),
-    0 24px 70px rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.018);
 }
 
-.calculator-page-shell > main .calculator-hero::after {
-  position: absolute;
-  z-index: -1;
-  top: -5rem;
-  right: -4rem;
-  width: 13rem;
-  height: 13rem;
-  border-radius: 9999px;
-  background: rgba(52, 211, 153, 0.075);
-  filter: blur(48px);
-  content: "";
-}
+.calculator-page-shell > main .calculator-hero::after { content: none; }
 
 .calculator-page-shell > main .calculator-hero > p:first-child {
   margin-bottom: 0;
@@ -184,13 +202,9 @@ input:-webkit-autofill:focus {
 
 .calculator-page-shell > main :is(form, section, div)[class*="border-zinc-800"][class*="bg-zinc-950"],
 .calculator-page-shell > main :is(form, section, div)[class*="border-white/10"][class*="bg-white/5"] {
-  border-color: rgba(110, 231, 183, 0.13) !important;
-  background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.038), rgba(16, 185, 129, 0.022) 58%, rgba(0, 0, 0, 0.2)),
-    rgba(7, 10, 8, 0.88) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.025),
-    0 16px 50px rgba(0, 0, 0, 0.11);
+  border-color: rgba(255, 255, 255, 0.075) !important;
+  background: rgba(255, 255, 255, 0.018) !important;
+  box-shadow: none;
 }
 
 .calculator-page-shell > main :is(section, div)[class*="border-zinc-600"][class*="bg-zinc-900"] {
@@ -214,7 +228,7 @@ input:-webkit-autofill:focus {
   border: 1px solid rgba(167, 243, 208, 0.42);
   background: linear-gradient(180deg, #f4fff9 0%, #c7f9df 100%) !important;
   color: #07110b !important;
-  box-shadow: 0 12px 28px rgba(16, 185, 129, 0.12);
+  box-shadow: none;
   transition:
     border-color 160ms ease,
     background-color 160ms ease,
@@ -354,7 +368,7 @@ input:-webkit-autofill:focus {
 
 .calculator-theme button,
 .calculator-theme a[class*="rounded"] {
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .calculator-theme section[class*="border-zinc-800"],
@@ -372,7 +386,7 @@ input:-webkit-autofill:focus {
 .ai-surface,
 .pricing-surface {
   color: #fff;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .profile-shell {
@@ -386,7 +400,7 @@ input:-webkit-autofill:focus {
 .ai-surface a,
 .pricing-surface button,
 .pricing-surface a {
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .profile-shell h1,
@@ -400,7 +414,7 @@ input:-webkit-autofill:focus {
 .pricing-surface h3 {
   max-width: 100%;
   overflow-wrap: anywhere;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .profile-shell section,
@@ -454,12 +468,10 @@ input:-webkit-autofill:focus {
 :is(a, button)[class~="bg-green-700"],
 .profile-shell .profile-primary-action {
   border: 1px solid rgba(110, 231, 183, 0.34);
-  background: linear-gradient(180deg, #111a15 0%, #0a100d 100%);
+  background: #101612;
   color: #f4fff9 !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.045),
-    0 10px 28px rgba(0, 0, 0, 0.24);
-  font-weight: 800;
+  box-shadow: none;
+  font-weight: 600;
 }
 
 .app-dark-action:hover,
@@ -469,7 +481,7 @@ input:-webkit-autofill:focus {
 :is(a, button)[class~="bg-green-700"]:hover,
 .profile-shell .profile-primary-action:hover {
   border-color: rgba(110, 231, 183, 0.56);
-  background: linear-gradient(180deg, #15251c 0%, #0c1510 100%);
+  background: #142019;
   color: #ffffff !important;
   transform: translateY(-1px);
 }
@@ -499,14 +511,14 @@ input:-webkit-autofill:focus {
 
 .profile-shell button.bg-white {
   border: 1px solid rgba(110, 231, 183, 0.34);
-  background: linear-gradient(180deg, #111a15 0%, #0a100d 100%) !important;
+  background: #101612 !important;
   color: #f4fff9 !important;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.24);
+  box-shadow: none;
 }
 
 .profile-shell button.bg-white:hover {
   border-color: rgba(110, 231, 183, 0.56);
-  background: linear-gradient(180deg, #15251c 0%, #0c1510 100%) !important;
+  background: #142019 !important;
 }
 
 .profile-shell .profile-secondary-action {
@@ -535,10 +547,10 @@ input:-webkit-autofill:focus {
 }
 
 .profile-shell .profile-nav-item--active {
-  border-color: rgba(110, 231, 183, 0.22);
-  background: linear-gradient(100deg, rgba(16, 185, 129, 0.13), rgba(110, 231, 183, 0.035));
+  border-color: rgba(167, 243, 208, 0.12);
+  background: rgba(167, 243, 208, 0.045);
   color: #ffffff;
-  box-shadow: inset 3px 0 0 rgba(110, 231, 183, 0.78);
+  box-shadow: inset 2px 0 0 rgba(167, 243, 208, 0.58);
 }
 
 .profile-shell a:focus-visible,
@@ -563,7 +575,33 @@ input:-webkit-autofill:focus {
 
 .pricing-surface button,
 .pricing-surface a[class*="rounded-full"] {
-  font-weight: 800;
+  font-weight: 600;
+}
+
+@keyframes anniversary-price-strike {
+  from { transform: scaleX(0) rotate(-5deg); }
+  to { transform: scaleX(1) rotate(-5deg); }
+}
+
+.promo-price-strike::after {
+  position: absolute;
+  right: -0.15em;
+  bottom: 0.58em;
+  left: -0.15em;
+  height: 0.1em;
+  border-radius: 999px;
+  background: rgba(167, 243, 208, 0.82);
+  content: "";
+  transform: scaleX(0) rotate(-5deg);
+  transform-origin: left center;
+  animation: anniversary-price-strike 0.8s 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .promo-price-strike::after {
+    animation: none;
+    transform: scaleX(1) rotate(-5deg);
+  }
 }
 
 @media (max-width: 639px) {

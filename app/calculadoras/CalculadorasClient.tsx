@@ -23,15 +23,14 @@ export default function CalculadorasPage() {
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
       <div className="mx-auto max-w-6xl px-4 py-10 sm:py-12">
-        <section className="relative overflow-hidden rounded-3xl border border-emerald-300/15 bg-gradient-to-br from-emerald-300/[0.07] via-white/[0.035] to-sky-300/[0.035] px-5 py-8 shadow-2xl shadow-black/20 sm:px-8 sm:py-10">
-          <div className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full bg-emerald-300/10 blur-3xl" />
-          <p className="relative text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300/75">
+        <section className="rounded-2xl border border-white/[0.08] bg-white/[0.018] px-5 py-8 sm:px-8 sm:py-10">
+          <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-emerald-200/55">
             Directorio de herramientas
           </p>
 
-          <div className="relative mt-4 grid gap-6">
+          <div className="mt-4 grid gap-6">
             <div>
-              <h1 className="max-w-3xl text-3xl font-bold tracking-tight text-white sm:text-4xl">
+              <h1 className="max-w-3xl text-3xl font-semibold tracking-[-0.035em] text-white sm:text-4xl">
                 {availableCalculators.length} calculadoras gratis para emprendedores y pymes
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-white/60 sm:text-base">
@@ -53,7 +52,7 @@ export default function CalculadorasPage() {
                 source: "calculator_catalog_featured",
               })
             }
-            className="group flex flex-col gap-6 rounded-3xl border border-emerald-300/30 bg-gradient-to-br from-emerald-300/10 to-sky-300/[0.04] p-6 transition hover:border-emerald-300/60 hover:bg-emerald-300/10 sm:flex-row sm:items-center sm:justify-between sm:p-8"
+            className="group flex flex-col gap-6 rounded-xl border border-emerald-200/14 bg-emerald-200/[0.025] p-6 transition hover:border-emerald-200/25 sm:flex-row sm:items-center sm:justify-between sm:p-8"
           >
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-200">
@@ -66,7 +65,7 @@ export default function CalculadorasPage() {
                 {featuredCalculator.description}
               </p>
             </div>
-            <span className="shrink-0 rounded-full bg-emerald-200 px-5 py-3 text-center text-sm font-bold text-zinc-950 transition group-hover:bg-emerald-100">
+            <span className="shrink-0 rounded-lg bg-emerald-100 px-5 py-3 text-center text-sm font-semibold text-zinc-950 transition group-hover:bg-white">
               Calcular mi margen <span aria-hidden="true">→</span>
             </span>
           </Link>
@@ -110,7 +109,7 @@ export default function CalculadorasPage() {
                           }
                           className="group block h-full"
                         >
-                          <div className="flex h-full min-h-[250px] flex-col rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.055] to-emerald-300/[0.025] p-5 shadow-lg shadow-black/10 transition duration-200 group-hover:-translate-y-0.5 group-hover:border-emerald-300/30 group-hover:shadow-emerald-950/20">
+                          <div className="flex h-full min-h-[250px] flex-col rounded-xl border border-white/[0.07] bg-white/[0.015] p-5 transition duration-200 group-hover:border-white/[0.15] group-hover:bg-white/[0.025]">
                             <div className="flex items-start justify-between gap-4">
                               <h3
                                 className="text-xl font-semibold tracking-tight text-white"
@@ -128,7 +127,7 @@ export default function CalculadorasPage() {
                             <p className="mt-4 text-sm leading-6 text-white/66">
                               {calculator.description}
                             </p>
-                            <div className="mt-5 rounded-xl border border-white/10 bg-zinc-950/55 p-4">
+                            <div className="mt-5 rounded-lg border border-white/[0.06] bg-black/15 p-4">
                               <p className="text-xs font-semibold uppercase tracking-wide text-white/40">
                                 Ideal para
                               </p>

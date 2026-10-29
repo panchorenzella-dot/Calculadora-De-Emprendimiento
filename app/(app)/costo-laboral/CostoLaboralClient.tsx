@@ -1,4 +1,5 @@
 "use client";
+import CalculatorInterpretation from "@/components/CalculatorInterpretation";
 
 import { FormEvent, useMemo, useState } from "react";
 import {
@@ -73,7 +74,7 @@ export default function CostoLaboralClient() {
   return <main>
     <CalculatorHeader eyebrow="Empleo · Argentina" title="Calculadora de costo laboral" description="Estimá el costo mensual de contratar a una persona en relación de dependencia, con cargas patronales, obra social, ART y provisiones." />
     <div className="grid items-start gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-      <CalculatorForm onSubmit={submit} error={error}>
+      <CalculatorForm onEdit={() => { setResults(null); setError(""); }} onSubmit={submit} error={error}>
         <MoneyField label="Sueldo bruto mensual" value={grossSalary} onChange={setGrossSalary} />
         <SelectField label="Tipo de empleador" value={employerType} onChange={(value) => setEmployerType(value as EmployerType)} hint="Referencia general. Beneficios, detracciones y regímenes especiales pueden modificar la carga efectiva.">
           <option value="general">Empleador general / MiPyME · 18%</option>
@@ -109,6 +110,7 @@ export default function CostoLaboralClient() {
           { title: "Costo mensual completo", value: results.annualizedMonthlyCost, note: "Costo anual estimado dividido por 12" },
           { title: "Costo adicional sobre el bruto", value: results.extraOverGross },
         ]} /> : null}
+          {results ? <CalculatorInterpretation kind="costo-laboral" result={results} /> : null}
       </ResultsPanel>
     </div>
     <ExplainGrid>

@@ -87,12 +87,12 @@ export default function ContactoPage() {
           __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
         }}
       />
-      <section className="border-b border-white/10 bg-[radial-gradient(circle_at_top,rgba(52,211,153,0.12),transparent_45%)]">
+      <section className="border-b border-white/[0.07]">
         <div className="mx-auto max-w-6xl px-6 py-16 sm:py-24">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-300/75">
             Estamos para ayudarte
           </p>
-          <h1 className="mt-4 max-w-2xl text-4xl font-bold tracking-tight sm:text-6xl">
+          <h1 className="mt-4 max-w-2xl text-4xl font-semibold tracking-[-0.04em] sm:text-6xl">
             Hablemos de tu experiencia
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-white/60">
@@ -100,7 +100,7 @@ export default function ContactoPage() {
           </p>
           <a
             href={`mailto:${siteConfig.contactEmail}?subject=Consulta%20desde%20Calculadora%20Emprendedora`}
-            className="mt-8 inline-flex rounded-full bg-white px-4 py-2.5 text-sm font-medium !text-black transition hover:bg-zinc-200"
+            className="mt-8 inline-flex rounded-lg bg-white px-4 py-2.5 text-sm font-medium !text-black transition hover:bg-zinc-200"
           >
             Enviar un email →
           </a>
@@ -112,16 +112,16 @@ export default function ContactoPage() {
           {reasons.map(([title, description]) => (
             <article
               key={title}
-              className="rounded-2xl border border-white/10 bg-white/[0.035] p-6"
+              className="rounded-xl border border-white/[0.07] bg-white/[0.015] p-6"
             >
-              <div className="mb-5 h-1 w-10 rounded-full bg-emerald-300" />
+              <div className="mb-5 h-px w-8 bg-emerald-200/55" />
               <h2 className="text-lg font-semibold">{title}</h2>
               <p className="mt-3 text-sm leading-6 text-white/55">{description}</p>
             </article>
           ))}
         </div>
 
-        <section className="mt-12 grid gap-6 rounded-3xl border border-emerald-300/15 bg-emerald-300/[0.04] p-7 md:grid-cols-[1fr_auto] md:items-center">
+        <section className="mt-12 grid gap-6 rounded-xl border border-emerald-200/13 bg-emerald-200/[0.025] p-7 md:grid-cols-[1fr_auto] md:items-center">
           <div>
             <p className="text-sm text-emerald-300">Soporte</p>
             <h2 className="mt-2 break-all text-xl font-semibold sm:text-2xl">
@@ -133,13 +133,13 @@ export default function ContactoPage() {
           </div>
           <a
             href={`mailto:${siteConfig.contactEmail}?subject=Consulta%20desde%20Calculadora%20Emprendedora`}
-            className="rounded-full border border-white/15 bg-black px-4 py-2 text-center text-sm font-medium text-white/80 hover:bg-zinc-900"
+            className="rounded-lg border border-white/[0.1] px-4 py-2 text-center text-sm font-medium text-white/70 hover:border-white/20 hover:text-white"
           >
             Escribir ahora
           </a>
         </section>
 
-        <section className="mt-8 rounded-3xl border border-white/10 bg-white/[0.025] p-7">
+        <section className="mt-8 rounded-xl border border-white/[0.07] bg-white/[0.015] p-7">
           <p className="text-xs uppercase tracking-[0.18em] text-white/40">Ayuda con tu plan</p>
           <h2 className="mt-3 text-2xl font-semibold">Suscripciones y reembolsos</h2>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-white/55">

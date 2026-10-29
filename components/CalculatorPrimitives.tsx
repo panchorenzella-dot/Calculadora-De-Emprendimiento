@@ -19,8 +19,8 @@ export function CalculatorHeader({ eyebrow, title, description }: { eyebrow: str
   </header>;
 }
 
-export function CalculatorForm({ children, onSubmit, error }: { children: ReactNode; onSubmit: (event: React.FormEvent<HTMLFormElement>) => void; error?: string | null }) {
-  return <form data-calculator-form onSubmit={onSubmit} className="min-w-0 rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
+export function CalculatorForm({ children, onSubmit, error, onEdit }: { children: ReactNode; onSubmit: (event: React.FormEvent<HTMLFormElement>) => void; error?: string | null; onEdit?: () => void }) {
+  return <form data-calculator-form onSubmit={onSubmit} onChangeCapture={onEdit} onClickCapture={(event) => { if ((event.target as Element).closest("button[type=button]")) onEdit?.(); }} className="min-w-0 rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
     <h2 className="text-xl font-semibold">Datos</h2>
     <div className="mt-5 grid gap-4">{children}</div>
     {error ? <p role="alert" className="mt-5 rounded-xl border border-rose-300/20 bg-rose-300/[0.06] px-4 py-3 text-sm font-semibold text-rose-100">{error}</p> : null}

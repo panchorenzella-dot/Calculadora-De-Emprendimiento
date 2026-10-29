@@ -1,4 +1,5 @@
 "use client";
+import CalculatorInterpretation from "@/components/CalculatorInterpretation";
 
 import OptionalFields from "@/components/OptionalFields";
 import { FormEvent, useMemo, useState } from "react";
@@ -70,7 +71,7 @@ export default function IngresosBrutosClient() {
   return <main>
     <CalculatorHeader eyebrow="Impuestos provinciales · Argentina" title="Calculadora de Ingresos Brutos" description="Estimá el anticipo de Ingresos Brutos de una jurisdicción usando tu facturación gravada, alícuota y recaudaciones sufridas." />
     <div className="grid items-start gap-6 lg:grid-cols-2">
-      <CalculatorForm onSubmit={submit} error={error}>
+      <CalculatorForm onEdit={() => { setResults(null); setError(""); }} onSubmit={submit} error={error}>
         <SelectField label="Jurisdicción" value={jurisdiction} onChange={setJurisdiction} hint="La selección identifica el escenario; la alícuota se carga manualmente porque depende de la actividad y la normativa local.">
           {jurisdictions.map((item) => <option key={item} value={item}>{item}</option>)}
         </SelectField>
@@ -96,6 +97,7 @@ export default function IngresosBrutosClient() {
           { title: "Saldo a favor estimado", value: results.balanceInFavor },
           { title: "Tasa efectiva", value: `${fmtNum(results.effectiveRate, 3)}%`, money: false },
         ]} /> : null}
+          {results ? <CalculatorInterpretation kind="ingresos-brutos" result={results} /> : null}
       </ResultsPanel>
     </div>
     <ExplainGrid>

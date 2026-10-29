@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import AnniversaryPromoBanner from "@/components/AnniversaryPromoBanner";
 import HomeAiDecisionDemo from "@/components/HomeAiDecisionDemo";
 import HomeProfitPreview from "@/components/HomeProfitPreview";
 import TrustSection from "@/components/TrustSection";
 import { availableCalculators } from "@/app/calculadoras/catalog";
+import { isAnniversaryPromotionActive } from "@/lib/promotions";
+
+export const revalidate = 3600;
 
 const featuredCalculators = [
   "/markup",
@@ -45,35 +49,34 @@ export const metadata: Metadata = {
 };
 
 export default function Home() {
+  const promotionActive = isAnniversaryPromotionActive();
+
   return (
     <div className="pb-10 pt-4 sm:pt-8">
-      <section className="relative overflow-hidden rounded-[32px] border border-white/10 bg-white/[0.035] px-5 py-8 shadow-2xl shadow-black/25 sm:px-8 sm:py-10 lg:px-12 lg:py-12">
-        <div className="pointer-events-none absolute -right-24 -top-28 h-72 w-72 rounded-full bg-emerald-400/10 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-32 left-20 h-64 w-64 rounded-full bg-sky-400/10 blur-3xl" />
-
-        <div className="relative grid items-center gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:gap-12">
+      <section className="overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.018] px-5 py-8 sm:px-8 sm:py-10 lg:px-12 lg:py-12">
+        <div className="grid items-center gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:gap-12">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300/15 bg-emerald-300/[0.06] px-3 py-1.5 text-[11px] font-semibold text-emerald-100/80">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+            <div className="inline-flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.16em] text-emerald-100/60">
+              <span className="h-1 w-1 rounded-full bg-emerald-200/70" />
               Precios y rentabilidad para emprendedores
             </div>
-            <h1 className="mt-5 max-w-3xl text-4xl font-bold leading-[1.05] tracking-[-0.04em] text-white sm:text-5xl lg:text-[56px]">
-              Definí precios rentables antes de vender
+            <h1 className="mt-5 max-w-3xl text-4xl font-semibold leading-[1.05] tracking-[-0.045em] text-white sm:text-5xl lg:text-[56px]">
+              Entendé los números de tu negocio antes de decidir
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-7 text-white/62 sm:text-lg sm:leading-8">
-              Calculá cuánto cobrar, qué margen te queda y cuántas ventas necesitás
-              para cubrir tus costos. Con números claros y sin armar una planilla.
+              Calculá precios, costos, ganancias, impuestos e inversiones.
+              Herramientas para emprendedores y pequeños negocios, con resultados explicados en palabras simples.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Link
-                href="/markup"
-                className="rounded-full bg-white px-5 py-3 text-center text-sm font-bold !text-black transition hover:bg-emerald-100"
+                href="#elegi-tu-calculo"
+                className="rounded-lg bg-white px-5 py-3 text-center text-sm font-semibold !text-black transition hover:bg-emerald-100"
               >
-                Calcular mi precio
+                Elegir qué necesito calcular
               </Link>
               <Link
                 href="/calculadoras"
-                className="rounded-full border border-emerald-300/30 bg-emerald-300/10 px-5 py-3 text-center text-sm font-bold text-emerald-100 transition hover:border-emerald-300/50 hover:bg-emerald-300/20"
+                className="rounded-lg border border-white/10 px-5 py-3 text-center text-sm font-semibold text-white/72 transition hover:border-white/20 hover:text-white"
               >
                 Explorar las {availableCalculators.length} calculadoras →
               </Link>
@@ -92,44 +95,65 @@ export default function Home() {
         </div>
       </section>
 
+      <section id="elegi-tu-calculo" aria-labelledby="needs-title" className="scroll-mt-24 pt-8 sm:pt-10">
+        <h2 id="needs-title" className="text-2xl font-semibold tracking-tight">¿Qué necesitás resolver?</h2>
+        <p className="mt-2 text-sm text-white/65">Elegí una necesidad para empezar. Podés calcular gratis y sin registrarte.</p>
+        <nav aria-label="Calculadoras por necesidad" className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {[
+            ["Definir un precio", "Costo, margen y cuánto cobrar", "/markup"],
+            ["Saber cuánto gano", "Ingresos, costos y resultado mensual", "/margen"],
+            ["Cubrir mis costos", "Ventas necesarias para alcanzar el equilibrio", "/punto-de-equilibrio"],
+            ["Calcular impuestos", "IVA, Ingresos Brutos y costo laboral", "/calculadoras#taxes"],
+            ["Evaluar una inversión", "Retorno, inflación y recupero", "/roi-inversion"],
+            ["Planificar mis ahorros", "Aportes, plazos y capital estimado", "/interes-compuesto"],
+          ].map(([label, detail, href]) => <Link key={href} href={href} className="rounded-xl border border-white/10 p-5 transition hover:border-white/25 hover:bg-white/[0.025]"><h3 className="font-medium">{label} <span aria-hidden="true">→</span></h3><p className="mt-2 text-sm leading-6 text-white/65">{detail}</p></Link>)}
+        </nav>
+      </section>
+
+      {promotionActive ? (
+        <div className="pt-8 sm:pt-10">
+          <AnniversaryPromoBanner />
+        </div>
+      ) : null}
+
+      <div className="pt-8 sm:pt-10">
+        <HomeAiDecisionDemo />
+      </div>
+
       <section aria-labelledby="featured-calculators-title" className="pt-8 sm:pt-10">
         <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h2 id="featured-calculators-title" className="text-2xl font-bold tracking-tight">
+            <h2 id="featured-calculators-title" className="text-2xl font-semibold tracking-tight">
               Calculadoras destacadas
             </h2>
             <p className="mt-2 text-sm text-white/65">
               Empezá por el precio, la ganancia o las ventas necesarias para cubrir costos.
             </p>
           </div>
-          <Link href="/calculadoras" className="inline-flex shrink-0 justify-center rounded-full bg-white px-5 py-3 text-sm font-bold !text-zinc-950 transition hover:bg-emerald-100">
+          <Link href="/calculadoras" className="inline-flex shrink-0 justify-center rounded-lg border border-white/10 px-5 py-3 text-sm font-medium text-white/72 transition hover:border-white/20 hover:text-white">
             Ver las {availableCalculators.length} calculadoras →
           </Link>
         </div>
         <nav aria-label="Calculadoras destacadas" className="grid gap-3 md:grid-cols-3">
           {featuredCalculators.map((calculator) => (
-            <Link key={calculator.href} href={calculator.href} className="group flex flex-col rounded-2xl border border-white/[0.08] bg-white/[0.025] p-5 transition hover:border-emerald-300/25 hover:bg-white/[0.05]">
-              <h3 className="text-base font-bold text-emerald-200/90">{calculator.title}</h3>
+            <Link key={calculator.href} href={calculator.href} className="group flex flex-col rounded-xl border border-white/[0.07] bg-white/[0.015] p-5 transition hover:border-white/[0.14] hover:bg-white/[0.025]">
+              <h3 className="text-base font-medium text-white/88">{calculator.title}</h3>
               <p className="mt-3 text-sm leading-6 text-white/65">{calculator.description}</p>
-              <span className="mt-auto pt-4 text-sm font-bold text-white/90 group-hover:text-emerald-200">Abrir calculadora →</span>
+              <span className="mt-auto pt-4 text-sm font-medium text-emerald-100/65 group-hover:text-emerald-100">Abrir calculadora →</span>
             </Link>
           ))}
         </nav>
       </section>
 
       <div className="pt-10 sm:pt-14">
-        <HomeAiDecisionDemo />
-      </div>
-
-      <div className="pt-10 sm:pt-14">
         <TrustSection />
       </div>
 
-      <section className="mt-10 rounded-3xl border border-white/10 bg-gradient-to-r from-white/[0.055] to-white/[0.02] px-6 py-9 text-center sm:px-10 sm:py-12">
+      <section className="mt-10 rounded-2xl border border-white/[0.07] bg-white/[0.015] px-6 py-9 text-center sm:px-10 sm:py-12">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200/65">
           Empezá por tu negocio
         </p>
-        <h2 className="mx-auto mt-3 max-w-2xl text-2xl font-bold tracking-tight sm:text-3xl">
+        <h2 className="mx-auto mt-3 max-w-2xl text-2xl font-semibold tracking-tight sm:text-3xl">
           Poné a prueba un precio antes de llevarlo a tus clientes
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-white/65">
@@ -139,13 +163,13 @@ export default function Home() {
         <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
           <Link
             href="/markup"
-            className="inline-flex justify-center rounded-full bg-white px-5 py-3 text-sm font-bold !text-zinc-950 transition hover:bg-emerald-100"
+            className="inline-flex justify-center rounded-lg bg-white px-5 py-3 text-sm font-semibold !text-zinc-950 transition hover:bg-emerald-100"
           >
             Calcular precio de venta →
           </Link>
           <Link
             href="/calculadoras"
-            className="inline-flex justify-center rounded-full border border-white/12 px-5 py-3 text-sm font-bold text-white/65 transition hover:border-white/25 hover:text-white"
+            className="inline-flex justify-center rounded-lg border border-white/[0.1] px-5 py-3 text-sm font-medium text-white/60 transition hover:border-white/20 hover:text-white"
           >
             Ver todas las herramientas
           </Link>

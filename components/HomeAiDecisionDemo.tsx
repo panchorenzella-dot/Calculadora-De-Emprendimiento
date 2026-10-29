@@ -16,17 +16,43 @@ const decisionSignals = [
 export default function HomeAiDecisionDemo() {
   return (
     <section
-      aria-labelledby="home-ai-demo-title"
+      id="analisis-ia"
+      aria-label="Ejemplo de análisis con IA"
       className="relative overflow-hidden rounded-[30px] border border-emerald-300/15 bg-[linear-gradient(135deg,rgba(16,185,129,.08),rgba(255,255,255,.025)_48%,rgba(0,0,0,.18))] p-6 sm:p-9"
     >
       <div className="pointer-events-none absolute -right-24 -top-28 size-64 rounded-full bg-emerald-300/10 blur-3xl" />
-      <div className="relative grid gap-8 lg:grid-cols-[0.78fr_1.22fr] lg:items-center lg:gap-12">
+
+      <div className="relative md:hidden">
+        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-200/65">
+          Después del cálculo
+        </p>
+        <h2 className="mt-2 text-xl font-bold tracking-tight">
+          Convertí el resultado en una decisión concreta
+        </h2>
+        <p className="mt-3 text-sm leading-6 text-white/62">
+          La IA usa tu escenario para explicarte qué precio necesitás y cómo cambia tu ganancia.
+        </p>
+        <div className="mt-4 flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-black/25 p-4">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-white/50">Ejemplo · margen 50%</p>
+            <p className="mt-1 text-lg font-bold text-emerald-100">Precio objetivo $28.000</p>
+          </div>
+          <p className="shrink-0 text-right text-xs font-bold text-white/65">+$300.000<br />en 100 ventas</p>
+        </div>
+        <Link
+          href="/precios"
+          className="mt-4 inline-flex text-sm font-bold text-emerald-200 transition hover:text-emerald-100"
+        >
+          Ver cómo funciona el análisis con IA →
+        </Link>
+      </div>
+
+      <div className="relative hidden gap-8 md:grid lg:grid-cols-[0.78fr_1.22fr] lg:items-center lg:gap-12">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-200/65">
             Después del cálculo
           </p>
           <h2
-            id="home-ai-demo-title"
             className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl"
           >
             Convertí el resultado en una decisión concreta

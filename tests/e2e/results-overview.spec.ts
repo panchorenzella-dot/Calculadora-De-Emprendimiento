@@ -20,6 +20,16 @@ const exampleFields: Record<string, Record<string, string>> = {
 };
 const industryExamples = templates as Record<string, Array<{ values: Record<string, string> }>>;
 
+test("las pérdidas son rojas y conservan la clave original para comparar escenarios", async ({ page }) => {
+  await page.goto("/markup?costo=10000&precio=8000");
+  await page.getByRole("button", { name: "Calcular ganancia estimada", exact: true }).click();
+  const loss = page.locator('[data-primary-results] [data-scenario-metric]').filter({ hasText: "Pérdida bruta por unidad" });
+  await expect(loss.locator("[data-scenario-value]")).toHaveAttribute("data-tone", "negative");
+  await expect(loss.locator("[data-scenario-value]")).toHaveCSS("color", "rgb(251, 113, 133)");
+  await expect(loss.locator("[data-scenario-label]")).toHaveAttribute("data-scenario-original-label", "Ganancia bruta por unidad");
+  await page.screenshot({ path: "artifacts/stage1/perdida-desktop.png", fullPage: true });
+});
+
 for (const calculator of availableCalculators) {
   test(`${calculator.title}: tres resultados, desglose completo y valores estables al abrir y cerrar`, async ({ page }) => {
     const errors: string[] = [];
@@ -36,6 +46,13 @@ for (const calculator of availableCalculators) {
     await page.locator(".calculator-page-shell form button[type='submit']").click();
     const result = page.locator('[data-calculator-results="ready"]');
     await expect(result).toBeVisible();
+    const insight = page.locator("[data-result-insight]");
+    await expect(insight).toHaveCount(1);
+    await expect(insight).toBeVisible();
+    await expect(insight.getByText("Alcance del cálculo.", { exact: false })).toBeVisible();
+    await insight.getByText("Ver valores en tabla", { exact: true }).click();
+    expect(await insight.locator("tbody tr").count()).toBeGreaterThan(0);
+    expect(await insight.innerText()).not.toMatch(/NaN|Infinity|undefined/);
     const primary = result.locator("[data-primary-results] [data-scenario-metric]");
     await expect(primary).toHaveCount(3);
     for (const metric of await primary.all()) await expect(metric).toBeVisible();
@@ -54,6 +71,22 @@ for (const calculator of availableCalculators) {
     expect(await primary.allTextContents()).toEqual(visibleValues);
     await expect(page.getByRole("button", { name: "Guardar escenario", exact: true })).toBeVisible();
     expect(errors).toEqual([]);
+    if (["/interes-compuesto", "/reventa", "/iva-producto"].includes(calculator.href)) {
+      await insight.screenshot({ path: `artifacts/stage1/${calculator.href.slice(1)}-desktop.png`, style: "header.sticky { visibility: hidden; }" });
+    }
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(insight).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), calculator.href).toBeTruthy();
+    if (["/interes-compuesto", "/reventa", "/iva-producto"].includes(calculator.href)) {
+      await insight.screenshot({ path: `artifacts/stage1/${calculator.href.slice(1)}-mobile.png`, style: "header.sticky { visibility: hidden; }" });
+    }
+    if (["/interes-compuesto", "/aporte-mensual", "/reventa"].includes(calculator.href)) {
+      const firstField = Object.keys(fields)[0];
+      await page.getByRole("textbox", { name: firstField, exact: true }).fill("200000");
+      await expect(insight).toHaveCount(0);
+      await page.locator(".calculator-page-shell form button[type='submit']").click();
+      await expect(insight).toBeVisible();
+    }
   });
 }
 

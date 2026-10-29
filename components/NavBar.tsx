@@ -4,28 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
-function hasStoredSession() {
-  if (typeof window === "undefined") return false;
-
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  if (!supabaseUrl) return false;
-
-  try {
-    const projectReference = new URL(supabaseUrl).hostname.split(".")[0];
-    const rawSession = window.localStorage.getItem(
-      `sb-${projectReference}-auth-token`,
-    );
-    if (!rawSession) return false;
-
-    const session = JSON.parse(rawSession) as {
-      access_token?: string;
-      refresh_token?: string;
-    };
-    return Boolean(session.access_token || session.refresh_token);
-  } catch {
-    return false;
-  }
-}
+import { hasStoredSession } from "@/lib/authBrowserSession";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -50,33 +29,20 @@ export default function Navbar() {
   ];
 
   const linkClass = (href: string) =>
-    `whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-bold transition ${
+    `relative whitespace-nowrap px-2.5 py-2 text-sm font-medium transition ${
       pathname === href
-        ? "bg-white/10 text-white"
-        : "text-white/70 hover:bg-white/[0.06] hover:text-white"
+        ? "text-white after:absolute after:inset-x-2.5 after:-bottom-[13px] after:h-px after:bg-emerald-200/80"
+        : "text-white/55 hover:text-white"
     }`;
 
   return (
-    <header className="border-b border-white/10 bg-[#050605] print:hidden">
-      {!signedIn && !pathname.startsWith("/perfil") && (
-        <div className="border-b border-white/10 bg-[#0a0b0a] text-white">
-          <div className="mx-auto flex min-h-9 max-w-6xl items-center justify-center gap-2 px-4 py-2 text-center text-xs font-bold sm:text-sm">
-            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-green-600" aria-hidden="true" />
-            <span className="sm:hidden">Guardá tus cálculos gratis.</span>
-            <span className="hidden sm:inline">Creá tu cuenta gratis, guardá tus escenarios y continuá desde cualquier dispositivo.</span>
-            <Link prefetch={false} href="/perfil?modo=registro" className="shrink-0 font-black text-green-500 hover:text-green-400">
-              Registrarme →
-            </Link>
-          </div>
-        </div>
-      )}
-
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
-        <Link href="/" aria-label="CE, Calculadora Emprendedora, un producto de Growtella" className="shrink-0 font-black tracking-tight text-white">
-          <span className="grid h-8 w-8 place-items-center rounded-full border border-white/15 bg-white/[0.05] text-xs text-white sm:hidden">CE</span>
+    <header className="sticky top-0 z-50 border-b border-white/[0.07] bg-[#070907]/90 backdrop-blur-xl print:hidden">
+      <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+        <Link href="/" aria-label="CE, Calculadora Emprendedora, un producto de Growtella" className="shrink-0 font-semibold tracking-[-0.02em] text-white">
+          <span className="grid h-8 w-8 place-items-center rounded-lg border border-white/12 bg-white/[0.025] text-[11px] text-white sm:hidden">CE</span>
           <span className="hidden sm:flex sm:flex-col">
-            <span className="text-base leading-tight">Calculadora Emprendedora</span>
-            <span className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.18em] text-white/65">Originado por Growtella</span>
+            <span className="text-sm leading-tight">Calculadora Emprendedora</span>
+            <span className="mt-1 text-[8px] font-medium uppercase tracking-[0.2em] text-white/35">por Growtella</span>
           </span>
         </Link>
 
@@ -90,7 +56,7 @@ export default function Navbar() {
           {signedIn ? (
             <Link prefetch={false} href="/perfil" aria-current={pathname.startsWith("/perfil") ? "page" : undefined} className={linkClass("/perfil")}>Perfil</Link>
           ) : (
-            <Link prefetch={false} href="/perfil" className="ml-1 inline-flex whitespace-nowrap rounded-full bg-green-700 px-3.5 py-2 text-sm font-black text-white transition hover:bg-green-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500">
+            <Link prefetch={false} href="/perfil" className="action-positive ml-1 inline-flex whitespace-nowrap rounded-lg border border-white/12 bg-white/[0.035] px-3.5 py-2 text-sm font-semibold text-white/85 transition hover:border-white/22 hover:bg-white/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200/60">
               <span className="sm:hidden">Entrar</span>
               <span className="hidden sm:inline">Ingresar</span>
             </Link>

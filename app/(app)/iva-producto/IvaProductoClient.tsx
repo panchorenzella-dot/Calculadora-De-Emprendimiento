@@ -1,4 +1,5 @@
 "use client";
+import CalculatorInterpretation from "@/components/CalculatorInterpretation";
 
 import { FormEvent, useMemo, useState } from "react";
 import {
@@ -55,7 +56,7 @@ export default function IvaProductoClient() {
   return <main>
     <CalculatorHeader eyebrow="Impuestos · Ventas" title="Calculadora de IVA por producto o servicio" description="Agregá IVA a un precio neto o separá el impuesto incluido en un precio final. También podés calcular varias unidades." />
     <div className="grid items-start gap-6 lg:grid-cols-2">
-      <CalculatorForm onSubmit={submit} error={error}>
+      <CalculatorForm onEdit={() => { setResults(null); setError(""); }} onSubmit={submit} error={error}>
         <SegmentedControl label="¿Qué querés hacer?" value={mode} onChange={(value) => setMode(value as "add" | "extract")} options={[{ value: "add", label: "Agregar IVA" }, { value: "extract", label: "Separar IVA incluido" }]} />
         <MoneyField label={mode === "add" ? "Precio neto sin IVA" : "Precio final con IVA"} value={amount} onChange={setAmount} />
         <SelectField label="Alícuota de IVA" value={rateChoice} onChange={setRateChoice}>
@@ -73,6 +74,7 @@ export default function IvaProductoClient() {
           { title: "IVA total", value: results.ivaTotal },
           { title: "Total final", value: results.grandTotal },
         ]} /> : null}
+          {results ? <CalculatorInterpretation kind="iva-producto" result={results} /> : null}
       </ResultsPanel>
     </div>
     <ExplainGrid>

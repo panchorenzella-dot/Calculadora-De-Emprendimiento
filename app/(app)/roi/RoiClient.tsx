@@ -1,4 +1,5 @@
 "use client";
+import CalculatorInterpretation from "@/components/CalculatorInterpretation";
 
 import ResultsOverview from "@/components/ResultsOverview";
 import { type FormEvent, useMemo, useState } from "react";
@@ -79,7 +80,7 @@ export default function Page() {
       </header>
 
       <div className="grid items-start gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <form onSubmit={handleCalculate} className="rounded-2xl border border-white/10 bg-white/5 p-6">
+        <form onChangeCapture={() => { setCalc(null); setError(""); }} onClickCapture={(event) => { if ((event.target as Element).closest("button[type=button]")) setCalc(null); }} onSubmit={handleCalculate} className="rounded-2xl border border-white/10 bg-white/5 p-6">
           <h2 className="text-xl font-semibold">Datos</h2>
 
           <div className="mt-6 grid gap-5">
@@ -143,6 +144,7 @@ export default function Page() {
               />
             </ResultsOverview>
           )}
+          {calc ? <CalculatorInterpretation kind="roi" result={{ ...calc, investment: parseDigitsToNumber(inversionInicial) }} currency={currency} /> : null}
         </div>
       </div>
 
