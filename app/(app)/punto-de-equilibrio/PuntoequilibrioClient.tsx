@@ -83,7 +83,7 @@ export default function PuntoEquilibrioPage() {
         <header className="calculator-hero mb-8">
           <p>Costos y rentabilidad</p>
           <h1 className="text-4xl font-bold tracking-tight">
-            Calculadora de Punto de Equilibrio
+            Calculá cuánto vender para cubrir tus costos
           </h1>
           <p className="mt-3 max-w-3xl text-white/70">
             Calculá cuántas unidades necesitás vender para cubrir tus costos

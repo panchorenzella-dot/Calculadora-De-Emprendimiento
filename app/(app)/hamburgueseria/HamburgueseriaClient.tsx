@@ -212,7 +212,7 @@ export default function HamburgueseriaPage() {
           </p>
 
           <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
-            Calculadora de costos para hamburgueserías
+            Calculá el costo y el precio de tus hamburguesas
           </h1>
 
           <p className="mt-4 max-w-3xl text-lg leading-relaxed text-zinc-400">

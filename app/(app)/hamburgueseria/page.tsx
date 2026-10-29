@@ -1,14 +1,13 @@
-import type { Metadata } from "next";
 import CalculatorGuideLinks from "@/components/CalculatorGuideLinks";
-import CalculatorStructuredData from "@/components/CalculatorStructuredData";
+import CalculatorStructuredData, { calculatorMetadata } from "@/components/CalculatorStructuredData";
 import HamburgueseriaClient from "./HamburgueseriaClient";
 
-export const metadata: Metadata = {
-  title: "Calculadora de costos para hamburguesería: precio y margen",
+export const metadata = calculatorMetadata({
+  path: "/hamburgueseria",
+  title: "Calculadora de hamburguesas: costo y precio de venta",
   description:
-    "Calculá el costo por hamburguesa, precio recomendado, margen, ganancia mensual y punto de equilibrio. Gratis y con ejemplo editable.",
-  alternates: { canonical: "/hamburgueseria" },
-};
+    "Sumá ingredientes, packaging, comisiones y gastos. Estimá el costo por hamburguesa, su precio de venta y el resultado mensual de tu negocio.",
+});
 
 export default function Page() {
   return <><CalculatorStructuredData path="/hamburgueseria" /><HamburgueseriaClient /><CalculatorGuideLinks path="/hamburgueseria" /></>;

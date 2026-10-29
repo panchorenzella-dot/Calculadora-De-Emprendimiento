@@ -7,7 +7,7 @@ test.describe("catálogo de calculadoras", () => {
     expect(response.ok()).toBeTruthy();
     const html = await response.text();
     expect(html).toMatch(/<h1[^>]*>/);
-    expect(html).toContain("calculadoras gratis para emprendedores y pymes");
+    expect(html).toContain("Elegí qué necesitás calcular para tu negocio");
     expect(html).toContain('href="/markup"');
   });
 

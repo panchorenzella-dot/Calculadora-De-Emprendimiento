@@ -31,7 +31,7 @@ export default function CalculadorasPage() {
           <div className="mt-4 grid gap-6">
             <div>
               <h1 className="max-w-3xl text-3xl font-semibold tracking-[-0.035em] text-white sm:text-4xl">
-                {availableCalculators.length} calculadoras gratis para emprendedores y pymes
+                Elegí qué necesitás calcular para tu negocio
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-white/60 sm:text-base">
                 Elegí tu tipo de negocio o explorá las herramientas de inversión,

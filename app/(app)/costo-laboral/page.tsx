@@ -1,13 +1,12 @@
-import type { Metadata } from "next";
 import CalculatorGuideLinks from "@/components/CalculatorGuideLinks";
-import CalculatorStructuredData from "@/components/CalculatorStructuredData";
+import CalculatorStructuredData, { calculatorMetadata } from "@/components/CalculatorStructuredData";
 import CostoLaboralClient from "./CostoLaboralClient";
 
-export const metadata: Metadata = {
-  title: "Calculadora de costo laboral en Argentina",
-  description: "Estimá el costo de un empleado con sueldo bruto, contribuciones patronales, obra social, ART, aguinaldo y vacaciones.",
-  alternates: { canonical: "/costo-laboral" },
-};
+export const metadata = calculatorMetadata({
+  path: "/costo-laboral",
+  title: "Costo laboral: calculá el costo de un empleado",
+  description: "Estimá el costo laboral en Argentina con sueldo bruto, contribuciones, ART, aguinaldo y vacaciones. Ajustá las tasas según tu caso.",
+});
 
 export default function Page() {
   return <><CalculatorStructuredData path="/costo-laboral" /><CostoLaboralClient /><CalculatorGuideLinks path="/costo-laboral" /></>;

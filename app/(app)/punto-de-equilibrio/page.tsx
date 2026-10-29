@@ -1,14 +1,13 @@
-import type { Metadata } from "next";
 import CalculatorGuideLinks from "@/components/CalculatorGuideLinks";
-import CalculatorStructuredData from "@/components/CalculatorStructuredData";
+import CalculatorStructuredData, { calculatorMetadata } from "@/components/CalculatorStructuredData";
 import PuntoequilibrioClient from "./PuntoequilibrioClient";
 
-export const metadata: Metadata = {
-  title: "Calculadora de punto de equilibrio: unidades y ventas",
+export const metadata = calculatorMetadata({
+  path: "/punto-de-equilibrio",
+  title: "Punto de equilibrio: calculá cuánto necesitás vender",
   description:
-    "Calculá cuántas unidades y cuánto necesitás vender para cubrir costos fijos y variables sin perder dinero.",
-  alternates: { canonical: "/punto-de-equilibrio" },
-};
+    "Ingresá precio, costo variable y costos fijos. Calculá tu punto de equilibrio en unidades y ventas para entender cuánto necesitás vender.",
+});
 
 export default function Page() {
   return <><CalculatorStructuredData path="/punto-de-equilibrio" /><PuntoequilibrioClient /><CalculatorGuideLinks path="/punto-de-equilibrio" /></>;

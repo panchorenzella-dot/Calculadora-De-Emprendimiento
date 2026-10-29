@@ -1,14 +1,13 @@
-import type { Metadata } from "next";
 import CalculatorGuideLinks from "@/components/CalculatorGuideLinks";
-import CalculatorStructuredData from "@/components/CalculatorStructuredData";
+import CalculatorStructuredData, { calculatorMetadata } from "@/components/CalculatorStructuredData";
 import MargenClient from "./MargenClient";
 
-export const metadata: Metadata = {
-  title: "Calculadora de margen de ganancia y rentabilidad",
+export const metadata = calculatorMetadata({
+  path: "/margen",
+  title: "Calculadora de margen: ganancia sobre tus ventas",
   description:
-    "Calculá margen, ganancia neta, precio de venta, punto de equilibrio y ROI de tu negocio con costos fijos y variables.",
-  alternates: { canonical: "/margen" },
-};
+    "Compará ventas y costos para estimar la ganancia y el margen de tu negocio. Entendé cuánto queda y qué gastos incluye el cálculo.",
+});
 
 export default function Page() {
   return <><CalculatorStructuredData path="/margen" /><MargenClient /><CalculatorGuideLinks path="/margen" /></>;

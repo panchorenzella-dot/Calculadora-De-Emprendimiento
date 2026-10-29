@@ -137,7 +137,7 @@ export default function Page() {
         <header className="calculator-hero mb-8">
           <p>Costos y rentabilidad</p>
           <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-            Calculadora de Margen para tu negocio
+            Calculá qué margen te dejan tus ventas
           </h1>
           <p className="mt-2 max-w-2xl text-white/70">
             Calculá margen de ganancia, ventas netas, punto de equilibrio, ROI

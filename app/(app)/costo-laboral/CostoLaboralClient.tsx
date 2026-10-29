@@ -72,7 +72,7 @@ export default function CostoLaboralClient() {
   }
 
   return <main>
-    <CalculatorHeader eyebrow="Empleo · Argentina" title="Calculadora de costo laboral" description="Estimá el costo mensual de contratar a una persona en relación de dependencia, con cargas patronales, obra social, ART y provisiones." />
+    <CalculatorHeader eyebrow="Empleo · Argentina" title="Calculá cuánto le cuesta un empleado a tu negocio" description="Estimá el costo mensual de contratar a una persona en relación de dependencia, con cargas patronales, obra social, ART y provisiones." />
     <div className="grid items-start gap-6 lg:grid-cols-[1.05fr_0.95fr]">
       <CalculatorForm onEdit={() => { setResults(null); setError(""); }} onSubmit={submit} error={error}>
         <MoneyField label="Sueldo bruto mensual" value={grossSalary} onChange={setGrossSalary} />
