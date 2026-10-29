@@ -1,9 +1,6 @@
 @import "tailwindcss";
 
 :root {
-  --positive: #4ade80;
-  --negative: #fb7185;
-  --warning: #fbbf24;
   --background: #070907;
   --foreground: #ffffff;
   --surface: #090b09;
@@ -16,25 +13,6 @@
 
 * {
   box-sizing: border-box;
-}
-
-[data-tone="positive"] { color: var(--positive) !important; }
-[data-tone="negative"] { color: var(--negative) !important; }
-[data-calculator-results="empty"] [data-scenario-value] { color: #71717a !important; }
-.action-positive, :is(a, button).action-positive, .profile-shell .profile-primary-action.action-positive {
-  background: var(--positive) !important;
-  color: #052e16 !important;
-  border-color: transparent !important;
-}
-.action-positive:hover { background: #86efac !important; }
-.action-danger { color: var(--negative) !important; border-color: #fb71854d !important; }
-.result-insight { min-width: 0; max-width: 100%; background: rgba(255,255,255,.018); }
-.calculator-page-shell [data-calculator-results], .calculator-page-shell form { min-width: 0; }
-.result-insight table { min-width: 15rem; }
-.result-insight td, .result-insight th { padding-right: .75rem; }
-@media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto !important; }
-  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; animation-iteration-count: 1 !important; }
 }
 
 html {

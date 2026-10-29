@@ -59,7 +59,7 @@ La implementación conserva los motores matemáticos existentes: `lib/calculatio
 - `CalculatorScenarioCapture.tsx`: captura consistente y claves estables de métricas.
 - `ProfilePage.tsx`, `ScenarioDetail.tsx`, `ScenarioComparison.tsx`: presentación coherente de los resultados guardados.
 - `AuthModal.tsx`, `SaveScenarioButton.tsx`, `CompareScenarioButton.tsx`, `PricingSelector.tsx`, `NavBar.tsx`, `ProfileOnboarding.tsx`, `HomeProfitPreview.tsx`: acciones y estados.
-- `app/globals.css`: paleta, contraste, anchos y movimiento reducido.
+- `app/globals.css` y `app/semantic-states.css`: identidad visual y estados semánticos, contraste, anchos y movimiento reducido. Los estados se importan por separado para entregar un recurso nuevo independiente del CSS global cacheado.
 - `tests/resultPresentation.test.ts`, `tests/e2e/results-overview.spec.ts`, `tests/e2e/discovery.spec.ts`, `tests/e2e/pricing.spec.ts`: regresiones y evidencia visual.
 
 ## Verificación
@@ -72,6 +72,7 @@ La implementación conserva los motores matemáticos existentes: `lib/calculatio
 - Pérdida verificada como texto negativo, etiqueta Pérdida, color rojo y clave estable para guardar/comparar.
 - TypeScript, ESLint y `git diff --check`.
 - Build de producción con Webpack completado, 64 páginas generadas. Turbopack local encontró una restricción del entorno al crear procesos/puertos de PostCSS; se verificó el mismo código con el compilador alternativo soportado por Next.
+- `npm run build` usa explícitamente Webpack para que Vercel compile con el mismo motor verificado localmente. La primera publicación con Turbopack entregó un CSS global sin los estados nuevos; la comprobación pública lo detectó y se separaron esos estilos en un recurso dedicado.
 - No se agregó una librería de gráficos. Las rutas públicas siguen prerenderizadas. No se presenta una auditoría Lighthouse ni una medición de Core Web Vitals de campo como si se hubieran realizado.
 
 ## Evidencia visual
